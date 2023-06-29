@@ -57,7 +57,9 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
     {
         global $tpl;
         
-        $tplRecSys = new ilTemplate("tpl.settings_student.html", true, true, self::PLUGIN_DIR);
+        $tplRecSys = new ilTemplate("tpl.settings_student.html", false, false, self::PLUGIN_DIR);
+        #SET false, false to true, true once addSettings is implemented to throw out empty blocks
+
         #$tplRecSys-> $this->addSettings($tplRecSys);
 
         $htmlContent = $tplRecSys->get();
