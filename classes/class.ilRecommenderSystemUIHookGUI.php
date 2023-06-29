@@ -2,6 +2,7 @@
 
 include_once("./Services/UIComponent/classes/class.ilUIHookPluginGUI.php");
 //Import model classes
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelCourse.php');
 
 
 /**
@@ -9,14 +10,15 @@ include_once("./Services/UIComponent/classes/class.ilUIHookPluginGUI.php");
  * 
  * @package ILIAS\Plugins\RecommenderSystem
  * @subpackage UserInterfaceHook
- * @author 
+ * @author Anna Eschbach-Dymanus <anna.maria.eschbach-dymanus@students.uni-mannheim.de>
+ *  
  */
 
 class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
 
     protected $plugin; // The plugin object
     protected $ctrl; // The controller object responsible for handling requests
-    protected $ilTabs;
+    protected $ilTabs; //It is used to add/activate tabs and subtabs
     protected $tree; // Idk what that does, but seems to be necessary to get parent classes?
     protected $ilAccess; // Manages read and write access to objects (e.g. to check if admin)
     protected $ilUser; // The logged in user
@@ -36,7 +38,7 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
         //Student Model specific
         //$RecSysStudent = false; //Initially false, but we will check if the user is a student later
 
-        //I dont understand the difference between ref_id and crs_id ... maybe every object have ref_ids but only courses (subtype of objects) have ref_ids ... Could probably just check the ilias models
+        //Course id is the ref_id of the course of this page
         $ref_id = (int)$_GET['ref_id'];
         $this->crs_id = $this->tree->checkForParentType($ref_id, 'crs');        
 
@@ -66,9 +68,9 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
         $tabId = "recsys_cockpit";
         $tabLabel = $this->plugin->txt("tab_label");
         
-        $tabLink = $this->ctrl->null; //getLinkTargetByClass('ilRecommenderSystemPageGUI', "show");
+        //$tabLink = $this->ctrl->null; //getLinkTargetByClass('ilRecommenderSystemPageGUI', "show");
         //Link the actual page rather than null, so the tab is clickable
-        //$tabLink = $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', "show");
+        $tabLink = $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', "show");
         $this->ilTabs->addTab($tabId, $tabLabel, $tabLink);
 
         
@@ -101,17 +103,21 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
 
 	    if ((strtolower($baseClass) == "ilrepositorygui") && ($objectType == 'crs') && ($a_part == "tabs")) 
         {
-            //TODO: Check if user has recsys enabled
+            //Check if course has been activated for RecSys
+            if ($this->isCourseActive()) {
+                return true;
+            }
+            
             //$ConfigModel = new ilRecommenderSystemConfig();
             //$user_is_enabled = $ConfigModel->isUserRecSysEnabled($this->ilUser->getLogin());
             $user_is_admin = $this->currentUserIsCourseAdmin();
             if ( $user_is_admin ) {
                 // is dozent
-                if ($user_is_enabled)
+                //if ($user_is_enabled)
                     return true;
             } else {
                 //Check if this course is actually a RecSys course!!
-                //if($this->isCourseActive())
+                if($this->isCourseActive())
                 return true;
             }
         }
@@ -123,6 +129,20 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
         $ref_id = (int)$_GET['ref_id'];        
         if ($this->ilAccess->checkAccess('write','',$ref_id)) { // access is checked on ref_id of course object
             return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function isCourseActive() {
+        // first check, if a course supports RecommenderSystems, if not skip, if instanciate ilRecommenderSystemCourse
+        if (ilRecSysModelCourse::existsRecSysCourse($this->crs_id)) {  
+            $Course = ilRecSysModelCourse::getRecSysCourse($this->crs_id);
+            if ($Course->getStatus()) {
+                return true;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }

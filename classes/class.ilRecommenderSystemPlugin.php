@@ -11,7 +11,7 @@ include_once("./Services/UIComponent/classes/class.ilUserInterfaceHookPlugin.php
  * 
  * @package ILIAS\Plugins\RecommenderSystem
  * @subpackage UserInterfaceHook
- * @author Anna Eschbach-Dymanus <anna.maria.eschbach-dymanus@students.uni-mannheim.de>, Daria ...
+ * @author Anna Eschbach-Dymanus <anna.maria.eschbach-dymanus@students.uni-mannheim.de>
  */
 class ilRecommenderSystemPlugin extends ilUserInterfaceHookPlugin
 {
