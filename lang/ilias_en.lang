@@ -1,2 +1,7 @@
 <!-- language file start -->
 tab_label#:#RecSys
+
+recsys_student_to_title#:#Tests 
+recsys_student_to_no_content#:#There are no tests yet.
+recys_student_to_no_recsys#:#RecSys-Profil must be activated to use this function.
+recys_student_to_material_sum_label#:#Materials used:

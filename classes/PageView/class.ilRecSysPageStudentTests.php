@@ -7,7 +7,7 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 #require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelRating.php');
 #require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysEventTracker.php');
 require_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDB.php");
-require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/util/class.ilRecSysListMaterials.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/util/class.ilRecSysListTests.php');
 
 
 
@@ -64,7 +64,7 @@ class ilRecSysPageStudent {
         #CHANGE TO true, true once filled up with data 
         
         #if ($this->RecSysCourse->getMod_lo())
-            $tplRecSys = $this->addModuleMaterials($tplRecSys);
+            $tplRecSys = $this->addModuleTests($tplRecSys);
 	    #if ($this->RecSysCourse->getMod_rec()) {
             #$tplRecSys = $ModuleGoals->addModuleIndividualGoals($tplRecSys);
         #}
@@ -75,36 +75,31 @@ class ilRecSysPageStudent {
     }
 
 
-    // --- Materials -----------------------------------------------------------------------
+    // --- Tests -----------------------------------------------------------------------
     
-    private function addModuleMaterials($tplMain) {
-        $tpl = new ilTemplate("tpl.materials_student.html", true, true, self::PLUGIN_DIR);
+    private function addModuleTests($tplMain) {
+        $tpl = new ilTemplate("tpl.student_to.html", true, true, self::PLUGIN_DIR);
         $tpl->setVariable("TXT_MODULE_TO_LABEL", $this->plugin->txt("recsys_student_to_title"));       
         
-        $material_types = array("exc", "file", "link", "lm", "tst");
+        // Get Tests
+        $tests = $this->getItemsOfCourse($this->il_crs_id, "tst");
+        #throw new ErrorException("course_tests: " . print_r($tests, true));
 
-        foreach ($material_types as $material_type){
-
-            // Get Materials
-            $materials = $this->getItemsOfCourse($this->il_crs_id, $material_type);
-
-            $ilObjGUI = new ilObjCourseGUI("", $this->crs_id, true, false);
-            $CourseContent = new ilRecSysListMaterials($ilObjGUI);
-            
-            // If no Material exists: cancel here        
-            if(!count($materials)) {
-                continue;
-            }
-            foreach ($materials as $item) {
-                $tpl->setCurrentBlock("Materials");
+        $ilObjGUI = new ilObjCourseGUI("", $this->crs_id, true, false);
+        $CourseContent = new ilRecSysListTests($ilObjGUI);
+        
+        // If no Tests exist: cancel here        
+        if(!count($tests)) {
+            $tpl->setVariable("TXT_MODULE_TO_NO_CONTENT", $this->plugin->txt("recsys_student_to_no_content"));
+            $tplMain->setVariable("MOD_TO", $tpl->get());
+            return $tplMain;
+        }  
+        $tpl->setCurrentBlock("Test");
+	    foreach ($tests as $item) {
                 $itemHtml = $CourseContent->getHtmlItem($item);
                 $tpl->setVariable("ITEM_HTML", $itemHtml);    
                 $tpl->parseCurrentBlock();                
             }
-            $tpl->setCurrentBlock("Types");
-            $tpl->setVariable("MATERIAL_TYPE", $material_type);
-            $tpl->parseCurrentBlock(); 
-        }
         $tplMain->setVariable("MOD_TO", $tpl->get());
         return $tplMain;
     }

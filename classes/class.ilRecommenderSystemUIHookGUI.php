@@ -38,7 +38,6 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
         //Student Model specific
         //$RecSysStudent = false; //Initially false, but we will check if the user is a student later
 
-        //Course id is the ref_id of the course of this page
         $ref_id = (int)$_GET['ref_id'];
         $this->crs_id = $this->tree->checkForParentType($ref_id, 'crs');        
 
@@ -47,20 +46,25 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
 
      /**
      * Called everytime the GUI is build. 
-     * It is used here to inject the LeAP Plugin Tab
+     * It is used here to inject the RecSys Plugin Tab
      */
     function modifyGUI($a_comp, $a_part, $a_par = array()) 
     {
         $correct_position = $this->isThisCorrectPositionForAddingRecSysTab($a_comp, $a_part, $a_par);
-        
+
         if ($correct_position) 
         {
             //Dont know what that does in Leap
-            //$this->rememberRefId();
-
+            $this->rememberRefId();
             $this->addRecSysTab();
         }
     }
+
+    private function rememberRefId() {
+        $ref_id = (int)$_GET['ref_id'];
+        $this->ctrl->setParameterByClass('ilRecommenderSystemPageGUI', 'ref_id', $ref_id);
+    }
+
 
     private function addRecSysTab() 
     {
@@ -83,18 +87,19 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
         //    $this->ilTabs->activateTab('recsys_cockpit');            
         //}
     }
-
+    
+    
     private function isThisCorrectPositionForAddingRecSysTab($a_comp, $a_part, $a_par = array()) 
     { 
         $baseClass = $_GET["baseClass"]; // baseClass wird nur so ausgelesen
         $contextObjId = $this->ctrl->getContextObjId();
         
-        $refId = (int)$_GET['ref_id'];
+        $crsId = (int)$_GET['ref_id'];
         $objectType = 'undefined';
 
-        if ($refId > 0) {
+        if ($crsId > 0) {
                     try {
-                        $objectType = ilObjectFactory::getInstanceByRefId($refId)->type;
+                        $objectType = ilObjectFactory::getInstanceByRefId($crsId)->type;
                     }
                     catch (Exception $e) {
                         return false;
@@ -136,9 +141,11 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
 
     private function isCourseActive() {
         // first check, if a course supports RecommenderSystems, if not skip, if instanciate ilRecommenderSystemCourse
+        return true; #REMOVE!!!
+
         if (ilRecSysModelCourse::existsRecSysCourse($this->crs_id)) {  
             $Course = ilRecSysModelCourse::getRecSysCourse($this->crs_id);
-            if ($Course->getStatus()) {
+            if ($Course->getCrs_status()) {
                 return true;
             } else {
                 return false;

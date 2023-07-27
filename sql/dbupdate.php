@@ -1,3 +1,9 @@
+/**
+ * 
+ * @author Joel Pflomm <joel.pflomm@students.uni-mannheim.de>
+ * 
+ *
+ */
 
 <#1>
 <?php
@@ -104,7 +110,7 @@ if (!$ilDB->tableExists('ui_uihk_recsys_courses'))
 	        'notnull'   => true,),
 	);
 	$ilDB->createTable("ui_uihk_recsys_courses", $fields);
-	$ilDB->addPrimaryKey("ui_uihk_recsys_courses", array("ref_id"));
+	$ilDB->addPrimaryKey("ui_uihk_recsys_courses", array("crs_id"));
 	$ilDB->createSequence('ui_uihk_recsys_courses');
 }
 
@@ -169,7 +175,7 @@ if (!$ilDB->tableExists('ui_uihk_recsys_feedback'))
             'type' => 'integer',
             'length' => 8,
             'notnull' => true ),        
-        'lo_id' => array(
+        'topic_id' => array(
             'type' => 'integer',
             'length' => 8,
             'notnull' => true ),
@@ -197,38 +203,5 @@ if (!$ilDB->tableExists('ui_uihk_recsys_feedback'))
     $ilDB->createTable("ui_uihk_recsys_feedback", $fields);
     $ilDB->addPrimaryKey("ui_uihk_recsys_feedback", array("feed_id"));
     $ilDB->createSequence('ui_uihk_recsys_feedback');    
-}
-
-if (!$ilDB->tableExists('ui_uihk_recsys_ratings'))
-{
-    $fields = array(
-        'rating_id' => array(
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true ),        
-        'lo_id' => array(
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true ),
-    	'usr_id' => array(
-            'type' => 'integer',
-   			'length' => 8,
-   			'notnull' => true ),
-        'crs_id' =>  array(  
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true ),
-        'rating' => array(  
-            'type' => 'integer',
-            'length' => 4,
-            'notnull' => true ),
-        'lastupdate' => array(
-            'type' => 'integer',
-            'length' => 4,
-            'notnull' => true ),
-    );
-    $ilDB->createTable("ui_uihk_recsys_ratings", $fields);
-    $ilDB->addPrimaryKey("ui_uihk_recsys_ratings", array("rating_id"));
-    $ilDB->createSequence('ui_uihk_recsys_ratings');    
 }
 ?>

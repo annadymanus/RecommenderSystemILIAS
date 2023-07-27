@@ -1,0 +1,175 @@
+<link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommederSystem/templates/css/recsys.css">
+
+<div>
+	<!-- Activate Recommender System for this Course -->
+	<form id="form_recsys" role="form"
+		class="form-horizontal preventDoubleSubmission"
+		action="{RECSYS_ADMIN_SAVE}"
+		method="post" 
+		novalidate="novalidate">
+		<div class="form-horizontal">
+			<div class="ilFormHeader">
+				<h3 class="ilHeader">
+					<a name="il_form_top"></a>{RECSYS_SETTINGS_LABEL}
+				</h3>
+			</div>
+			<div class="form-group">
+				
+				<label for="recsys_course_status" class="col-sm-2 control-label">{RECSYS_SETTINGS_COURSE_ACTIVE_LABEL}</label>
+				<div class="col-sm-10">
+					<div class="checkbox">
+						<label> <input
+							id="recsys_course_status"
+							type="checkbox" 
+							name="recsys_course_status" 
+							value="1" 
+							{RECSYS_SETTINGS_COURSE_ACTIVE_CHECKED} />
+							&nbsp;
+						</label>
+					</div>
+					<div class="help-block">{RECSYS_SETTINGS_COURSE_ACTIVE_HELP}</div>
+				</div>
+				
+				<!-- Placeholder -->
+				<div class="col-sm-12">
+					&nbsp;
+				</div>
+				
+		
+				<label for="recsys_lo" class="col-sm-2 control-label">{RECSYS_SETTINGS_LO_LABEL}</label>
+				<div class="col-sm-10">
+					<div class="checkbox">
+						<label> <input
+							id="recsys_lo"
+							type="checkbox" 
+							name="recsys_lo" 
+							value="1" 
+							{RECSYS_SETTINGS_LO_CHECKED} />
+							&nbsp;
+						</label>
+					</div>
+					<div class="help-block">{RECSYS_SETTINGS_LO_HELP}</div>
+					<div>
+						<a href="{RECSYS_SETTINGS_LO_URL}">
+							{RECSYS_SETTINGS_LO_EDIT}
+						</a>
+					</div>
+				</div>
+
+				<!-- Placeholder -->
+				<div class="col-sm-12">
+					&nbsp;
+				</div>
+				
+				<label for="recsys_ig" class="col-sm-2 control-label">{RECSYS_SETTINGS_IG_LABEL}</label>
+				<div class="col-sm-2">
+					<div class="checkbox">
+						<label> 
+							<input
+								id="recsys_ig"
+								type="checkbox" 
+								name="recsys_ig" 
+								value="1" 
+								{RECSYS_SETTINGS_IG_CHECKED}
+								/>
+							&nbsp;
+						</label>
+					</div>
+					<div class="help-block">{RECSYS_SETTINGS_IG_HELP}</div>
+				</div>
+				<label for="recsys_ig_default" class="col-sm-2 control-label">{RECSYS_SETTINGS_IG_DEFAULT_LABEL}</label>
+				<div class="col-sm-2">
+					<div class="checkbox">
+						<label> 
+							<input
+								id="recsys_ig_default"
+								type="checkbox" 
+								name="recsys_ig_default" 
+								value="1" 
+								{RECSYS_SETTINGS_IG_DEFAULT_CHECKED}
+								/>
+							&nbsp;
+						</label>
+					</div>
+					<div class="help-block">{RECSYS_SETTINGS_IG_DEFAULT_HELP}</div>
+				</div>
+				
+				<label for="recsys_recommendations" class="col-sm-3 control-label">{RECSYS_SETTINGS_RECOMMENDATIONS_LABEL}</label>
+				<div class="col-sm-9">
+					<div class="checkbox">
+						<label> <input
+							id="recsys_recommendations"
+							type="checkbox" 
+							name="recsys_recommendations" 
+							value="1" 
+							{RECSYS_SETTINGS_RECOMMENDATIONS_CHECKED} 
+							disabled
+							/>
+							&nbsp;
+						</label>
+					</div>
+					<div class="help-block">{RECSYS_SETTINGS_RECOMMENDATIONS_HELP}</div>
+				</div>
+				--> 
+
+			</div>
+			<div class="ilFormFooter clearfix">
+				<div class="col-sm-6 ilFormRequired">
+					<input type="hidden" id="reg_code" name="reg_code" value="BL6GLRxPpG"/>
+				</div>
+				<div class="col-sm-6 ilFormCmds">
+					<input class="btn btn-default btn-sm" type="submit" name="cmd[update]" value="{SAVE}"  />
+					<input class="btn btn-default btn-sm" type="reset" name="cmd[cancel]" value="{CANCEL}"  />
+				</div>
+			</div>
+		</div>
+	</form>
+			
+	<hr />	
+	
+	<div class="form-horizontal">
+		<div class="ilFormHeader">
+			<h3 class="ilHeader">
+				<a name="il_form_top"></a>{RECSYS_SETTINGS_DATA_UPDATE_LABEL}
+			</h3>
+		</div>
+		<div class="form-group">
+			<div class="col-sm-1 ilFormCmds">	
+				<form id="form_leap" role="form"
+					class="form-horizontal preventDoubleSubmission"
+					action="{RECSYS_SETTINGS_DATA_UPDATE_ACTION}"
+					method="post" 
+					novalidate="novalidate">
+					<input type="hidden" id="reg_code" name="reg_code" value="BL6GLrxPpG"/>	
+					<input class="btn btn-default btn-sm" type="submit" name="cmd[update]" value="{RECSYS_SETTINGS_DATA_UPDATE_BUTTON}"  />
+				</form>
+			</div>
+		</div>
+	</div>	
+		
+	<hr />
+		
+	<!-- Statistics -->
+	<div>		
+		<div class="ilFormHeader">
+			<h3 class="ilHeader">
+				<a name="il_form_top"></a>{RECSYS_STUDENTS_DATA_LABEL}
+			</h3>
+		</div>
+		<div class="form-group">
+			<div class="il_InfoScreenProperty control-label col-xs-3">{RECSYS_STUDENTS_COURSE_LABEL}:</div>
+			<div class="il_InfoScreenPropertyValue col-xs-9">{RECSYS_STUDENTS_COURSE_VALUE}</div>
+		</div>		
+		<div class="form-group">
+			<div class="il_InfoScreenProperty control-label col-xs-3">{RECSYS_STUDENTS_INACTIVE_LABEL}:</div>
+			<div class="il_InfoScreenPropertyValue col-xs-9">{RECSYS_STUDENTS_INACTIVE_VALUE}</div>
+		</div>		
+		<div class="form-group">
+			<div class="il_InfoScreenProperty control-label col-xs-3">{RECSYS_STUDENTS_ACTIVE_LABEL}:</div>
+			<div class="il_InfoScreenPropertyValue col-xs-9">{RECSYS_STUDENTS_ACTIVE_VALUE}</div>
+		</div>		
+	</div>
+	
+	<hr />
+	
+</div>

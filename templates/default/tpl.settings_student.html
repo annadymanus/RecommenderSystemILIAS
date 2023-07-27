@@ -1,1 +1,65 @@
-<div style="height: 100px;">Hello World</div>
+<link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/recsys.css">
+
+<script type="text/javascript" src="./Services/Calendar/lib/bootstrap3_datepicker/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript" src="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/LearningAnalyticsProfile2/templates/bootstrap_slider/bootstrap-slider.min.js"></script>
+
+
+<div class="recsys-module-frame">
+	<div class="recsys-module-tile-full">
+			<div class="form-horizontal">
+				<div>
+					<h3 class="ilHeader">
+						{RECSYS_STUDENT_STATUS_LABEL}
+					</h3>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-12">
+						{RECSYS_STUDENT_STATUS_TEXT}
+					</div>
+				</div>
+				
+				<div class="form-group">
+					<label for="recsys_student_status" class="col-sm-2 control-label">{RECSYS_STUDENT_STATUS_LABEL}:</label>
+					<div class="col-sm-10">
+						<form id="form_recsys" role="form"
+								class="form-horizontal preventDoubleSubmission"
+								action="{RECSYS_STUDENT_SAVE}"
+								method="post" 
+								novalidate="novalidate">
+							<div>
+							    <div class="radio {RECSYS_STUDENT_STATUS_INACTIVE_VISIBILITY}"
+									 title="{RECSYS_STUDENT_STATUS_INACTIVE_TOOLTIPP}">
+									<label><input 	name="recsys_student_status" 
+													value="0" 
+													type="radio" 
+													{RECSYS_STUDENT_STATUS_INACTIVE} 
+													{RECSYS_STUDENT_STATUS_INACTIVE_RADIO}/>
+										{RECSYS_STUDENT_STATUS_INACTIVE_LABEL}
+									</label>
+									<div class="help-block">{RECSYS_STUDENT_STATUS_INACTIVE_HELP}</div>
+								</div>					
+
+								<div class="radio {RECSYS_STUDENT_STATUS_ACTIVE_VISIBILITY}" 
+									 title="{RECSYS_STUDENT_STATUS_ACTIVE_TOOLTIPP}">
+									<label><input 	name="recsys_student_status" 
+													value="2" 
+													type="radio" 
+													{RECSYS_STUDENT_STATUS_ACTIVE} 
+													{RECSYS_STUDENT_STATUS_ACTIVE_RADIO}/>
+										{RECSYS_STUDENT_STATUS_ACTIVE_LABEL}
+									</label>
+									<div class="help-block">{RECSYS_STUDENT_STATUS_ACTIVE_HELP}</div>
+								</div>	
+							</div>						
+							<input class="btn btn-default btn-sm" type="submit" name="cmd[update]" value="{SAVE}"  />
+						</form>
+					</div>
+					<div class="col-sm-12">&nbsp;</div>
+				</div>
+				
+
+				<hr />
+				
+			</div>
+	</div>
+</div>

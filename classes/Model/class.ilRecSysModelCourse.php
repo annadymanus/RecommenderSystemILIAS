@@ -1,4 +1,7 @@
 <?php
+
+//@author Potoskueva Daria
+
 require_once("./Services/Object/classes/class.ilObject.php");
 
 class ilRecSysModelCourse {
@@ -23,52 +26,53 @@ class ilRecSysModelCourse {
 
 
     // Database values
-    private $obj_id;
-    private $ref_id;
-    private $status; // 0=LeAP plugin not active / 1=LeAP plugin not active
+    private $il_crs_id;
+    private $crs_id;
+    private $crs_status; // 0=LeAP plugin not active / 1=LeAP plugin not active
     private $mod_tracking;
     private $mod_lo;
     private $mod_ig;
-    private $mod_ig_default;
+    //private $mod_ig_default;
     private $opt_default;
     private $opt_out;
     private $opt_anonym;
-    private $opt_active; 
+    private $opt_active;
+    private $mod_recommendations;
     
     var $ilDB;
     
     // ---------------------------------------------------------------
     
-    private function __construct($ref_id) //Private functions are only accessible within the class that defines them
+    private function __construct($crs_id) //Private functions are only accessible within the class that defines them
     {
         global $ilDB;
         $this->ilDB = $ilDB;
-        $this->ref_id = $ref_id;
-        $this->obj_id = ilObject::_lookupObjectId($ref_id);
+        $this->crs_id = $crs_id;
+        $this->il_crs_id = ilObject::_lookupObjectId($crs_id);
     }
     
     
-    public static function getRecSysCourse($ref_id) 
+    public static function getRecSysCourse($crs_id) 
     {
-        $RecSysCourse = new ilRecSysModelCourse($ref_id);
+        $RecSysCourse = new ilRecSysModelCourse($crs_id);
         $RecSysCourse->read();
         return $RecSysCourse;
     }
     
     
-    public static function getOrCreateRecSysCourse($ref_id) 
+    public static function getOrCreateRecSysCourse($crs_id) 
     {        
-        if (!self::existsRecSysCourse($ref_id)) {
-            $RecSysCourse = new ilRecSysModelCourse($ref_id);            
+        if (!self::existsRecSysCourse($crs_id)) {
+            $RecSysCourse = new ilRecSysModelCourse($crs_id);            
             $RecSysCourse->create();
         }
-        return self::getRecSysCourse($ref_id);
+        return self::getRecSysCourse($crs_id);
     }
     
     
-    public static function existsRecSysCourse($ref_id) {
+    public static function existsRecSysCourse($crs_id) {
         global $ilDB;
-        #$queryResult = $ilDB->query("SELECT * FROM ui_uihk_leap2_courses WHERE ref_id = ".$ilDB->quote($ref_id, "integer"));        
+        #$queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_courses WHERE crs_id = ".$ilDB->quote($crs_id, "integer"));        
         #if ($ilDB->numRows($queryResult) == 1) {
             return true;
         #} else {
@@ -84,15 +88,15 @@ class ilRecSysModelCourse {
     
     private function read() 
     {
-        $queryResult = $this->ilDB->query("SELECT * FROM ui_uihk_leap2_courses WHERE ref_id = ".$this->ilDB->quote($this->ref_id, "integer"));
+        $queryResult = $this->ilDB->query("SELECT * FROM ui_uihk_recsys_courses WHERE crs_id = ".$this->ilDB->quote($this->crs_id, "integer"));
         $course = $this->ilDB->fetchObject($queryResult);
-        $this->obj_id                 = $course->obj_id;
-        $this->ref_id                 = $course->ref_id;
-        $this->status                 = $course->status;
+        $this->il_crs_id              = $course->il_crs_id;
+        $this->crs_id                 = $course->crs_id;
+        $this->crs_status             = $course->crs_status;
         $this->mod_tracking           = $course->mod_tracking ;
         $this->mod_lo                 = $course->mod_lo;
         $this->mod_ig                 = $course->mod_ig;
-        $this->mod_ig_default         = $course->mod_ig_default;
+        //$this->mod_ig_default         = $course->mod_ig_default;
         $this->mod_recommendations    = $course->mod_recommendations;
         $this->opt_default            = $course->opt_default;
         $this->opt_out                = $course->opt_out;
@@ -104,12 +108,12 @@ class ilRecSysModelCourse {
     
     private function create()
     {        
-        $this->ilDB->manipulateF("INSERT INTO ui_uihk_leap2_courses "
-            . "(ref_id, obj_id, status, mod_tracking, mod_lo, mod_ig, mod_ig_default, mod_recommendations, opt_default, opt_out, opt_anonym, opt_active )"
+        $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_courses "
+            . "(crs_id, il_crs_id, crs_status, mod_tracking, mod_lo, mod_ig, mod_recommendations, opt_default, opt_out, opt_anonym, opt_active )"
             . " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-            array("integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer"),
-            array(  $this->ref_id, 
-                    $this->obj_id, 
+            array("integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer"),
+            array(  $this->crs_id, 
+                    $this->il_crs_id, 
                     self::COURSE_DEFAULT_SETTINGS_STATUS,
                     self::COURSE_DEFAULT_SETTINGS_TRACKING, 
                     self::COURSE_DEFAULT_SETTINGS_LO,  
@@ -126,20 +130,19 @@ class ilRecSysModelCourse {
     
     private function update() 
     {    
-        $this->ilDB->manipulateF("UPDATE ui_uihk_leap2_courses"
+        $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_courses"
                             ." SET"
-                                ." status=%s"
+                                ." crs_status=%s"
                                 ." ,mod_tracking=%s"
                                 ." ,mod_lo=%s"
                                 ." ,mod_ig=%s"
-                                ." ,mod_ig_default=%s"
                                 ." ,mod_recommendations=%s"
                                 ." ,opt_default=%s"
                                 ." ,opt_out=%s"
                                 ." ,opt_anonym=%s"
                                 ." ,opt_active=%s" 
-                            ." WHERE obj_id=%s"
-                                ." AND ref_id=%s ;",
+                            ." WHERE il_crs_id=%s"
+                                ." AND crs_id=%s ;",
                 array(  "integer", 
                         "integer", 
                         "integer", 
@@ -150,20 +153,19 @@ class ilRecSysModelCourse {
                         "integer", 
                         "integer", 
                         "integer",
-                        "integer",
                         "integer"),
-                array(  $this->status, 
+                array(  $this->crs_status, 
                         $this->mod_tracking,       
                         $this->mod_lo,               
                         $this->mod_ig,
-                        $this->mod_ig_default,
+                        //$this->mod_ig_default,
                         $this->mod_recommendations,
                         $this->opt_default,
                         $this->opt_out,
                         $this->opt_anonym,
                         $this->opt_active,               
-                        $this->obj_id, 
-                        $this->ref_id
+                        $this->il_crs_id, 
+                        $this->crs_id
                 )
             );
     }
@@ -171,26 +173,26 @@ class ilRecSysModelCourse {
     
     // --- Getters and Setters ---------------------------------------------    
     public function getTitle() {
-        return ilObject::_lookupTitle($this->getObj_id());
+        return ilObject::_lookupTitle($this->getIl_crs_id());
     }
     
     public function getDescription() {
-        return ilObject::_lookupDescription($this->getObj_id());
+        return ilObject::_lookupDescription($this->getIl_crs_id());
     }    
     
-    public function getObj_id()
+    public function getIl_crs_id()
     {
-        return $this->obj_id;
+        return $this->il_crs_id;
     }
     
-    public function getRef_id()
+    public function getCrs_id()
     {
-        return $this->ref_id;
+        return $this->crs_id;
     }
     
-    public function getStatus()
+    public function getCrs_status()
     {
-        return $this->status;
+        return $this->crs_status;
     }
     
     public function getMod_tracking()
@@ -233,18 +235,18 @@ class ilRecSysModelCourse {
         return $this->opt_active;
     }
     
-    public function setObj_id($obj_id)
+    public function setIl_crs_id($il_crs_id)
     {
-        $this->obj_id = $obj_id;
+        $this->il_crs_id = $il_crs_id;
     }
-    public function setRef_id($ref_id)
+    public function setCrs_id($crs_id)
     {
-        $this->ref_id = $ref_id;
+        $this->crs_id = $crs_id;
     }
 
-    public function setStatus($status)
+    public function setCrs_status($crs_status)
     {
-        $this->status = $status;
+        $this->crs_status = $crs_status;
     }
     
     public function setMod_tracking($mod_tracking)
@@ -286,15 +288,15 @@ class ilRecSysModelCourse {
     {
         $this->opt_active = $opt_active;
     }
-    public function getMod_ig_default()
-    {
-        return $this->mod_ig_default;
-    }
+    //public function getMod_ig_default()
+    //{
+    //    return $this->mod_ig_default;
+    //}
 
-    public function setMod_ig_default($mod_ig_default)
-    {
-        $this->mod_ig_default = $mod_ig_default;
-    }
+    //public function setMod_ig_default($mod_ig_default)
+    //{
+    //    $this->mod_ig_default = $mod_ig_default;
+    //}
 
     
 }

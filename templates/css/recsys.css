@@ -1,0 +1,315 @@
+@charset "UTF-8";
+
+/** Student Dashboard */
+.recsys-modules-frame {
+	width: 100%;
+	height: 100%;
+}
+
+.recsys-module-tile {
+	width: 650px;	
+	float: left;
+	margin: 5px;	
+	padding: 10px;
+	background-color: #fefefe;
+}
+
+.recsys-module-tile-full {
+	width: 1300px;
+	margin: 5px;	
+	padding: 10px;
+	background-color: #fefefe;
+}
+
+/** Admin Settings **/
+.recsys-settings-bordered {
+	border: 1px solid #999999;
+}
+
+/** Common **/
+.recsys-show {
+	display:block;
+}
+.recsys-hidden {
+	display:none;
+}
+
+.col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12 {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.form-horizontal{
+	margin-bottom: 5px;	
+}
+
+/** TRACKING ------------------------------------------ **/
+
+.recsys-trac-box {
+	border-top: 1px solid #dddddd;
+	border-bottom: 1px solid #dddddd;
+}
+.recsys-tracking-opt-hidden {
+	/*display: none;*/	
+	opacity: 0.5;
+}
+.recsys-tracking-opt-hidden label {
+	color: #bbbbbb;
+}
+
+/** Learning Objectives **/
+
+.recsys-lo-tile {
+	min-height: 150px;
+}
+.recsys-lo {
+	margin-bottom: 5px;
+	border: 1px solid #dddddd;	
+}
+.recsys-lo-header {
+	background-color: #ededed;
+	line-height: 1.6em;
+}
+.recsys-lo-header-label {
+	text-align: right;
+	padding-right: 0px;
+	font-size: 0.9em;
+	color: #777777;
+}
+
+.recsys-lo-description {
+	font-size: 0.85em;
+}
+.recsys-lo-header-info {
+	padding:0px;
+}
+.recsys-lo-info-chart {
+	display: table-cell;
+	vertical-align: middle;
+	text-align: center;	
+}
+.recsys-lo-info-chart-frame {
+	margin-top:2px;
+	background-color: #f3f3f3;
+	border: 1px solid #bbbbbb;
+	line-height: 1.3em;	
+}
+.recsys-lo-info-chart-body {
+	border-right: 1px dotted #bbbbbb;	
+	padding: 2px 1px 2px 1px;
+	line-height: 1.0em;
+	
+}
+.recsys-lo-info-chart-body-limit {
+	top: -0.4em;
+	line-height: 2.0em;
+	border-right: 1px dashed #888888;
+	z-index: 10;
+}
+.recsys-lo-info-chart-body-green {
+	background-color: #60B060;
+}
+.recsys-lo-info-chart-body-blue {
+	background-color: #82CAFF;
+}
+.recsys-lo-info-chart-body-red {
+	background-color: #FFA500; /* orange */
+}
+.recsys-lo-material {
+	margin: 3px 3px 3px 20px;	
+	padding: 0px;
+	line-height: 32px;
+	/*color: #5F79B6;*/
+	vertical-align: middle;
+}
+.recsys-lo-material-status img{
+	margin-top: 5px;
+	height: 1.5em;
+}
+.recsys-lo-material-data img{	
+	height: 1.6em;
+}
+
+/** REMINDER **/
+.recsys-rem-tile {	
+	min-height: 100px;
+	height: 300px;
+}
+.recsys-rem-header {
+	line-height: 1.0em;
+	color: #999999; 
+}
+.recsys-rem-box {
+	height: 240px;
+	overflow-y: auto;
+	padding: 5px;
+	border-top: 1px solid #dddddd;
+	border-bottom: 1px solid #dddddd;
+}
+.recsys-rem-no-content {
+	text-align: center;
+}
+.recsys-rem {
+	margin-bottom: 5px;
+	border: 1px solid #dddddd;
+	vertical-align: middle;	
+	line-height: 2.1em;
+}
+.recsys-rem-open {
+	color: #5F79B6;
+}
+.recsys-rem-closed {
+	background-color: #eeeeee;
+	color: #aaaaaa; 
+}
+.recsys-rem-done {
+	text-align: center;
+	vertical-align: middle;
+}
+.recsys-rem-done-img {
+	line-height: 1.3em;
+}
+.recsys-rem-date {
+	vertical-align: middle;
+}
+.recsys-rem-title {
+	text-align: left;
+}
+.recsys-rem-action {	
+	vertical-align: middle;
+	text-align: right;
+	padding-bottom: 2px;
+}
+
+
+/** PROMPTS **/
+.recsys-pro-tile {	
+	min-height: 100px;
+	height: 300px;
+}
+.recsys-pro-box {
+	height: 240px;
+	overflow-y: auto;
+	padding: 5px;
+	border-top: 1px solid #dddddd;
+	border-bottom: 1px solid #dddddd;
+}
+.recsys-pro-no-content {
+	text-align: center;
+}
+.recsys-pro {
+	margin-bottom: 5px;
+	border: 1px solid #dddddd;
+	vertical-align: middle;	
+	line-height: 2.1em;
+}
+.recsys-pro-open {
+	color: #5F79B6;
+}
+.recsys-pro-closed {
+	background-color: #eeeeee;
+	color: #aaaaaa; 
+}
+.recsys-pro-title {
+	text-align: left;
+}
+.recsyspro-action {	
+	vertical-align: middle;
+	text-align: right;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+
+/** INDIVIDUAL GOALS **/
+.recsys-ig {
+	margin-bottom: 5px;
+	border: 1px solid #dddddd;
+	vertical-align: middle;
+	padding-left: 0px;
+	padding-right: 0px;
+}
+.recsys-ig-box {
+	height: 400px;
+	min-height: 400px;
+	overflow-y: auto;
+}
+.recsys-ig-goal-clickable:hover {
+	cursor: pointer;
+	background-color: #C5D1F6;
+}
+.recsys-ig-goal-closed {
+	vertical-align: center;
+	margin: auto;
+	padding: 1px;
+}
+.recsys-ig-goal-open {
+	display:none;
+	vertical-align: middle;
+	margin: auto;
+	padding-left:15px;
+	padding-right:5px;	
+}
+.recsys-ig-goal-open .form-horizontal{
+	margin-bottom: 5px;	
+}
+.recsys-ig-date {
+	margin-top: 5px;
+}
+.recsys-ig-title {	
+	margin-top: 5px;
+}
+
+.recsys-ig-progress .progress {
+	height: 20px;
+	min-width: 45px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+.progress-bar {
+	min-width: 3px !important;
+}
+.recsys-ig-progress-done {
+	background-color: #60B060 !important;
+}
+.recsys-ig-progress-running{
+	background-color: #FFA500 !important;
+}
+.recsys-ig-progress-overtime {
+	background-color: #dc3545 !important;
+}
+.recsys-ig-progress-wait {
+	background-color: #82CAFF !important;
+}
+.slider.slider-horizontal {
+	width: 80% !important;
+	margin-left: 5px;	
+	margin-bottom: 5px;
+	line-height: 1.0em;
+}
+
+.recsys-ig-action {
+	margin-top: 5px;
+}
+.recsys-ig-action input {
+	vertical-align: middle;
+}
+
+.recsys-ig-files-show {
+	display: initial;
+}
+.recsys-ig-files-show ul{
+	margin: 3px;
+}
+.recsys-ig-files-edit {
+	display: none;
+}
+.recsys-ig-files-edit input{
+	vertical-align: middle;
+	margin: 0px 0px 2px 0px;	
+}
+
+/** Admin Settings **/
+.recsys-settings-bordered {
+	border: 1px solid #999999;
+}

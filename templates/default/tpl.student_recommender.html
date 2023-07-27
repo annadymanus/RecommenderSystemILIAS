@@ -1,0 +1,94 @@
+<div class="recsys-module-tile recsys-ig-tile">
+
+	<h3>"Recommended Materials"</h3>
+	The materials below are recommended based on your test score and performance on individual tasks. It might be useful if you repeat conrete tasks and slideds.
+		
+	<div class="recsys-ig-box">
+		
+		<!-- BEGIN IndividualGoals  -->
+		<div id="goal_{VAL_MODULE_IG_ID}"
+			 class="recsys-ig container-fluid {VAL_MODUL_IG_VISIBILITY}">
+		
+			<!-- list goal -->
+			<div id="goal_closed_{VAL_MODULE_IG_ID}" 
+					class="row recsys-ig-goal-closed recsys-ig-goal-clickable"
+					onclick="openGoal({VAL_MODULE_IG_ID})" 
+					title="{TXT_MODULE_IG_TOOLTIPP}">
+				<div class="col-sm-2 recsys-ig-date">
+					{VAL_MODULE_IG_STARTDATE}
+				</div>
+				<div class="col-sm-2 recsys-ig-date">
+					{VAL_MODULE_IG_ENDDATE}
+				</div>
+				<div class="col-sm-6 recsys-ig-title">
+					{VAL_MODULE_IG_TITLE}
+				</div>
+				<div class="col-sm-2 recsys-ig-progress">
+					<div class="progress">
+					  	<div class="progress-bar {VAL_MODULE_IG_PROGRESS_COLOR}" 
+					  			role="progressbar" 
+					  			style="width: {VAL_MODULE_IG_PROGRESS}%" 
+					  			aria-valuenow="{VAL_MODULE_IG_PROGRESS}" 
+					  			aria-valuemin="0" 
+					  			aria-valuemax="100">
+					  	</div>					  			
+					</div>					
+				</div>
+			</div>
+			
+		
+	</div>
+</div>
+
+<!-- Button functionalities-->
+<script type="text/javascript">
+	var openGoal = function( id ) {
+		$('#goal_open_'+id).fadeIn(400);
+		$('#goal_closed_'+id).hide();
+		return true;
+	}
+	
+	var closeGoal = function( id ) {		
+		$('#goal_open_'+id).hide();
+		$('#goal_closed_'+id).fadeIn(400);
+		
+		if (id == 0) {
+			$('#goal_0').hide();
+			$('#row_new_goal_action').show();
+		}		
+		return true;
+	}
+	
+	var openNewGoal = function() {
+		$('#goal_0').fadeIn(400);
+		$('#goal_open_0').fadeIn(400);
+		$('#goal_closed_0').hide();
+		$('#row_new_goal_action').hide();
+		return true;
+	}
+	
+	var deleteGoal = function() {		
+		var message = "{TXT_MODULE_IG_BUTTON_DELETE_CONFIRM}";		
+		return confirm(message);
+	}
+</script>
+
+
+<!-- Goal-MaterialsButtons -->
+<script type="text/javascript">
+	var openGoalMaterials = function( id ) {
+		$('#leap_ig_goal_'+id+'_material_edit').fadeIn(400);
+		$('#leap_ig_goal_'+id+'_material_list').hide();
+		return true;
+	}
+	
+	<!-- not used currently
+	var closeGoalMaterials = function( id ) {		
+		$('#leap_ig_goal_'+id+'_material_list').fadeIn(400);
+		$('#leap_ig_goal_'+id+'_material_edit').hide();
+		return true;
+	}
+	-->
+</script>
+
+

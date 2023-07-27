@@ -2,10 +2,11 @@
 
 require_once("./Services/Object/classes/class.ilObjectGUI.php");
 include_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecommenderSystemConst.php");
-#require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilLeapPageTeacher.php');
-#require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilLeapPageTeacherSettings.php');
-#require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilLeapPageStudent.php');
+#require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageTeacher.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageTeacherSettings.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudent.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudentSettings.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelConfig.php');
 
 
 /**
@@ -62,8 +63,8 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                     $this->addTab();
                     $this->ilTabs->setSubTabActive("recsys_student_overview");
                     
-                    #$page = new ilRecSysPageStudent($this->ref_id);
-                    #$page->show_student();
+                    $page = new ilRecSysPageStudent($this->ref_id);
+                    $page->show_student();
                     break;
                 default:
                     ilUtil::redirect("goto.php?target=crs_".$this->ctrl->getContextObjId());
@@ -90,6 +91,7 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                     #$page = new ilRecSysTeacherSettings($this->ref_id);
                     #$page->show_teacher_settings();
                     break;
+
                 case ilRecommenderSystemConst::CMD_SAVE_TEACHER_SETTINGS:
                     #$this->checkPermission("write");
                     $this->addTab();
@@ -104,7 +106,7 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                     $this->addTab();
                     $this->ilTabs->setSubTabActive("recsys_teacher_settings");
                     
-                    #$page = new ilRecSysTeacherSettings($this->ref_id);
+                    $page = new ilRecSysTeacherSettings($this->ref_id);
                     #$page->update_students_and_resources();
                     break;
                 default:
@@ -121,21 +123,18 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
         $teacherViewModeStudent = $viewMode->isEnabled() && $viewMode->isActive();
 
         if (!$loggedinAsTeacher)
-            return True;
+            return true;
         if (!$teacherViewModeStudent)
             return true;
         return False;
     }
 
     private function isCurrentUserRecSysEnabled(){
-        /*
-        create config model class first
+        
         $ConfigModel = new ilRecSysConfig();
         $user_login = $this->ilUser->getLogin();
 
         return $ConfigModel->isUserRecSysEnabled($user_login);
-        */
-        return true;
     }
 
     private function isCurrentUserCourseAdmin(){

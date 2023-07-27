@@ -1,0 +1,40 @@
+@charset "UTF-8";
+
+.recsys-module-tile {
+	width: 650px;	
+	float: left;
+	margin: 5px;	
+	padding: 10px;
+	background-color: #fefefe;
+}
+
+.col-sm-2, .col-sm-4, .col-sm-7 {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.recsys-lo-tile {
+	min-height: 150px;
+}
+.recsys-lo {
+	margin-bottom: 5px;
+	border: 1px solid #dddddd;	
+}
+.recsys-lo-header {
+	background-color: #ededed;
+	line-height: 1.6em;
+}
+.recsys-lo-header-label {
+	text-align: right;
+	padding-right: 0px;
+	font-size: 0.9em;
+	color: #777777;
+}
+.recsys-lo-material {
+	margin: 3px 3px 3px 20px;	
+	padding: 0px;
+	line-height: 32px;
+	/*color: #5F79B6;*/
+	vertical-align: middle;
+}
+

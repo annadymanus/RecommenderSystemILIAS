@@ -48,8 +48,8 @@ class ilRecSysModelStudent {
 	
 	public static function getRecSysStudent($usr_id, $crs_id)
 	{	    
-	    $recsysStudent = new ilRecSysModelStudent($usr_id, $crs_id);	    
-	    return $recsysStudent->read();
+	    $RecSysStudent = new ilRecSysModelStudent($usr_id, $crs_id);	    
+	    return $RecSysStudent->read();
 	}
 	
 	
@@ -117,7 +117,7 @@ class ilRecSysModelStudent {
 	// -----------------------------------------------------------------------------------
 	
 	private function read() {
-	    global $ilDB;
+	    #global $ilDB;
         #create database for recsys first then uncomment the code and change the name of the table ofcourse
 	    #$queryResult = $ilDB->query("SELECT * FROM ui_uihk_leap2_users WHERE usr_id=".$ilDB->quote($this->usr_id, "integer")." AND crs_id=".$ilDB->quote($this->crs_id, "integer")." ;");
 	    #$student = $ilDB->fetchObject($queryResult);	    

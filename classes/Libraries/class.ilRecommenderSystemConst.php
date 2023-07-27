@@ -11,7 +11,10 @@ class ilRecommenderSystemConst {
     const CMD_SHOW_TEACHER_SETTINGS   = "show_teacher_settings";
     const CMD_SAVE_TEACHER_SETTINGS   = "save_teacher_settings";
     const CMD_UPDATE_STUDENTS_AND_RESOURCES = "update_student_and_resources";
-
+    const CMD_STUDENT_LO_FEEDBACK = "student_lo_feedback";
+    const CMD_SHOW_STUDENT_LO_FEEDBACK = "student_lo_feedback_show";
+    const CMD_SAVE_STUDENT_LO_FEEDBACK = "student_lo_feedback_save";
+    
     const OPT_DEFAULT_NONE 	= 0;
     const OPT_DEFAULT_ANONYM 	= 1;
 }
