@@ -8,6 +8,8 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 #require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysEventTracker.php');
 require_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDB.php");
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/util/class.ilRecSysListMaterials.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudentRecommender.php');
+
 
 
 
@@ -42,9 +44,9 @@ class ilRecSysPageStudent {
         $this->ilUser       = $ilUser;
 
 
-        #$this->RecSysCourse   = ilRecSysModelCourse::getOrCreateRecSysCourse($crs_id);
-        #$this->RecSysStudent  = ilRecSysModelStudent::getOrCreateRecSysStudent($this->ilUser->getId(), $this->crs_id, $this->RecSysCourse->getOpt_default());
-        $this->CoreDB          = new ilRecSysCoreDB("admin");
+        $this->RecSysCourse   = null; //ilRecSysModelCourse::getOrCreateRecSysCourse($crs_id);
+        $this->RecSysStudent  = null; //ilRecSysModelStudent::getOrCreateRecSysStudent($this->ilUser->getId(), $this->crs_id, $this->RecSysCourse->getOpt_default());
+        #$this->CoreDB          = new ilRecSysCoreDB("admin");
         
         $this->plugin = ilPlugin::getPluginObject(IL_COMP_SERVICE, 'UIComponent', 'uihk', 'RecommenderSystem');
     }
@@ -66,7 +68,8 @@ class ilRecSysPageStudent {
         #if ($this->RecSysCourse->getMod_lo())
             $tplRecSys = $this->addModuleMaterials($tplRecSys);
 	    #if ($this->RecSysCourse->getMod_rec()) {
-            #$tplRecSys = $ModuleGoals->addModuleIndividualGoals($tplRecSys);
+            $Recommendations = new ilRecSysPageStudentRecommender($this->crs_id, $this->RecSysCourse, $this->RecSysStudent);
+            $tplRecSys = $Recommendations->addModuleRecommendedMaterials($tplRecSys);
         #}
 
 
@@ -79,10 +82,9 @@ class ilRecSysPageStudent {
     
     private function addModuleMaterials($tplMain) {
         $tpl = new ilTemplate("tpl.materials_student.html", true, true, self::PLUGIN_DIR);
-        $tpl->setVariable("TXT_MODULE_TO_LABEL", $this->plugin->txt("recsys_student_to_title"));       
+        $tpl->setVariable("RECOMMEND", $this->plugin->txt("recsys_student_recommend"));
         
         $material_types = array("exc", "file", "link", "lm", "tst");
-
         foreach ($material_types as $material_type){
 
             // Get Materials
@@ -96,15 +98,25 @@ class ilRecSysPageStudent {
                 continue;
             }
             foreach ($materials as $item) {
+                $tags = array(array("Topic1", "From x to y"), array("Topic2", "From x to y and some very long description and some very long description and some very long description and some very long description and some very long description"), array("Topic3", "From x to y"));
+                foreach ($tags as $tag) {
+                    $tpl->setCurrentBlock("Tags");
+                    $tpl->setVariable("TAG_SELECTED", False ? 'checked' : ''); #Query Student Selection (Student Selection Status)
+                    $tpl->setVariable("TAG", $tag[0]);
+                    $tpl->setVariable("COMMENT", $tag[1]);
+                    $tpl->setVariable("ITEM_TITLE", $item['title']);
+                    $tpl->parseCurrentBlock();
+                }
                 $tpl->setCurrentBlock("Materials");
                 $itemHtml = $CourseContent->getHtmlItem($item);
-                $tpl->setVariable("ITEM_HTML", $itemHtml);    
+                $tpl->setVariable("ITEM_HTML", $itemHtml);
                 $tpl->parseCurrentBlock();                
             }
             $tpl->setCurrentBlock("Types");
             $tpl->setVariable("MATERIAL_TYPE", $material_type);
             $tpl->parseCurrentBlock(); 
         }
+        
         $tplMain->setVariable("MOD_TO", $tpl->get());
         return $tplMain;
     }

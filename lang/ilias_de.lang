@@ -1,7 +1,7 @@
 <!-- language file start -->
 tab_label#:#RecSys
 
-recys_student_to_title#:#Tests
-recys_student_to_no_content#:#Es sind noch keine Tests verfuegbar.
-recys_student_to_no_recsys#:#RecSys-Profil muss aktiv sein um diese Funktion zu verwenden.
-recys_student_to_material_sum_label#:#Materialien benutzt:
+recsys_student_to_no_content#:#Es sind noch keine Tests verfuegbar.
+recsys_student_to_no_recsys#:#RecSys-Profil muss aktiv sein um diese Funktion zu verwenden.
+recsys_student_to_material_sum_label#:#Materialien benutzt:
+recsys_student_recommend#:#Vorschlagen

@@ -1,40 +1,41 @@
 <link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/recsys_2.css">
 <link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/accordion.css">
+<link rel="stylesheet" href="./templates/default/delos.css">
 
-<div class="recsys-module-tile recsys-lo-tile">
-	
+
+<form id="form_recsys" role="form"
+	class="recsys-module-tile recsys-lo-tile"
+	action="{RECOMMEND}"
+	method="post" 
+	novalidate="novalidate">
+
 	{TXT_MODULE_TO_NO_CONTENT}
 	
 	<!-- BEGIN Types -->
-	<div>
-	<button class="accordion">{MATERIAL_TYPE}</button>
+	<button type="button" class="accordion">{MATERIAL_TYPE}</button>
 	<div class="panel">
 		<!-- BEGIN Materials  -->
-		<div class="recsys-lo container-fluid">
-			<div class="row recsys-lo-header">
-				<div class="recsys-lo-title col-sm-7">
-					<!--{VAL_LO_TITLE} {VAL_LO_TEST_STATUS}-->
-					Some Title
-				</div>
-			</div>
+		<div class="recsys-lo container-fluid" style="margin: 5px">
 			<div class="row recsys-lo-material">
 				<div>
 					{ITEM_HTML}
 				</div>
 			</div>
-			<div class="flex-container" style="display: flex;">
-				<div style="padding: 5px; margin: 5px; border: 2px solid red;">TOPIC1</div>
-				<div style="padding: 5px; margin: 5px; border: 2px solid blue;">TOPIC2</div>
-			</div>
-			<div class="button">
-				Recommend Content
-			</div>
+			<table class="table table-striped fullwidth">
+			<!-- BEGIN Tags -->
+				<tr title="{TAG}">
+					<td style="width: 10%"><input name="{ITEM_TITLE}_{TAG}" type="checkbox" {TAG_SELECTED} /></td>
+					<td style="width: 20%;">{TAG}</td>
+					<td style="width: 70%;">{COMMENT}</td>
+				</tr>	
+			<!-- END Tags -->
+			</table>
 		</div>
 		<!-- END Materials -->
 	</div>
-	</div>
 	<!-- END Types -->
-</div>
+	<input class="btn btn-default" style="width: 100%; padding: 18px;" type="submit" name="cmd[update]" value="{RECOMMEND}">
+</form>
 
 <script>
 	var acc = document.getElementsByClassName("accordion");
