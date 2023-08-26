@@ -1,0 +1,316 @@
+<link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/recsys_2.css">
+<link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/accordion.css">
+<link rel="stylesheet" href="./templates/default/delos.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+TEACHER
+<form id="form_recsys" role="form"
+	action="{RECSYS_TEACHER_SAVE}"
+	method="post" 
+	novalidate="novalidate">
+
+	{TXT_MODULE_TO_NO_CONTENT}
+	
+	<!-- BEGIN Types -->
+	<button type="button" class="accordion">{MATERIAL_TYPE}</button>
+	<div class="panel">
+		<!-- BEGIN Materials  -->
+		<div class="recsys-lo container-fluid" style="margin: 5px">
+			<div class="row recsys-lo-material">
+				<div>
+					{ITEM_HTML}
+				</div>
+				<div class="isexercisecheckbox" id="{MATERIAL_TYPE}_{ITEM_ID}_isexercise">
+					<input name="{MATERIAL_TYPE}_{ITEM_ID}_isexercise" style="margin-left: 10px;" type="checkbox" {IS_EXERCISE}> Is Exercise Sheet </input>
+				</div>
+				<div class="isscriptcheckbox" id="{MATERIAL_TYPE}_{ITEM_ID}_isscript">
+					<input name="{MATERIAL_TYPE}_{ITEM_ID}_isscript" style="margin-left: 10px;" type="checkbox" {IS_SCRIPT}> Is Script </input>
+				</div>
+			</div>
+			<table class="table table-striped fullwidth" id="{ITEM_ID}_table">
+			<!-- BEGIN Tags -->
+				<tr class="rowbox" id="{ITEM_ID}_{ROW}">
+					<!--td style="width: 10%"><input name="{ITEM_ID}_{TAG}" type="checkbox" {TAG_SELECTED} ></input></td-->
+					<td style="width: 100%; display:flex">
+						<div style="display: flex;" id="{ITEM_ID}_{ROW}_tagholder" name="{I}">
+						<!-- BEGIN Subtags -->
+							<div class="tagbox" id="{ITEM_ID}_{ROW}_{I}_box" style="display:flex">
+								<select class="selector" name="{ITEM_ID}_{ROW}_{I}" style="max-width: 100px;">
+									<!-- BEGIN Alltags -->
+									<option style="overflow: hidden; text-overflow:ellipsis"  value="{ALL_TAG}" {TAG_SELECTED}>{ALL_TAG}</option>
+									<!-- END Alltags -->
+								</select>
+								<input type="button" style=" background-color: transparent; font-size: 130%; align-self: center; width:20px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
+									class="material-icons btn" value="delete" id="{ITEM_ID}_{ROW}_{I}_delete" onclick="removeTag(this.id);" />
+							</div>
+						<!-- END Subtags -->
+						
+							<input class="newtagfield" style="margin-right: 5px; width:100px; display: none" id="{ITEM_ID}_{ROW}_newtag" type="text" onfocusout="newTag(this.id, this.value);"/>
+						</div>
+						<input type="button" style="margin-left: auto; margin-right: 5px" class="btn btn-default btn-sm" value="{ADD_TAG}" id="{ITEM_ID}_{ROW}_add" onclick="addTag(this.id);"/>
+						<input type="button" style="margin-right: 5px" class="btn btn-default btn-sm" value="{NEW_TAG}" id="{ITEM_ID}_{ROW}_create" onclick="showNewTag(this.id);"/>
+					</td>
+					<!--Make distinction on material types and on types of file-->
+					<td class="descfield" id="{MATERIAL_TYPE}_{IS_EXERCISE}_{IS_SCRIPT}" style="width: 70%;"><input style="width: 100%" name="{ITEM_ID}_{ROW}_desc" type="text"></input></td>
+					<td><input type="button" style=" background-color: transparent; font-size: 180%; align-self: center; width:25px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
+						class="material-icons btn" value="deleterow" id="{ITEM_ID}_{ROW}_deleterow" onclick="removeRow(this.id);" />
+				</tr>	
+
+			<!-- END Tags -->
+			</table>		
+
+			<input style="margin-bottom: 5px; margin-left: 5px;" class="btn btn-default btn-sm" type="button" value="{ADD_ROW}" id="{ITEM_ID}_{ROW}_addrow" onclick="addRow(this.id);"  />
+		</div> 
+		<!-- END Materials -->
+	</div>
+	<!-- END Types -->
+	<input class="btn btn-default" style="width: 100%; padding: 18px;" type="submit" name="cmd[save]" value="{SAVE}"></input>
+</form>
+
+
+<div style="display:none">
+	<tr class="rowbox" id="x_x">
+		<td style="width: 100%; display:flex">
+			<div style="display: flex;" id="x_x_tagholder" name="x">
+				<div class="tagbox" id="x_x_x_box" style="display:flex">
+					<select class="selector" name="x_x_x" style="max-width: 100px;">
+						<option style="overflow: hidden; text-overflow:ellipsis"  value=" " > </option>
+					</select>
+					<input type="button" style=" background-color: transparent; font-size: 130%; align-self: center; width:20px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
+						class="material-icons btn" value="delete" id="x_x_x_delete" onclick="removeTag(this.id);" />
+				</div>			
+				<input class="newtagfield" style="margin-right: 5px; width:100px; display: none" id="x_x_newtag" type="text" onfocusout="newTag(this.id, this.value);"/>
+			</div>
+			<input type="button" style="margin-left: auto; margin-right: 5px" class="btn btn-default btn-sm" value="x" id="x_x_add" onclick="addTag(this.id);"/>
+			<input type="button" style="margin-right: 5px" class="btn btn-default btn-sm" value="x" id="x_x_create" onclick="showNewTag(this.id);"/>
+		</td>
+		<!--Make distinction on material types and on types of file-->
+
+		<td class="descfield" style="width: 70%;"><input style="width: 100%" name="x_x_desc" type="text"></input></td>
+		<td><input type="button" style=" background-color: transparent; font-size: 180%; align-self: center; width:25px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
+			class="material-icons btn" value="deleterow" id="x_x_deleterow" onclick="removeRow(this.id);" />
+	</tr>
+</div>
+
+<script>
+
+	
+
+
+	var acc = document.getElementsByClassName("accordion");
+	var i;
+	
+	for (i = 0; i < acc.length; i++) {
+	  acc[i].addEventListener("click", function() {
+		this.classList.toggle("active-panel");
+		var panel = this.nextElementSibling;
+		if (panel.style.maxHeight) {
+		  panel.style.maxHeight = null;
+		} else {
+		  panel.style.maxHeight = panel.scrollHeight + "px";
+		}
+	  });
+	}
+	prevent_submit_on_textfield_enter("newtagfield");
+	prevent_submit_on_textfield_enter("descfield");
+
+	var exercise_checkboxes = document.getElementsByClassName("isexercisecheckbox");
+	//set invisible if not material_type=file
+	for (var i = 0; i < exercise_checkboxes.length; i++) {
+		if (exercise_checkboxes[i].id.split("_")[0] != "file") {
+			exercise_checkboxes[i].style.display = "none";
+			exercise_checkboxes[i].innerHTML = "";
+		}
+	}
+	var script_checkboxes = document.getElementsByClassName("isscriptcheckbox");
+	//set invisible if not material_type=file
+	for (var i = 0; i < script_checkboxes.length; i++) {
+		if (script_checkboxes[i].id.split("_")[0] != "file") {
+			script_checkboxes[i].style.display = "none";
+			script_checkboxes[i].innerHTML = "";
+		}
+	}
+
+	var descfield_type = document.getElementsByClassName("descfield");
+	console.log("tutaj jest descfield");
+	console.log(descfield_type);
+	//based on the id of the descfield, set the placeholder
+	for (var i = 0; i < descfield_type.length; i++) {
+		console.log(descfield_type[i]);
+		//var id = descfield_type[i].id;
+		var type = descfield_type[i].id.split("_")[0];
+		var is_exercise = descfield_type[i].id.split("_")[1];
+		var is_script = descfield_type[i].id.split("_")[2];
+		console.log("id" + descfield_type[i].id);
+		console.log("type"+ type);
+		console.log("is exercise" + is_exercise);
+		console.log("is script" + is_script);
+		if (type == "file") {
+			console.log("tutaj jest file");
+			if (is_exercise == "checked") {
+				console.log("exc_sheet");
+				//"Exercise Sheet"
+				descfield_type[i].innerHTML = '<input style="width: 100%" name="{ITEM_ID}_{ROW}_desc" type="number"></input>';
+			}
+			else if (is_script == "checked") {
+				console.log("tutaj jest script");
+				//"Script"
+				descfield_type[i].innerHTML = '<input style="width: 50%" name="{ITEM_ID}_{ROW}_desc" type="number"></input>';
+
+			}
+			else {
+				console.log("file");
+				//Default "from - to" field 
+				descfield_type[i].innerHTML = "";
+			}
+		}
+		else if (type == "video") {
+			descfield_type[i].innerHTML = "";
+		}
+		else if (type == "link") {
+			//weblink
+			descfield_type[i].innerHTML = "";
+		}
+		else if (type == "excercise") {
+			descfield_type[i].innerHTML = "";
+		}
+		else if (type == "test") {
+			descfield_type[i].innerHTML = "";
+		}
+		else if (type == "bibliography") {
+			descfield_type[i].innerHTML = "";
+		}
+	}
+
+	function prevent_submit_on_textfield_enter(classname){
+		var input = document.getElementsByClassName(classname);
+		for (var i = 0; i < input.length; i++) {
+			input[i].addEventListener("keypress", function(event) {
+				// If the user presses the "Enter" key on the keyboard
+				if (event.key === "Enter") {
+					// Cancel the default action, if needed
+					event.preventDefault();
+					// Unfocus the text field
+					this.blur();
+				}
+			});
+		}
+	}
+	
+
+	function removeTag(clicked_id)
+	{
+		var id = clicked_id.replace("_delete", "") + "_box";
+		document.getElementById(id).remove();
+	}
+
+	function updateNextI(id){
+		var item_row = id.split("_").slice(0,2).join("_");
+		var tagholder = document.getElementById(id + "_tagholder");
+
+		var last_I = tagholder.name;
+		var new_I = parseInt(last_I) + 1;
+		tagholder.name = new_I;
+		return new_I;
+	}
+
+	function getNextI(id){
+		var tagholder = document.getElementById(id + "_tagholder");
+		return tagholder.getAttribute("name");
+	}
+
+	function addTag(clicked_id){
+		var id = clicked_id.replace("_add", "");
+		var box = document.getElementsByClassName("tagbox")[0];
+		var box_clone = box.cloneNode(true);
+		
+		id_I = id + "_" + getNextI(id)
+		console.log(id_I);
+		box_clone.id = id_I + "_box";
+		box_clone.children[0].name = id_I;
+		box_clone.children[1].id = id_I + "_delete";
+		var select = document.getElementById(id.split("_").slice(0,2).join("_") + "_tagholder");
+		
+		//get text field by id
+		var newtag = document.getElementById(id + "_newtag");
+		//insert new tag before text field
+		select.insertBefore(box_clone, newtag);
+		new_id = updateNextI(id);
+		return [box_clone, new_id];
+	}
+
+	function showNewTag(clicked_id)
+	{
+		var id = clicked_id.replace("_create", "");
+		var newtag = document.getElementById(id + "_newtag");
+		newtag.style.display = "inline";
+		newtag.focus();
+	}
+
+	function newTag(clicked_id, input_value)
+	{
+		//add new selector to current box
+		var new_tag_id = clicked_id.replace("_newtag", "_add");
+		var [box_clone, new_I] = addTag(new_tag_id);
+
+		
+		//add new input_value as option to all selects
+		var all_selects = document.getElementsByClassName("selector");
+		for (var i = 0; i < all_selects.length; i++) {
+			var option = document.createElement("option");
+			option.text = input_value;
+			option.value = input_value;
+			all_selects[i].add(option);
+		}
+
+		//set new select to input_value
+		var new_select = box_clone.children[0];
+		new_select.value = input_value;
+		
+		//hide input field and reset value
+		console.log(clicked_id);
+		var newtag = document.getElementById(clicked_id);
+		newtag.style.display = "none";
+		newtag.value = "";
+	}
+	
+	//new function to add new row with tags and comment field
+	function addRow(clicked_id){
+		var id = clicked_id.replace("_addrow", "");
+		var row = document.getElementsByClassName("rowbox")[0];
+		var row_clone = row.cloneNode(true);
+
+		row_clone.id = id;
+		row_clone.children[0].children[0].id = id + "_tagholder";
+		row_clone.children[0].children[0].setAttribute("name", "0");
+
+		//remove all but last child (hidden input field)
+		while (row_clone.children[0].children[0].childElementCount > 1) {
+			row_clone.children[0].children[0].removeChild(row_clone.children[0].children[0].firstChild);
+		}
+
+		row_clone.children[0].children[0].children[0].id = id + "_newtag";
+		row_clone.children[0].children[1].id = id + "_add";
+		row_clone.children[0].children[2].id = id + "_create";
+		
+		row_clone.children[1].setAttribute("name", id + "_desc");
+		row_clone.children[2].children[0].id = id + "_deleterow";
+
+		var item_id = id.split("_")[0];
+		document.getElementById(item_id + "_table").children[0].appendChild(row_clone);
+
+		var last_row = id.split("_")[1];
+		var new_row = parseInt(last_row) - 1;
+		var new_id = item_id + "_" + new_row;
+		document.getElementById(clicked_id).id = new_id + "_addrow";
+		prevent_submit_on_textfield_enter("newtagfield");
+		prevent_submit_on_textfield_enter("descfield");
+	}
+
+	//new function to remove row
+	function removeRow(clicked_id){
+		var id = clicked_id.replace("_deleterow", "");
+		console.log(id)
+		document.getElementById(id).remove();
+	}
+</script>

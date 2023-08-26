@@ -5,7 +5,7 @@
 
 <form id="form_recsys" role="form"
 	class="recsys-module-tile recsys-lo-tile"
-	action="{RECOMMEND}"
+	action="{RECSYS_STUDENT_RECOMMEND}"
 	method="post" 
 	novalidate="novalidate">
 
@@ -24,8 +24,12 @@
 			<table class="table table-striped fullwidth">
 			<!-- BEGIN Tags -->
 				<tr title="{TAG}">
-					<td style="width: 10%"><input name="{ITEM_TITLE}_{TAG}" type="checkbox" {TAG_SELECTED} /></td>
-					<td style="width: 20%;">{TAG}</td>
+					<td style="width: 10%"><input name="{ITEM_ID}_{TAGS}" type="checkbox" {TAG_SELECTED} ></input></td>
+					<td style="width: 100%; display:flex">
+						<!-- BEGIN Subtags -->
+						<div style="margin-right: 5px;">{TAG}</div>
+						<!-- END Subtags -->
+					</td>
 					<td style="width: 70%;">{COMMENT}</td>
 				</tr>	
 			<!-- END Tags -->
@@ -34,7 +38,7 @@
 		<!-- END Materials -->
 	</div>
 	<!-- END Types -->
-	<input class="btn btn-default" style="width: 100%; padding: 18px;" type="submit" name="cmd[update]" value="{RECOMMEND}">
+	<input class="btn btn-default" style="width: 100%; padding: 18px;" type="submit" name="cmd[save]" value="{RECOMMEND}"></input>
 </form>
 
 <script>

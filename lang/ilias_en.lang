@@ -5,3 +5,5 @@ recsys_student_to_no_content#:#There are no tests yet.
 recsys_student_to_no_recsys#:#RecSys-Profil must be activated to use this function.
 recsys_student_to_material_sum_label#:#Materials used:
 recsys_student_recommend#:#Recommend
+recsys_add_tag#:#Add Tag
+recsys_new_tag#:#New Tag

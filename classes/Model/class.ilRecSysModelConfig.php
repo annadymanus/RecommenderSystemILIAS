@@ -7,7 +7,7 @@ class ilRecSysModelConfig
     var $ilDB;
 	
     var $configItems = [
-            "enabled_users"            => "",
+            "enabled_users"       => "",
             "leapcore_apiurl"     => "",
             "leapcore_username"   => "",
             "leapcore_password"   => "",

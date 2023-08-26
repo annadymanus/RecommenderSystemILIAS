@@ -9,6 +9,7 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 require_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDB.php");
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/util/class.ilRecSysListMaterials.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudentRecommender.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/class.ilRecommenderSystemPageGUI.php');
 
 
 
@@ -44,9 +45,9 @@ class ilRecSysPageStudent {
         $this->ilUser       = $ilUser;
 
 
-        $this->RecSysCourse   = null; //ilRecSysModelCourse::getOrCreateRecSysCourse($crs_id);
-        $this->RecSysStudent  = null; //ilRecSysModelStudent::getOrCreateRecSysStudent($this->ilUser->getId(), $this->crs_id, $this->RecSysCourse->getOpt_default());
-        #$this->CoreDB          = new ilRecSysCoreDB("admin");
+        $this->RecSysCourse   = ilRecSysModelCourse::getOrCreateRecSysCourse($crs_id);
+        $this->RecSysStudent  = ilRecSysModelStudent::getOrCreateRecSysStudent($this->ilUser->getId(), $this->crs_id, $this->RecSysCourse->getOpt_default());
+        $this->CoreDB          = null;//new ilRecSysCoreDB("admin");
         
         $this->plugin = ilPlugin::getPluginObject(IL_COMP_SERVICE, 'UIComponent', 'uihk', 'RecommenderSystem');
     }
@@ -77,12 +78,39 @@ class ilRecSysPageStudent {
         $tpl->setContent($htmlContent);
     }
 
+    function debug_to_console($data, $context = 'Debug in Console') {
+
+        // Buffering to solve problems frameworks, like header() in this and not a solid return.
+        ob_start();
+    
+        $output  = 'console.info(\'' . $context . ':\');';
+        $output .= 'console.log(' . json_encode($data) . ');';
+        $output  = sprintf('<script>%s</script>', $output);
+    
+        echo $output;
+    }   
+
+    public function save_student_recommendations() {
+        $status = $_POST['form_recsys'];
+        foreach ($_POST as $key => $value) {
+            $this->debug_to_console($key);
+        }
+        //$this->debug_to_console("test");
+        //$this->debug_to_console($_POST);
+        //$this->debug_to_console($_POST["exc 2_Topic1"]);
+        //$this->updateStudent($this->ilUser->getId(), $status);
+        //$this->RecSysStudent->refreshRecSysStudent();
+
+        //ilUtil::sendSuccess($this->plugin->txt('recsys_saved_sucessfully'), true);
+        
+        //$this->show_student_settings();
+    }
+
 
     // --- Materials -----------------------------------------------------------------------
     
     private function addModuleMaterials($tplMain) {
         $tpl = new ilTemplate("tpl.materials_student.html", true, true, self::PLUGIN_DIR);
-        $tpl->setVariable("RECOMMEND", $this->plugin->txt("recsys_student_recommend"));
         
         $material_types = array("exc", "file", "link", "lm", "tst");
         foreach ($material_types as $material_type){
@@ -98,13 +126,18 @@ class ilRecSysPageStudent {
                 continue;
             }
             foreach ($materials as $item) {
-                $tags = array(array("Topic1", "From x to y"), array("Topic2", "From x to y and some very long description and some very long description and some very long description and some very long description and some very long description"), array("Topic3", "From x to y"));
+                $tags = array(array(array("Topic1", "Topic2"), "From x to y"), array(array("Topic2"), "From x to y and some very long description and some very long description and some very long description and some very long description and some very long description"), array(array("Topic3","Topic4","Topic5"), "From x to y"));
                 foreach ($tags as $tag) {
+                    foreach ($tag[0] as $subtag){
+                        $tpl->setCurrentBlock("Subtags");
+                        $tpl->setVariable("TAG", $subtag);
+                        $tpl->parseCurrentBlock();
+                    }
                     $tpl->setCurrentBlock("Tags");
                     $tpl->setVariable("TAG_SELECTED", False ? 'checked' : ''); #Query Student Selection (Student Selection Status)
-                    $tpl->setVariable("TAG", $tag[0]);
+                    $tpl->setVariable("TAGS", implode("|", $tag[0]));
                     $tpl->setVariable("COMMENT", $tag[1]);
-                    $tpl->setVariable("ITEM_TITLE", $item['title']);
+                    $tpl->setVariable("ITEM_ID", $item['obj_id']);
                     $tpl->parseCurrentBlock();
                 }
                 $tpl->setCurrentBlock("Materials");
@@ -116,7 +149,8 @@ class ilRecSysPageStudent {
             $tpl->setVariable("MATERIAL_TYPE", $material_type);
             $tpl->parseCurrentBlock(); 
         }
-        
+        $tpl->setVariable("RECOMMEND", $this->plugin->txt("recsys_student_recommend"));
+        $tpl->setVariable("RECSYS_STUDENT_RECOMMEND", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_STUDENT_RECOMMEND));
         $tplMain->setVariable("MOD_TO", $tpl->get());
         return $tplMain;
     }

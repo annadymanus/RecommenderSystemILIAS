@@ -42,39 +42,70 @@ class ilRecommenderSystemPlugin extends ilUserInterfaceHookPlugin
 
         // Check if its the delete event
         
-        //if ($a_event != "toTrash")
-        //    return True;
+        if ($a_event != "toTrash")
+            return True;
         
-        // Check if the parameter is an array and if it has a ref_id. If it has no ref_id, it is not a course
-        // Naturally... this assumes that we give our courses an attribute ref_id just like they do in Leap...
+        // Check if the parameter is an array and if it has a crs_status. If it has no crs_status, it is not a course
         
-        //if (!is_array($a_parameter) || (!array_key_exists("ref_id", $a_parameter)))
-        //    return True;
+        if (!is_array($a_parameter) || (!array_key_exists("crs_status", $a_parameter)))
+            return True;
         
         // Check if the ref_id is numeric. If it is not numeric, it is not a course
         
-        //if (!is_numeric($a_parameter["ref_id"]))
-        //    return True;
+        if (!is_numeric($a_parameter["crs_status"]))
+            return True;
 
         //So now we know its a course that is to be deleted...
-
-        //Insert here database queries to delete the data from the database when a course is deleted
-
-        //return True;
+        global $ilDB;
+        $queryResult = $ilDB->query("DELETE FROM ui_uihk_recsys_courses where crs_id = " . $a_parameter["crs_id"]);
+        $queryResult = $ilDB->query("DELETE FROM ui_uihk_recsys_user where crs_id = " . $a_parameter["crs_id"]);
+        return True;
     }
 
 	protected function afterActivation()
 	{
 		// do nothing
 	}
-
-    /**
+	
+	/**
 	 * Remove all DataBase Entries
 	 * @see ilPlugin::beforeUninstall()
 	 */
 	protected function beforeUninstall()
 	{
-        //insert code that deletes all relevant data from the database when the plugin is uninstalled
+	    $log = ilLoggerFactory::getLogger('ilRecommenderSystemPlugin');
+	    global $ilDB;
+	    
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_config");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_config_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_user");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_user_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_courses");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_courses_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_tags");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_tags_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_t_p_m");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_t_p_m_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_o_t_u");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_o_t_u_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_s_t_u");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_s_t_u_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_s");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_s_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_p");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_p_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_v");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_v_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_pic");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_pic_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_w");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_w_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_bib");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_bib_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_t");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_t_seq");
+	    $log->info("Uninstalled Recsys");	    
+	    return true; // false would indicate that anything went wrong	    
 	}
 
 }

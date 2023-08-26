@@ -2,7 +2,7 @@
 
 require_once("./Services/Object/classes/class.ilObjectGUI.php");
 include_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecommenderSystemConst.php");
-#require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageTeacher.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageTeacher.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageTeacherSettings.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudent.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudentSettings.php');
@@ -58,6 +58,13 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                     $page = new ilRecSysPageStudentSettings($this->ref_id);
                     $page->save_student_settings();
                     break;
+                case ilRecommenderSystemConst::CMD_STUDENT_RECOMMEND:
+                    $this->addTab();
+                    $this->ilTabs->setSubTabActive("recsys_student_overview");
+                    
+                    $page = new ilRecSysPageStudent($this->ref_id);
+                    $page->save_student_recommendations();
+                    break;
                 case ilRecommenderSystemConst::CMD_SHOW:
                 case ilRecommenderSystemConst::CMD_SHOW_STUDENT:
                     $this->addTab();
@@ -73,14 +80,22 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
         } 
         elseif ($this->isCurrentUserRecSysEnabled()){
             switch ($cmd) {
+                case ilRecommenderSystemConst::CMD_TEACHER_SAVE:
+                    #$this->checkPermission("write");
+                    $this->addTab();
+                    $this->ilTabs->setSubTabActive("recsys_teacher_overview");
+                    
+                    $page = new ilRecSysPageTeacher($this->ref_id);
+                    $page->save_material_tags();
+                    break;
                 case ilRecommenderSystemConst::CMD_SHOW_TEACHER:
                 case ilRecommenderSystemConst::CMD_SHOW:
                     #$this->checkPermission("read");
                     $this->addTab();
                     $this->ilTabs->setSubTabActive("recsys_teacher_overview");
                     
-                    #$page = new ilRecSysTeacher($this->ref_id);
-                    #$page->show_teacher();
+                    $page = new ilRecSysPageTeacher($this->ref_id);
+                    $page->show_course();
                     break;
 
                 case ilRecommenderSystemConst::CMD_SHOW_TEACHER_SETTINGS:
@@ -116,6 +131,18 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
         }
     }
 
+    function debug_to_console($data, $context = 'Debug in Console') {
+
+        // Buffering to solve problems frameworks, like header() in this and not a solid return.
+        ob_start();
+    
+        $output  = 'console.info(\'' . $context . ':\');';
+        $output .= 'console.log(' . json_encode($data) . ');';
+        $output  = sprintf('<script>%s</script>', $output);
+    
+        echo $output;
+    }
+
     private function actAsStudent(){
 
         $loggedinAsTeacher = $this->isCurrentUserCourseAdmin();
@@ -124,17 +151,18 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
 
         if (!$loggedinAsTeacher)
             return true;
-        if (!$teacherViewModeStudent)
+        if ($teacherViewModeStudent)
             return true;
         return False;
     }
 
     private function isCurrentUserRecSysEnabled(){
         
-        $ConfigModel = new ilRecSysConfig();
+        $ConfigModel = new ilRecSysModelConfig();
         $user_login = $this->ilUser->getLogin();
 
-        return $ConfigModel->isUserRecSysEnabled($user_login);
+        return True; #PLACEHOLDER
+        #return $ConfigModel->isUserRecSysEnabled($user_login);
     }
 
     private function isCurrentUserCourseAdmin(){

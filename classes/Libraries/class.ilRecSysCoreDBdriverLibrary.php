@@ -19,10 +19,10 @@ class ilRecSysCoreDBdriverLibrary{
     public function setUsername($username) { $this->username = $username; }
     public function setPassword($password) { $this->password = $password; }
     public function setApiUrl($apiurl) {
+        $this->apiurl = $apiurl;
         $this->servicePath = parse_url($apiurl, PHP_URL_PATH);
         $pathStart = strpos($apiurl, $this->servicePath);
         $this->domain = substr($apiurl, $pathStart);
-        $this->apiurl = $apiurl;
     }
     public function init($username, $password, $apiurl) {
         $this->setUsername($username);

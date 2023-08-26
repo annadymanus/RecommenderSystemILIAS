@@ -49,7 +49,6 @@ class ilRecSysPageStudentRecommender {
     private function getMaterialsFromCourse() {
         $materials = array();
         
-        //TODO_daniel improve, and get all Ressources directly from Course
         // Get Learning Objectives
         $objective_ids = ilCourseObjective::_getObjectiveIds($this->il_crs_id, true);
 

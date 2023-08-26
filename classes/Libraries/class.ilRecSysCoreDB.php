@@ -1,4 +1,6 @@
 <?php
+require_once('./Modules/File/classes/class.ilObjFileAccess.php');
+require_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDBdriverLibrary.php");
 
 class ilRecSysCoreDB {
 
