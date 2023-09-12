@@ -4,9 +4,6 @@
 
 class ilRecSysModelPresentation {
 
-    private static $instance;
-    private static $uniquecounter;
-
 
     private $presentation_id;
     private $obj_id;
@@ -20,7 +17,7 @@ class ilRecSysModelPresentation {
     //-----------------------------------------------------------------------------------
 
     //constructor
-    private function __construct($presentation_id, $obj_id, $start_slide, $end_slide, $difficulty, $rating_count)
+    public function __construct($presentation_id, $obj_id, $start_slide, $end_slide, $difficulty, $rating_count)
     {
         global $ilDB;
         $this->ilDB = $ilDB;
@@ -33,67 +30,53 @@ class ilRecSysModelPresentation {
 
     }
 
-    public static function getInstance() {
-        if (self::$instance === null) {
-            // set instance to latest Presentation stored in Table;
-            self::$uniquecounter = self::getLastPresentationId();
-            // see wether there is a latest Presentation stored in the Table
-            if(self::$uniquecounter == 0){
-                // initialize instance with a first dummy object not yet inserted
-                self::$instance = new self(self::$uniquecounter, 0, 0, 0, 0, 0);
-            } else {
-                // initialize everything with the last Presentation that was stored inside the database
-                $presentation = self::getPresentationById(self::$uniquecounter);
-                self::$instance = new self($presentation->presentation_id, $presentation->obj_id, $presentation->start_slide, $presentation->end_slide, $presentation->difficulty, $presentation->rating_count);
-            }
-        }
-        return self::$instance;
-    }
-    private function clone() {
-        // Private clone method to prevent cloning of the instance
+    public static function fetchByMaterialID($presentation_id){
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_p WHERE presentation_id = ".$ilDB->quote($presentation_id, "integer"));
+        $fetched_presentation = $ilDB->fetchObject($queryResult);
+        $presentation = new ilRecSysModelPresentation(
+            $fetched_presentation->presentation_id, 
+            $fetched_presentation->obj_id,
+            $fetched_presentation->start_slide,
+            $fetched_presentation->end_slide,
+            $fetched_presentation->difficulty, 
+            $fetched_presentation->rating_count);
+        return $presentation;
     }
 
-    private function __wakeup() {
-        // Private wakeup method to prevent unserialization of the instance
+    public static function fetchByObjID($obj_id, $from=null, $to=null){
+        global $ilDB;
+        if($from != null && $to != null){
+            $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_p WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_slide == ".$ilDB->quote($from, "integer")." AND end_slide == ".$ilDB->quote($to, "integer"));
+        }
+        else if($from == null && $to == null){
+            $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_p WHERE obj_id = ".$ilDB->quote($obj_id, "integer"));
+        }
+        else{
+            throw new Exception("Either both from and to have to be null or both have to be set");
+        }
+        //if query is empty, return null
+        if ($ilDB->numRows($queryResult) === 0) {
+            return null;
+        }
+            
+           
+        $presentations = array();
+        while($fetched_presentation = $ilDB->fetchObject($queryResult)){
+            $presentation = new ilRecSysModelPresentation(
+                $fetched_presentation->presentation_id, 
+                $fetched_presentation->obj_id,
+                $fetched_presentation->start_slide,
+                $fetched_presentation->end_slide,
+                $fetched_presentation->difficulty, 
+                $fetched_presentation->rating_count);
+            $presentations[] = $presentation;
+        }
+        return $presentations;
     }
+    
 
     // --------------------------------------------------------------
-
-        
-    /**
-     * class function that gets the lastWeblinkId-attribute from the table ui_uihk_recsys_m_c_w
-     */
-    private static function getLastPresentationId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT presentation_id FROM ui_uihk_recsys_m_c_f_p ORDER BY presentation_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_presentation_id = 0;
-        } else {
-            $last_presentation_id = $ilDB->fetchAssoc($queryResult);
-            $last_presentation_id = $last_presentation_id['presentation_id'];
-        }
-        return $last_presentation_id;
-    }
-
-    
-    /**
-     * class function that gets the last Presentation object from the table ui_uihk_recsys_m_c_f_p
-     */
-    public static function getPresentationById($presentation_id) {
-        $queryResult = self::$ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_p WHERE presentation_id = ".self::$ilDB->quote($presentation_id, "integer"));
-        $weblink = self::$ilDB->fetchObject($queryResult);
-        return $weblink;
-    }
-
-    /**
-     * class function that increments the unique counter of the class. This is done to produce unique ids for the ui_uihk_recsys_m_c_f_p table
-     */
-    public static function incrementUniquecounter() {
-        self::$uniquecounter ++;
-        return self::$uniquecounter;
-    }
-
-    // ----------------------------------------------------------------------
     /**
      * functions that implement queries to the db
      */
@@ -118,24 +101,24 @@ class ilRecSysModelPresentation {
      * put a new Presentation element in the table
      */
 
-     public function createPresentation($obj_id, $start_slide, $end_slide){
+     public function createPresentation() {
         $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_m_c_f_p"
                 . "(presentation_id, obj_id, start_slide, end_slide, difficulty, rating_count)"
                 . " VALUES (%s,%s,%s,%s,%s,%s)",
                 array("integer", "integer", "integer", "integer", "float", "integer"),
-                array(self::incrementUniquecounter(), 
-                      $obj_id,
-                      $start_slide,
-                      $end_slide,  
-                      0.0,          // difficulty
-                      0       // rating_count
+                array($this->presentation_id, 
+                      $this->obj_id,
+                      $this->start_slide,
+                      $this->end_slide,  
+                      $this->difficulty,          // difficulty
+                      $this->rating_count       // rating_count
                     ));
     }
 
     /**
      *  update the attributes of the presentation, give by its id
      */
-    public function updateWeblink($presentation_id, $start_slide, $end_slide, $difficulty, $rating_count) {
+    public function update($start_slide, $end_slide, $difficulty, $rating_count) {
         $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_m_c_f_p"
         ."SET"
             ." start_slide = %s"
@@ -144,12 +127,12 @@ class ilRecSysModelPresentation {
             ." ,rating_count = %s"
         ." WHERE presentation_id = %s",
     array("integer", "integer", "float", "integer", "integer"),
-    array($start_slide, $end_slide, $difficulty, $rating_count, $presentation_id)
+    array($start_slide, $end_slide, $difficulty, $rating_count, $this->presentation_id)
     );
     }
 
     /**
-     * delete Weblink with the given $presentation_id
+     * delete presentation with the given $presentation_id
      */
     public function deletePresentation($presentation_id)
     {   
@@ -207,11 +190,5 @@ class ilRecSysModelPresentation {
     public function incrementRatingCount() {
         $this->rating_count++;
     }
-
-
-
-
-
-
 
 }

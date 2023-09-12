@@ -10,7 +10,7 @@ require_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/util/class.ilRecSysListMaterials.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudentRecommender.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/class.ilRecommenderSystemPageGUI.php');
-
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageUtils.php');
 
 
 
@@ -112,11 +112,11 @@ class ilRecSysPageStudent {
     private function addModuleMaterials($tplMain) {
         $tpl = new ilTemplate("tpl.materials_student.html", true, true, self::PLUGIN_DIR);
         
-        $material_types = array("exc", "file", "link", "lm", "tst");
+        $material_types = ilRecSysPageUtils::getAllValidObjTypes();
         foreach ($material_types as $material_type){
 
             // Get Materials
-            $materials = $this->getItemsOfCourse($this->il_crs_id, $material_type);
+            $materials = ilRecSysPageUtils::getItemsOfCourse($this->CourseObject, $material_type);
 
             $ilObjGUI = new ilObjCourseGUI("", $this->crs_id, true, false);
             $CourseContent = new ilRecSysListMaterials($ilObjGUI);
@@ -126,17 +126,30 @@ class ilRecSysPageStudent {
                 continue;
             }
             foreach ($materials as $item) {
-                $tags = array(array(array("Topic1", "Topic2"), "From x to y"), array(array("Topic2"), "From x to y and some very long description and some very long description and some very long description and some very long description and some very long description"), array(array("Topic3","Topic4","Topic5"), "From x to y"));
-                foreach ($tags as $tag) {
-                    foreach ($tag[0] as $subtag){
+                $file_type = null;
+                if($material_type == "file"){
+                    $file_type = ilRecSysPageUtils::fileIsType($item['obj_id']);	
+                }
+                //$material_tags = ilRecSysPageUtils::getMaterialTagEntries($item['obj_id'], $file_type == null ?  $material_type : $file_type);
+                $material_tags = array(array(0,array("Semantic Knowledge", "Graphs and Networks", "Sublayer Performance Review Attacks"), array(3,5)), array(1,array("Topic2"), array(7,9)), array(2,array("Topic3","Topic4","Topic5"), array(11,13)));
+
+                //if no tags given, skip material
+                if($material_tags[0][1][0]==""){
+                    continue;
+                }
+                foreach ($material_tags as $material_tag) {
+                    foreach ($material_tag[1] as $subtag){
                         $tpl->setCurrentBlock("Subtags");
                         $tpl->setVariable("TAG", $subtag);
                         $tpl->parseCurrentBlock();
                     }
                     $tpl->setCurrentBlock("Tags");
                     $tpl->setVariable("TAG_SELECTED", False ? 'checked' : ''); #Query Student Selection (Student Selection Status)
-                    $tpl->setVariable("TAGS", implode("|", $tag[0]));
-                    $tpl->setVariable("COMMENT", $tag[1]);
+                    $tpl->setVariable("SECTION", $material_tag[0]);
+                    $tpl->setVariable("FROM", $material_tag[2][0]);
+                    $tpl->setVariable("TO", $material_tag[2][1]);
+                    $tpl->setVariable("MATERIAL_TYPE", $material_type);
+                    $tpl->setVariable("FILE_TYPE", $file_type);
                     $tpl->setVariable("ITEM_ID", $item['obj_id']);
                     $tpl->parseCurrentBlock();
                 }
@@ -151,43 +164,11 @@ class ilRecSysPageStudent {
         }
         $tpl->setVariable("RECOMMEND", $this->plugin->txt("recsys_student_recommend"));
         $tpl->setVariable("RECSYS_STUDENT_RECOMMEND", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_STUDENT_RECOMMEND));
-        $tplMain->setVariable("MOD_TO", $tpl->get());
+        $tplMain->setVariable("MATERIALS", $tpl->get());
         return $tplMain;
     }
 
-    
-    private function getItemsOfCourse($crs_ref_id, $type=null)
-    {
-        $courseObjects = $this->CourseObject->getSubItems();
-        
-        $courseObjects = $courseObjects['_all'];                // get all Items of this course
-        $courseObjects = $this->getAllSubItems($courseObjects, $type); // get also Items of folders
-        return $courseObjects;
-    }
-    
-    private function getAllSubItems($container, $type = null)
-    {             
-        if (!isset($container)) return [];  //return empty array if there is no container
-        
-        $items = array();
-        
-        foreach ($container as $item) {    
-          
-            if ($item['type'] == $type || $type == null) {
-                array_push($items, $item);
-            } else if ($item['type'] == 'fold') {
-                $ilObjFolder = new ilObjFolder($item['ref_id']);
-                $objects = $ilObjFolder->getSubItems();
-                $objects = $objects['_all'];
-                $items = array_merge($items, $this->getAllSubItems($objects, $type));
-            } else if ($item['type'] == 'grp') {
-                $ilObjGroup = new ilObjGroup($item['ref_id']);
-                $objects = $ilObjGroup->getSubItems();
-                $objects = $objects['_all'];            
-                $items = array_merge($items, $this->getAllSubItems($objects, $type));
-            }
-        }
-        return $items;
-    }
+
+
     
 }

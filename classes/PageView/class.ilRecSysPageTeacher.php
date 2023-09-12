@@ -10,10 +10,13 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/class.ilRecommenderSystemPageGUI.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelTags.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelScript.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelExercise.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelVideo.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelPresentation.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelWeblink.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelTagHandler.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelTagsPerMaterial.php');
-
-
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageUtils.php');
 /**
  * Handles the Commands of the Student Overview.
  *
@@ -32,6 +35,7 @@ class ilRecSysPageTeacher {
     private $RecSysCourse;
     #private $CoreDB;
     private $plugin;
+    private $tag_handler;
     
     
     public function __construct( $crs_id ) {
@@ -42,7 +46,7 @@ class ilRecSysPageTeacher {
         $this->il_crs_id    = ilObject::_lookupObjectId($crs_id);
         $this->CourseObject = new ilObjCourse($crs_id);
         $this->ilUser       = $ilUser;
-
+        $this->tag_handler  = ilRecSysModelTagHandler::getInstance();
 
         $this->RecSysCourse   = ilRecSysModelCourse::getOrCreateRecSysCourse($crs_id);
         #$this->CoreDB          = null;//new ilRecSysCoreDB("admin");
@@ -87,35 +91,83 @@ class ilRecSysPageTeacher {
         $types = array();
         foreach ($_POST as $key => $value) {
             //parse what is posted
-            list($obj_id, $section_id, $column) = explode("_", $key);
-            
-            if(!ctype_digit($obj_id)){
-                //Here obj_id is material type and $section_id the obj_id
-                if($obj_id == "file"){
-                    if($column == "isscript"){
-                        $types[$section_id] = "script";
+            list($column_1, $column_2, $column_3) = explode("_", $key);
+
+            //Here column_1 is obj id and $column_2 the material type and $column_3 the file type if mat is file
+            if($column_3 == "file_type"){
+                $types[$column_2] = $value;
+            }
+            else if(ctype_digit($column_1) & ctype_digit(trim($column_2, "-"))){
+                //Here column_1 is obj_id and column_2 is section_id
+                if (!array_key_exists($column_1, $material_tags)){
+                    $material_tags[$column_1] = array();
+                }
+                if (!array_key_exists($column_2, $material_tags[$column_1])){
+                    $material_tags[$column_1][$column_2] = array();
+                    $material_tags[$column_1][$column_2]["tags"] = array();
+                }
+                //this pushed value is the fromto/desc field
+                if (str_contains($column_3, 'desc')){
+                    if ($column_3 == "descfrom"){
+                        if (array_key_exists("fromto", $material_tags[$column_1][$column_2])){
+                            $material_tags[$column_1][$column_2]["fromto"][0] = $value;
+                        }
+                        else{
+                            $material_tags[$column_1][$column_2]["fromto"] = array($value, "0");
+                        }
                     }
-                    else if($column == "isexercise"){
-                        $types[$section_id] = "exc_sheet";
+                    else if($column_3 == "descto"){
+                        if (array_key_exists("fromto", $material_tags[$column_1][$column_2])){
+                            $material_tags[$column_1][$column_2]["fromto"][1] = $value;
+                        }
+                        else{
+                            $material_tags[$column_1][$column_2]["fromto"] = array("0", $value);
+                        }
+                    }
+                    else if($column_3 == "descfrommin"){
+                        if (array_key_exists("fromto", $material_tags[$column_1][$column_2])){
+                            $material_tags[$column_1][$column_2]["fromto"][0] = $value.$material_tags[$column_1][$column_2]["fromto"][0];
+                        }
+                        else{
+                            $material_tags[$column_1][$column_2]["fromto"] = array($value, "");
+                        }
+                    }
+                    else if($column_3 == "descfromsec"){
+                        if (array_key_exists("fromto", $material_tags[$column_1][$column_2])){
+                            $material_tags[$column_1][$column_2]["fromto"][0] = $material_tags[$column_1][$column_2]["fromto"][0].":".$value;
+                        }
+                        else{
+                            $material_tags[$column_1][$column_2]["fromto"] = array($value, "");
+                        }
+                    }
+                    else if($column_3 == "desctomin"){
+                        if (array_key_exists("fromto", $material_tags[$column_1][$column_2])){
+                            $material_tags[$column_1][$column_2]["fromto"][1] = $value.$material_tags[$column_1][$column_2]["fromto"][1];
+                        }
+                        else{
+                            $material_tags[$column_1][$column_2]["fromto"] = array("", $value);
+                        }
+                    }
+                    else if($column_3 == "desctosec"){
+                        if (array_key_exists("fromto", $material_tags[$column_1][$column_2])){
+                            $material_tags[$column_1][$column_2]["fromto"][1] = $material_tags[$column_1][$column_2]["fromto"][1].":".$value;
+                        }
+                        else{
+                            $material_tags[$column_1][$column_2]["fromto"] = array("", $value);
+                        }
+                    }
+                    else{
+                        $material_tags[$column_1][$column_2]["fromto"] = array($value, $value);
                     }
                 }
-                continue;
+                //this value is a tag
+                else if(ctype_digit($column_3)){
+                    if($value != ""){
+                        array_push($material_tags[$column_1][$column_2]["tags"], $value);
+                    }
+                }
             }
-            if (!array_key_exists($obj_id, $material_tags)){
-                $material_tags[$obj_id] = array();
-            }
-            if (!array_key_exists($section_id, $material_tags[$obj_id])){
-                $material_tags[$obj_id][$section_id] = array();
-                $material_tags[$obj_id][$section_id]["tags"] = array();
-            }
-            //this pushed value is the comment field
-            if ($column == 'desc'){
-                $material_tags[$obj_id][$section_id]["desc"] = $value;
-            }
-            //this value is a tag
-            else if(ctype_digit($column)){
-                array_push($material_tags[$obj_id][$section_id]["tags"], $value);
-            }
+            
         }
 
         //fill in missing types
@@ -131,104 +183,39 @@ class ilRecSysPageTeacher {
         foreach ($material_tags as $obj_id => $sections){
             foreach ($sections as $section_id => $desc_tags){
                 if ($section_id < 0 && empty($desc_tags["tags"])){
-                    unset($material_tags[$obj_id][$section_id]);
+                    unset($material_tags[$column_1][$section_id]);
                 }
             }
         }
-
-        //$some_model = new ilRecSysModelSomeModel();
 
         //iterate over materials
         foreach ($material_tags as $obj_id => $sections){
             //iterate over sections
             foreach ($sections as $section_id => $desc_tags){
                 //save the tag in the database
-                $this->debug_to_console($section_id, "$section_id");
-                if ($desc_tags["desc"] == ""){
-                    $from_to = null;
+                if(!array_key_exists("fromto", $desc_tags)){
+                    $desc_tags["fromto"] = null;
                 }
-                else{
-                    $from_to = explode(" ",  $desc_tags["desc"]); //temporal solution 
-                }
-                $this->debug_to_console(array($obj_id, $section_id, $desc_tags["tags"], $types[$obj_id], $from_to), "create taghandler");
-                $this->debug_to_console("end", "end");
-                $tag_handler = new ilRecSysModelTagHandler($obj_id, $section_id, $desc_tags["tags"], $types[$obj_id], $from_to);
-                $tag_handler->update_db();
+                //$this->tag_handler->update_db($obj_id, $section_id, $desc_tags["tags"], $types[$obj_id], $desc_tags["fromto"]);
             }
         }
-        
-        //I dont know why this is necessary ...
-        //$this->CoreDB = new ilRecSysCoreDB("admin");
-        //$this->CoreDB->createCourse( $this->RecSysCourse );
-        //$this->CoreDB->checkLastConnection();
 
         ilUtil::sendSuccess($this->plugin->txt("recsys_saved_sucessfully"), true);
         
         $this->show_course();
     }
 
-    private function fileIsType($obj_id){
-        $material = ilRecSysModelScript::fetchByObjID($obj_id);
-        if($material != null){
-            return "script";
-        }
-        //continue try erroring other types
-
-    }
-
-    private function getMaterialTagEntries($obj_id, $material_type) {
-        //In shape [[section_id, [tag1, tag2, tag3], from_to], ...] 
-        //where from_to is the information e.g. for scripts it would be start_page, end_page, etc.
-        //Right now, from_to is displayed just as a text input, but later on should be displayed with appropriate input fields
-        //...Try at first to make it work for scripts and later for other material types. Start by parsing from_to into string for comment field and later parse comment back into proper values (ofc later replace with appropriate fields)
-        
-        $material_tag_entries = array();
-
-        
-        if($material_type == "file"){
-            $material_type = $this->fileIsType($obj_id);
-        }
-        $this->debug_to_console($material_type, "material_type");
-        switch ($material_type){
-            case "script":
-                $materials = ilRecSysModelScript::fetchByObjID($obj_id);
-                $this->debug_to_console($materials, "materials");
-                foreach($materials as $material){
-                    $from_to = $material->getStart_page()." ".$material->getEnd_page();
-                    $tags = ilRecSysModelTagsPerMaterial::getAllTagIds($material->get_id(), $material_type);
-                    if(!empty($tags)){
-                        $tag_names = array_map(function($tag){return ilRecSysModelTags::fetchTagById($tag)->getTag_name();}, $tags);
-                        $material_tag_entries[] = array($material->get_id(), $tag_names, $from_to);
-                    }
-
-                }
-                break;
-        }
-        $this->debug_to_console($material_tag_entries, "material_tag_entries");
-        $this->debug_to_console($material_type, "material_type");
-        //check if empty array
-        if(empty($material_tag_entries)){
-            $material_tag_entries = array(array(-1, array(), ""));
-        }
-        #$material_tag_entries = 
-        return $material_tag_entries;
-    }
-
-    private function getAllValidObjTypes(){
-        //get all material types that are supported by recsys
-        $material_types = array("file"); //"exc", "file", "link", "lm", "tst");
-        return $material_types;
-    }
+       
 
     private function getTeacherMaterialTemplate() {
         $tpl = new ilTemplate("tpl.teacher.html", true, true, self::PLUGIN_DIR);
         
-        $material_types = $this->getAllValidObjTypes();
+        $material_types = ilRecSysPageUtils::getAllValidObjTypes();
         foreach ($material_types as $material_type){
 
             
             // Get Materials
-            $materials = $this->getItemsOfCourse($this->il_crs_id, $material_type);
+            $materials = ilRecSysPageUtils::getItemsOfCourse($this->CourseObject, $material_type);
 
 
             $ilObjGUI = new ilObjCourseGUI("", $this->crs_id, true, false);
@@ -238,25 +225,26 @@ class ilRecSysPageTeacher {
             if(!count($materials)) {
                 continue;
             }
+
+
             $all_tags = ilRecSysModelTags::fetchAllTagNames();
+            $all_tags[] = "";
+
+
             foreach ($materials as $item) {
-                $material_tags = $this->getMaterialTagEntries($item['obj_id'], $material_type);
                 
-                $is_script = false;
-                if($material_type == "file" && $this->fileIsType($item['obj_id']) == "script"){
-                    $is_script = true;
-                }
-                $is_exc_sheet = false;
-                if($material_type == "file" && $this->fileIsType($item['obj_id']) == "exc_sheet"){
-                    $is_exc_sheet = true;
+                $file_type = null;
+                if($material_type == "file"){
+                    $file_type = ilRecSysPageUtils::fileIsType($item['obj_id']);	
                 }
 
-                //replace row with actual database row ids instead of just an iterator
+                $material_tags = ilRecSysPageUtils::getMaterialTagEntries($item['obj_id'], $file_type == null ?  $material_type : $file_type);
+                
+                //replace section with actual database section ids instead of just an iterator
                 foreach ($material_tags as $tags) {
                     $counter = 0;
-                    $row = $tags[0];
+                    $section = $tags[0];
                     foreach ($tags[1] as $subtag){
-                        $tpl->setCurrentBlock("Subtags");
                         foreach ($all_tags as $all_tag){
                             $tpl->setCurrentBlock("Alltags");
                             $tpl->setVariable("ALL_TAG", $all_tag);
@@ -264,10 +252,12 @@ class ilRecSysPageTeacher {
                             $tpl->parseCurrentBlock();
                         }
                         //get index of tag in all tags for selection default
+                        $tpl->setCurrentBlock("Subtags");
+
                         $tpl->setVariable("TAG", $subtag);
                         $tpl->setVariable("ITEM_ID", $item['obj_id']);
                         $tpl->setVariable("I", $counter);
-                        $tpl->setVariable("ROW", $row);
+                        $tpl->setVariable("SECTION", $section);
                         $tpl->parseCurrentBlock();
                         $counter++;
                     }
@@ -275,71 +265,45 @@ class ilRecSysPageTeacher {
                     $tpl->setVariable("I", $counter);
                     $tpl->setVariable("ADD_TAG", "Add Tag");#$this->plugin->txt("recsys_add_tag"));
                     $tpl->setVariable("NEW_TAG", "New Tag");#$this->plugin->txt("recsys_new_tag"));
-                    $tpl->setVariable("ROW", $row);
-                    $tpl->setVariable("COMMENT", $tags[2]);
+                    $tpl->setVariable("SECTION", $section);
+                    $tpl->setVariable("FROM", $tags[2][0]);
+                    $tpl->setVariable("TO", $tags[2][1]);
                     $tpl->setVariable("ITEM_ID", $item['obj_id']);
-                    $tpl->setVariable("SAVE", "Save");#$this->plugin->txt("recsys_save"));
-                    $tpl->setVariable("ADD_ROW", "Add Row");#$this->plugin->txt("recsys_new_row"));
+                    $tpl->setVariable("SAVING", $this->plugin->txt("recsys_teacher_save"));
+                    $tpl->setVariable("ADD_SECTION", "Add Row");#$this->plugin->txt("recsys_new_section"));
                     $tpl->setVariable("MATERIAL_TYPE", $material_type);
-                    $tpl->setVariable("IS_SCRIPT", $is_script ? "checked" : "");
-                    $tpl->setVariable("IS_EXERCISE", $is_exc_sheet ? "checked" : "");
+                    $tpl->setVariable("FILE_TYPE", $file_type);
+
 
                     $tpl->parseCurrentBlock();
-                    $row++; //remove later
                 }
                 $tpl->setCurrentBlock("Materials");
                 $tpl->setVariable("MATERIAL_TYPE", $material_type);
-                $tpl->setVariable("IS_SCRIPT", $is_script ? "checked" : "");
-                $tpl->setVariable("IS_EXERCISE", $is_exc_sheet ? "checked" : "");
+                
+                //Maybe solve with iterator in future
+                $tpl->setVariable("IS_SCRIPT", $file_type=="script" ? "selected" : "");
+                $tpl->setVariable("IS_EXERCISE", $file_type=="excsheet" ? "selected" : "");
+                $tpl->setVariable("IS_VIDEO", $file_type=="video" ? "selected" : "");
+                $tpl->setVariable("IS_PRESENTATION", $file_type=="presentation" ? "selected" : "");
+
                 $itemHtml = $CourseContent->getHtmlItem($item);
-                $tpl->setVariable("ROW", -1);
+                $tpl->setVariable("SECTION", $material_tags[0][0] == -1 ? -2 : -1); //set to -2 if empty entry already exists
                 $tpl->setVariable("ITEM_ID", $item['obj_id']); //TODO: check if this is correct
                 $tpl->setVariable("ITEM_HTML", $itemHtml);
-                $tpl->parseCurrentBlock();                
+                $tpl->parseCurrentBlock();
+                //$item_count++;                
             }
             $tpl->setCurrentBlock("Types");
             $tpl->setVariable("MATERIAL_TYPE", $material_type);
             $tpl->parseCurrentBlock(); 
         }
-        $tpl->setVariable("SAVE", $this->plugin->txt("recsys_teacher_save"));
+        $tpl->setVariable("SAVING", $this->plugin->txt("recsys_teacher_save"));
         $tpl->setVariable("RECSYS_TEACHER_SAVE", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_TEACHER_SAVE));
         return $tpl;
     }
 
     
-    private function getItemsOfCourse($crs_ref_id, $type=null)
-    {
-        $courseObjects = $this->CourseObject->getSubItems();
-        
-        $courseObjects = $courseObjects['_all'];                // get all Items of this course
-        $courseObjects = $this->getAllSubItems($courseObjects, $type); // get also Items of folders
-        return $courseObjects;
-    }
     
-    private function getAllSubItems($container, $type = null)
-    {             
-        if (!isset($container)) return [];  //return empty array if there is no container
-        
-        $items = array();
-        
-        foreach ($container as $item) {    
-          
-            if ($item['type'] == $type || $type == null) {
-                array_push($items, $item);
-            } else if ($item['type'] == 'fold') {
-                $ilObjFolder = new ilObjFolder($item['ref_id']);
-                $objects = $ilObjFolder->getSubItems();
-                $objects = $objects['_all'];
-                $items = array_merge($items, $this->getAllSubItems($objects, $type));
-            } else if ($item['type'] == 'grp') {
-                $ilObjGroup = new ilObjGroup($item['ref_id']);
-                $objects = $ilObjGroup->getSubItems();
-                $objects = $objects['_all'];            
-                $items = array_merge($items, $this->getAllSubItems($objects, $type));
-            }
-        }
-        return $items;
-    }
 
     /*
     public function save_tags(){
@@ -352,7 +316,7 @@ class ilRecSysPageTeacher {
         $Tag->save();
     }
 
-    public function delete_row(){
+    public function delete_section(){
         
         if (isset($_POST['tag_id']) && is_numeric($_GET['tag_id'])){
             $tag_id = $_GET['tag_id'];
@@ -380,13 +344,13 @@ class ilRecSysPageTeacher {
             // Static Texts
           
             $tpl->setVariable("TXT_MODULE_BUTTON_SAVE_TAGS", $this->plugin->txt("recsys_button_save_tags"));
-            $tpl->setVariable("TXT_MODULE_BUTTON_DELETE_ROW", $this->plugin->txt("recsys_button_delete_row"));
-            $tpl->setVariable("TXT_MODULE_ADD_ROW", $this->plugin->txt("recsys_button_add_row"));        
+            $tpl->setVariable("TXT_MODULE_BUTTON_DELETE_SECTION", $this->plugin->txt("recsys_button_delete_section"));
+            $tpl->setVariable("TXT_MODULE_ADD_SECTION", $this->plugin->txt("recsys_button_add_section"));        
             
             // Buttons
             $tpl->setVariable("RECSYS_TAG_SAVE", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SAVE_TAGS)); 
-            $tpl->setVariable("RECSYS_TAG_DELETE", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_DELETE_ROW));
-            $tpl->setVariable("RECSYS_TAG_ADD", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_ADD_ROW));
+            $tpl->setVariable("RECSYS_TAG_DELETE", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_DELETE_SECTION));
+            $tpl->setVariable("RECSYS_TAG_ADD", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_ADD_SECTION));
             
             // Default visibility (goal template is not shown)
             $tpl->setVariable("GOAL_TEMPLATE_VISIBILITY", "hidden");          
@@ -394,7 +358,7 @@ class ilRecSysPageTeacher {
             $tpl->parseCurrentBlock();
         }
 
-        $tplMain->setVariable("MOD_ROW", $tpl->get());
+        $tplMain->setVariable("MOD_SECTION", $tpl->get());
         return $tplMain;
     }
     */

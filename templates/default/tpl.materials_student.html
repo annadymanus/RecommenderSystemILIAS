@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/recsys_2.css">
-<link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/accordion.css">
+<link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/accordion.css"-->
 <link rel="stylesheet" href="./templates/default/delos.css">
 
 
@@ -23,14 +23,14 @@
 			</div>
 			<table class="table table-striped fullwidth">
 			<!-- BEGIN Tags -->
-				<tr title="{TAG}">
-					<td style="width: 10%"><input name="{ITEM_ID}_{TAGS}" type="checkbox" {TAG_SELECTED} ></input></td>
-					<td style="width: 100%; display:flex">
+				<tr title="{TAG}" style="display:flex">
+					<td style="width: 10%"><input name="{ITEM_ID}_{SECTION}" type="checkbox" {TAG_SELECTED} ></input></td>
+					<td style="width: 100%; display: flex; flex-direction: row; flex-wrap: wrap;">
 						<!-- BEGIN Subtags -->
-						<div style="margin-right: 5px;">{TAG}</div>
+						<div style="display: flex; margin-right: 5px; margin-bottom: 5px; padding: 4px; box-shadow: 0px 2px 2px 0px gray; color: white ; background-color: #4c6586;">{TAG}</div>
 						<!-- END Subtags -->
 					</td>
-					<td style="width: 70%;">{COMMENT}</td>
+					<td class="descfield" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" value="{FROM}_{TO}" style="display:flex"><div></div><input name="{ITEM_ID}_{SECTION}_desc"></input></td>
 				</tr>	
 			<!-- END Tags -->
 			</table>
@@ -42,6 +42,7 @@
 </form>
 
 <script>
+
 	var acc = document.getElementsByClassName("accordion");
 	var i;
 	
@@ -56,4 +57,59 @@
 		}
 	  });
 	}
+
+	var descfields = document.getElementsByClassName("descfield");
+	//based on the id of the descfield, set the placeholder
+
+	for (var i = 0; i < descfields.length; i++) {
+		from_to = descfields[i].getAttribute("value").split("_");
+		update_descfieldtype(descfields[i], from_to[0], from_to[1]);
+	}
+
+	function update_descfieldtype(descfield, from="", to=""){
+		var type = descfield.id.split("_")[1];
+		var filetype = descfield.id.split("_")[2];
+		var item_id = descfield.children[1].name.split("_")[0];
+		var section = descfield.children[1].name.split("_")[1];
+		if (type == "file") {
+			if (filetype == "excsheet") {
+				descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
+				+ '<div style="margin: auto auto auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desc" >' + from + '</div>';
+			}
+			else if(filetype == "video"){
+				frommin = from.split(":")[0];
+				fromsec = from.split(":")[1];
+				tomin = to.split(":")[0];
+				tosec = to.split(":")[1];
+				descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Time </div>'
+					+ '<div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_descfrommin">' + frommin +'</div>'
+					+ '<div style="margin: auto; text-align: center;">:</div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_descfromsec">' + fromsec +'</div>'
+					+ '<div style="margin: auto; text-align: center;"> - </div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desctomin">' + tomin + '</div>'
+					+ '<div style="margin: auto; text-align: center;">:</div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desctosec">' + tomin + '</div>'
+			}
+			else{
+				input_names = {"script": "Page", "presentation": "Slide"}
+				descfield.innerHTML = '<div style="margin: auto; width:fit-content">' + input_names[filetype]
+					+ '</div><div style="text-align: center; margin: auto 5px auto 5px; width:40px; width:40px;" name="' + item_id + '_' + section + '_descfrom">' + from + '</div>'
+					+ '<div style="margin: auto; text-align: center;"> - </div>'
+					+ '<div style="text-align: center; margin: auto 5px auto 5px; width:40px;" name="' + item_id + '_' + section + '_descto">' + to + '</div>';
+					console.log(descfield.innerHTML);
+			}
+		}
+		else if (type == "webr") {
+			//weblink
+			descfield.innerHTML = null;
+		}
+		else if (type == "exc") {
+			descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
+				+ '<div style="margin: auto auto auto 5px; width:40px;" name="' + item_id + '_' + section + '_desc" >' + from + '</div>';
+		}
+		else if (type == "test") {
+			descfield.innerHTML = "";
+		}
+		else if (type == "bibliography") {
+			descfield.innerHTML = "";
+		}
+	}
+
 </script>

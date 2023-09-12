@@ -3,7 +3,6 @@
 <link rel="stylesheet" href="./templates/default/delos.css">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-TEACHER
 <form id="form_recsys" role="form"
 	action="{RECSYS_TEACHER_SAVE}"
 	method="post" 
@@ -16,177 +15,175 @@ TEACHER
 	<div class="panel">
 		<!-- BEGIN Materials  -->
 		<div class="recsys-lo container-fluid" style="margin: 5px">
-			<div class="row recsys-lo-material">
+			<div class="section recsys-lo-material">
 				<div>
 					{ITEM_HTML}
 				</div>
-				<div class="isexercisecheckbox" id="{MATERIAL_TYPE}_{ITEM_ID}_isexercise">
-					<input name="{MATERIAL_TYPE}_{ITEM_ID}_isexercise" style="margin-left: 10px;" type="checkbox" {IS_EXERCISE}> Is Exercise Sheet </input>
-				</div>
-				<div class="isscriptcheckbox" id="{MATERIAL_TYPE}_{ITEM_ID}_isscript">
-					<input name="{MATERIAL_TYPE}_{ITEM_ID}_isscript" style="margin-left: 10px;" type="checkbox" {IS_SCRIPT}> Is Script </input>
+				<div style="display: flex">
+					<div style="margin-left: 20px; margin-right: 10px;"> Material Type: </div>
+					<select class="filetypeselector" name="{MATERIAL_TYPE}_{ITEM_ID}_filetype" style="max-width: 100px;">
+						<option style="overflow: hidden; text-overflow:ellipsis" value="excsheet" {IS_EXERCISE}>Exercise</option>
+						<option style="overflow: hidden; text-overflow:ellipsis" value="script" {IS_SCRIPT}>Script</option>
+						<option style="overflow: hidden; text-overflow:ellipsis" value="presentation" {IS_PRESENTATION}>Presentation</option>
+						<option style="overflow: hidden; text-overflow:ellipsis" value="video" {IS_VIDEO}>Video</option>
+					</select>
 				</div>
 			</div>
 			<table class="table table-striped fullwidth" id="{ITEM_ID}_table">
 			<!-- BEGIN Tags -->
-				<tr class="rowbox" id="{ITEM_ID}_{ROW}">
-					<!--td style="width: 10%"><input name="{ITEM_ID}_{TAG}" type="checkbox" {TAG_SELECTED} ></input></td-->
+				<tr class="sectionbox" id="{ITEM_ID}_{SECTION}" style="display: flex">
 					<td style="width: 100%; display:flex">
-						<div style="display: flex;" id="{ITEM_ID}_{ROW}_tagholder" name="{I}">
+						<div style="display: flex;" id="{ITEM_ID}_{SECTION}_tagholder" name="{I}">
 						<!-- BEGIN Subtags -->
-							<div class="tagbox" id="{ITEM_ID}_{ROW}_{I}_box" style="display:flex">
-								<select class="selector" name="{ITEM_ID}_{ROW}_{I}" style="max-width: 100px;">
+							<div class="tagbox" id="{ITEM_ID}_{SECTION}_{I}_box" style="display:flex">
+								<select class="selector" name="{ITEM_ID}_{SECTION}_{I}" style="width: 100px; ">
 									<!-- BEGIN Alltags -->
 									<option style="overflow: hidden; text-overflow:ellipsis"  value="{ALL_TAG}" {TAG_SELECTED}>{ALL_TAG}</option>
 									<!-- END Alltags -->
 								</select>
 								<input type="button" style=" background-color: transparent; font-size: 130%; align-self: center; width:20px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
-									class="material-icons btn" value="delete" id="{ITEM_ID}_{ROW}_{I}_delete" onclick="removeTag(this.id);" />
+									class="material-icons btn" value="delete" id="{ITEM_ID}_{SECTION}_{I}_delete" onclick="removeTag(this.id);" />
 							</div>
 						<!-- END Subtags -->
 						
-							<input class="newtagfield" style="margin-right: 5px; width:100px; display: none" id="{ITEM_ID}_{ROW}_newtag" type="text" onfocusout="newTag(this.id, this.value);"/>
+							<input class="newtagfield" style="margin-right: 5px; width:100px; display: none" id="{ITEM_ID}_{SECTION}_newtag" type="text" onfocusout="newTag(this.id, this.value);"/>
 						</div>
-						<input type="button" style="margin-left: auto; margin-right: 5px" class="btn btn-default btn-sm" value="{ADD_TAG}" id="{ITEM_ID}_{ROW}_add" onclick="addTag(this.id);"/>
-						<input type="button" style="margin-right: 5px" class="btn btn-default btn-sm" value="{NEW_TAG}" id="{ITEM_ID}_{ROW}_create" onclick="showNewTag(this.id);"/>
+						<input type="button" style="margin-left: auto; margin-right: 5px" class="btn btn-default btn-sm" value="{ADD_TAG}" id="{ITEM_ID}_{SECTION}_add" onclick="addTag(this.id);"/>
+						<input type="button" style="margin-right: 5px" class="btn btn-default btn-sm" value="{NEW_TAG}" id="{ITEM_ID}_{SECTION}_create" onclick="showNewTag(this.id);"/>
 					</td>
 					<!--Make distinction on material types and on types of file-->
-					<td class="descfield" id="{MATERIAL_TYPE}_{IS_EXERCISE}_{IS_SCRIPT}" style="width: 70%;"><input style="width: 100%" name="{ITEM_ID}_{ROW}_desc" type="text"></input></td>
+					<td class="descfield" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" value="{FROM}_{TO}" style="display:flex"><div></div><input name="{ITEM_ID}_{SECTION}_desc"></input></td>
 					<td><input type="button" style=" background-color: transparent; font-size: 180%; align-self: center; width:25px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
-						class="material-icons btn" value="deleterow" id="{ITEM_ID}_{ROW}_deleterow" onclick="removeRow(this.id);" />
+						class="material-icons btn" value="deletesection" id="{ITEM_ID}_{SECTION}_deletesection" onclick="removeRow(this.id);" /></td>
 				</tr>	
 
 			<!-- END Tags -->
 			</table>		
 
-			<input style="margin-bottom: 5px; margin-left: 5px;" class="btn btn-default btn-sm" type="button" value="{ADD_ROW}" id="{ITEM_ID}_{ROW}_addrow" onclick="addRow(this.id);"  />
+			<input style="margin-bottom: 5px; margin-left: 8px;" class="btn btn-default btn-sm" type="button" value="{ADD_SECTION}" id="{ITEM_ID}_{SECTION}_addsection" onclick="addRow(this.id);"  />
 		</div> 
 		<!-- END Materials -->
 	</div>
 	<!-- END Types -->
-	<input class="btn btn-default" style="width: 100%; padding: 18px;" type="submit" name="cmd[save]" value="{SAVE}"></input>
+	<input class="btn btn-default" style="width: 100%; padding: 18px;" type="submit" name="cmd[save]" value="{SAVING}"></input>
 </form>
 
 
-<div style="display:none">
-	<tr class="rowbox" id="x_x">
-		<td style="width: 100%; display:flex">
-			<div style="display: flex;" id="x_x_tagholder" name="x">
-				<div class="tagbox" id="x_x_x_box" style="display:flex">
-					<select class="selector" name="x_x_x" style="max-width: 100px;">
-						<option style="overflow: hidden; text-overflow:ellipsis"  value=" " > </option>
-					</select>
-					<input type="button" style=" background-color: transparent; font-size: 130%; align-self: center; width:20px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
-						class="material-icons btn" value="delete" id="x_x_x_delete" onclick="removeTag(this.id);" />
-				</div>			
-				<input class="newtagfield" style="margin-right: 5px; width:100px; display: none" id="x_x_newtag" type="text" onfocusout="newTag(this.id, this.value);"/>
-			</div>
-			<input type="button" style="margin-left: auto; margin-right: 5px" class="btn btn-default btn-sm" value="x" id="x_x_add" onclick="addTag(this.id);"/>
-			<input type="button" style="margin-right: 5px" class="btn btn-default btn-sm" value="x" id="x_x_create" onclick="showNewTag(this.id);"/>
-		</td>
-		<!--Make distinction on material types and on types of file-->
-
-		<td class="descfield" style="width: 70%;"><input style="width: 100%" name="x_x_desc" type="text"></input></td>
-		<td><input type="button" style=" background-color: transparent; font-size: 180%; align-self: center; width:25px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
-			class="material-icons btn" value="deleterow" id="x_x_deleterow" onclick="removeRow(this.id);" />
-	</tr>
-</div>
-
-<script>
-
-	
-
-
-	var acc = document.getElementsByClassName("accordion");
-	var i;
-	
-	for (i = 0; i < acc.length; i++) {
-	  acc[i].addEventListener("click", function() {
-		this.classList.toggle("active-panel");
-		var panel = this.nextElementSibling;
-		if (panel.style.maxHeight) {
-		  panel.style.maxHeight = null;
-		} else {
-		  panel.style.maxHeight = panel.scrollHeight + "px";
+<script>	
+	function render_accordion(){
+		var acc = document.getElementsByClassName("accordion");
+		var i;
+		
+		for (i = 0; i < acc.length; i++) {
+		  acc[i].addEventListener("click", function() {
+			this.classList.toggle("active-panel");
+			var panel = this.nextElementSibling;
+			if (panel.style.maxHeight) {
+			  panel.style.maxHeight = null;
+			} else {
+			  panel.style.maxHeight = panel.scrollHeight + "px";
+			}
+		  });
 		}
-	  });
 	}
+
+	function update_height_of_active_panel(){
+		var acc = document.getElementsByClassName("accordion");
+		var i;
+		
+		for (i = 0; i < acc.length; i++) {
+			if (acc[i].classList.contains("active-panel")){
+				var panel = acc[i].nextElementSibling;
+				panel.style.maxHeight = panel.scrollHeight + "px";
+			}
+		}
+	}
+
+	render_accordion()
 	prevent_submit_on_textfield_enter("newtagfield");
 	prevent_submit_on_textfield_enter("descfield");
 
-	var exercise_checkboxes = document.getElementsByClassName("isexercisecheckbox");
+	var filetypeselectors = document.getElementsByClassName("filetypeselector");
 	//set invisible if not material_type=file
-	for (var i = 0; i < exercise_checkboxes.length; i++) {
-		if (exercise_checkboxes[i].id.split("_")[0] != "file") {
-			exercise_checkboxes[i].style.display = "none";
-			exercise_checkboxes[i].innerHTML = "";
-		}
-	}
-	var script_checkboxes = document.getElementsByClassName("isscriptcheckbox");
-	//set invisible if not material_type=file
-	for (var i = 0; i < script_checkboxes.length; i++) {
-		if (script_checkboxes[i].id.split("_")[0] != "file") {
-			script_checkboxes[i].style.display = "none";
-			script_checkboxes[i].innerHTML = "";
+	for (var i = 0; i < filetypeselectors.length; i++) {
+		if (filetypeselectors[i].name.split("_")[0] != "file") {
+			filetypeselectors[i].parentElement.style.display = "none";
 		}
 	}
 
-	var descfield_type = document.getElementsByClassName("descfield");
-	console.log("tutaj jest descfield");
-	console.log(descfield_type);
+	var descfields = document.getElementsByClassName("descfield");
 	//based on the id of the descfield, set the placeholder
-	for (var i = 0; i < descfield_type.length; i++) {
-		console.log(descfield_type[i]);
-		//var id = descfield_type[i].id;
-		var type = descfield_type[i].id.split("_")[0];
-		var is_exercise = descfield_type[i].id.split("_")[1];
-		var is_script = descfield_type[i].id.split("_")[2];
-		console.log("id" + descfield_type[i].id);
-		console.log("type"+ type);
-		console.log("is exercise" + is_exercise);
-		console.log("is script" + is_script);
-		if (type == "file") {
-			console.log("tutaj jest file");
-			if (is_exercise == "checked") {
-				console.log("exc_sheet");
-				//"Exercise Sheet"
-				descfield_type[i].innerHTML = '<input style="width: 100%" name="{ITEM_ID}_{ROW}_desc" type="number"></input>';
-			}
-			else if (is_script == "checked") {
-				console.log("tutaj jest script");
-				//"Script"
-				descfield_type[i].innerHTML = '<input style="width: 50%" name="{ITEM_ID}_{ROW}_desc" type="number"></input>';
+	for (var i = 0; i < descfields.length; i++) {
+		from_to = descfields[i].getAttribute("value").split("_");
+		update_descfieldtype(descfields[i], from_to[0], from_to[1]);
+	}
 
+	function update_descfieldtype(descfield, from="", to=""){
+		var type = descfield.id.split("_")[1];
+		var filetype = descfield.id.split("_")[2];
+		var item_id = descfield.children[1].name.split("_")[0];
+		var section = descfield.children[1].name.split("_")[1];
+		if (type == "file") {
+			if (filetype == "excsheet") {
+				descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
+				+ '<input style="margin-left: 5px; width:50px" name="' + item_id + '_' + section + '_desc" type="number" value=' + from + '></input>';
 			}
-			else {
-				console.log("file");
-				//Default "from - to" field 
-				descfield_type[i].innerHTML = "";
+			else if(filetype == "video"){
+				frommin = from.split(":")[0];
+				fromsec = from.split(":")[1];
+				tomin = to.split(":")[0];
+				tosec = to.split(":")[1];
+				descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Time </div>'
+					+ '<input style="margin-left: 5px; margin-right: 5px; width:47px" name="' + item_id + '_' + section + '_descfrommin" type="number" placeholder="min" value="' + frommin + '""></input>'
+					+ '<div style="margin: auto; text-align: center;">:</div><input style="margin-left: 5px; margin-right: 5px; width:47px" name="' + item_id + '_' + section + '_descfromsec" type="number" max="59" placeholder="sec" value="' + fromsec + '""></input>'
+					+ '<div style="margin: auto; text-align: center;"> - </div><input style="margin-left: 5px; margin-right: 5px; width:47px" name="' + item_id + '_' + section + '_desctomin" type="number" placeholder="min" value="' + tomin + '""></input>'
+					+ '<div style="margin: auto; text-align: center;">:</div><input style="margin-left: 5px; margin-right: 5px; width:47px" name="' + item_id + '_' + section + '_desctosec" type="number" max="59" placeholder="sec" value="' + tosec + '""></input>';
+			}
+			else{
+				input_names = {"script": "Page", "presentation": "Slide"}
+				descfield.innerHTML = '<div style="margin: auto; width:fit-content">' + input_names[filetype]
+					+ '</div><input style="margin-left: 5px; margin-right: 5px; width:50px" name="' + item_id + '_' + section + '_descfrom" type="number" value="' + from + '""></input>'
+					+ '<div style="margin: auto; text-align: center;"> - </div>'
+					+ '<input style="margin-left: 5px; margin-right: 5px; width:50px" name="' + item_id + '_' + section + '_descto" type="number" value="' + to + '"></input>';
 			}
 		}
-		else if (type == "video") {
-			descfield_type[i].innerHTML = "";
-		}
-		else if (type == "link") {
+		else if (type == "webr") {
 			//weblink
-			descfield_type[i].innerHTML = "";
+			descfield.innerHTML = null;
 		}
-		else if (type == "excercise") {
-			descfield_type[i].innerHTML = "";
+		else if (type == "exc") {
+			descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
+			+ '<input style="margin-left: 5px; width:50px" name="' + item_id + '_' + section + '_desc" type="number" value=' + from + '></input>';
 		}
 		else if (type == "test") {
-			descfield_type[i].innerHTML = "";
+			descfield.innerHTML = "";
 		}
 		else if (type == "bibliography") {
-			descfield_type[i].innerHTML = "";
+			descfield.innerHTML = "";
 		}
+	}
+
+	//update descfield on change of filetype
+	for (var i = 0; i < filetypeselectors.length; i++) {
+		filetypeselectors[i].addEventListener("change", function() {
+			var filetype = this.value;
+			var id = this.name.split("_")[1];
+			//get all descfields with that item_id
+			var descinputs = document.getElementsByClassName("descfield");
+			for (var i = 0; i < descinputs.length; i++) {
+				if (descinputs[i].id.split("_")[0] == id) {
+					descinputs[i].id = id + "_file_" + filetype;
+					update_descfieldtype(descinputs[i]);
+				}
+			}
+		});
 	}
 
 	function prevent_submit_on_textfield_enter(classname){
 		var input = document.getElementsByClassName(classname);
 		for (var i = 0; i < input.length; i++) {
 			input[i].addEventListener("keypress", function(event) {
-				// If the user presses the "Enter" key on the keyboard
+				// If user presses the "Enter" key on the keyboard
 				if (event.key === "Enter") {
 					// Cancel the default action, if needed
 					event.preventDefault();
@@ -205,7 +202,7 @@ TEACHER
 	}
 
 	function updateNextI(id){
-		var item_row = id.split("_").slice(0,2).join("_");
+		var item_section = id.split("_").slice(0,2).join("_");
 		var tagholder = document.getElementById(id + "_tagholder");
 
 		var last_I = tagholder.name;
@@ -225,7 +222,6 @@ TEACHER
 		var box_clone = box.cloneNode(true);
 		
 		id_I = id + "_" + getNextI(id)
-		console.log(id_I);
 		box_clone.id = id_I + "_box";
 		box_clone.children[0].name = id_I;
 		box_clone.children[1].id = id_I + "_delete";
@@ -274,43 +270,53 @@ TEACHER
 		newtag.value = "";
 	}
 	
-	//new function to add new row with tags and comment field
+	//new function to add new section with tags and comment field
 	function addRow(clicked_id){
-		var id = clicked_id.replace("_addrow", "");
-		var row = document.getElementsByClassName("rowbox")[0];
-		var row_clone = row.cloneNode(true);
+		var id = clicked_id.replace("_addsection", "");
+		var sections = document.getElementsByClassName("sectionbox");
 
-		row_clone.id = id;
-		row_clone.children[0].children[0].id = id + "_tagholder";
-		row_clone.children[0].children[0].setAttribute("name", "0");
-
-		//remove all but last child (hidden input field)
-		while (row_clone.children[0].children[0].childElementCount > 1) {
-			row_clone.children[0].children[0].removeChild(row_clone.children[0].children[0].firstChild);
+		//find section with corresponding material type and item_id
+		var section;
+		for (var i = 0; i < sections.length; i++) {
+			if (parseInt(sections[i].id.split("_")[0]) == parseInt(id.split("_")[0]) ) {
+				section = sections[i];
+				break;
+			}
 		}
 
-		row_clone.children[0].children[0].children[0].id = id + "_newtag";
-		row_clone.children[0].children[1].id = id + "_add";
-		row_clone.children[0].children[2].id = id + "_create";
+		var section_clone = section.cloneNode(true);
+
+		section_clone.id = id;
+		section_clone.children[0].children[0].id = id + "_tagholder";
+		section_clone.children[0].children[0].setAttribute("name", "0");
+
+		//remove all but last child (hidden input field)
+		while (section_clone.children[0].children[0].childElementCount > 1) {
+			section_clone.children[0].children[0].removeChild(section_clone.children[0].children[0].firstChild);
+		}
+
+		section_clone.children[0].children[0].children[0].id = id + "_newtag";
+		section_clone.children[0].children[1].id = id + "_add";
+		section_clone.children[0].children[2].id = id + "_create";
 		
-		row_clone.children[1].setAttribute("name", id + "_desc");
-		row_clone.children[2].children[0].id = id + "_deleterow";
+		section_clone.children[1].setAttribute("name", id + "_desc");
+		section_clone.children[2].children[0].id = id + "_deletesection";
 
 		var item_id = id.split("_")[0];
-		document.getElementById(item_id + "_table").children[0].appendChild(row_clone);
+		document.getElementById(item_id + "_table").children[0].appendChild(section_clone);
 
-		var last_row = id.split("_")[1];
-		var new_row = parseInt(last_row) - 1;
-		var new_id = item_id + "_" + new_row;
-		document.getElementById(clicked_id).id = new_id + "_addrow";
+		var last_section = id.split("_")[1];
+		var new_section = parseInt(last_section) - 1;
+		var new_id = item_id + "_" + new_section;
+		document.getElementById(clicked_id).id = new_id + "_addsection";
 		prevent_submit_on_textfield_enter("newtagfield");
 		prevent_submit_on_textfield_enter("descfield");
+		update_height_of_active_panel();
 	}
 
-	//new function to remove row
+	//new function to remove section
 	function removeRow(clicked_id){
-		var id = clicked_id.replace("_deleterow", "");
-		console.log(id)
+		var id = clicked_id.replace("_deletesection", "");
 		document.getElementById(id).remove();
 	}
 </script>

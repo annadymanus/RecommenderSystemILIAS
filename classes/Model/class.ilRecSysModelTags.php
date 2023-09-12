@@ -11,19 +11,17 @@ class ilRecSysModelTags {
     private $tag_name;
     private $tag_description;
     private $tag_occurence;
-    private $next_tag_id;
+
     //tags per user
     private $usr_id;
     private $priority;
-    private $tag_counter;
    
     
     private $ilDB;
 
-    //-----------------------------------------------------------------------------------
-    //Tag table (ui_uihk_recsys_tags)
+    // -----------------------------------------------------------------------------------
+    // constructor
 
-    //constructor
     public function __construct($tag_id, $tag_name, $tag_description, $tag_occurence)
     {
         global $ilDB;
@@ -33,6 +31,9 @@ class ilRecSysModelTags {
         $this->tag_description = $tag_description;
         $this->tag_occurence = $tag_occurence;
     }
+
+    // -----------------------------------------------------------------------------------
+    // static functions to get tag ids
 
     public static function fetchTagByName($tag_name)
     {
@@ -73,19 +74,8 @@ class ilRecSysModelTags {
         return $tag_names;
     }
 
-    //function for getting a tag
-    public function getTag()
-    {
-        global $ilDB;
-        $queryResult = $this->ilDB->query("SELECT * FROM ui_uihk_recsys_tags WHERE tag_id = ".$this->$ilDB->quote($this->tag_id, "integer"));
-        $tag = $this->ilDB->fetchAssoc($queryResult);
-        $this->tag_id = $tag->tag_id;
-        $this->tag_name = $tag->tag_name;
-        $this->tag_description = $tag->tag_description;
-        $this->tag_occurence = $tag->tag_occurence;
-        return $this;
-    }
-
+    // -----------------------------------------------------------------------------------
+    // create function
 
     //function for adding a new tag to a tag table
     public function addNewTag()
@@ -94,30 +84,62 @@ class ilRecSysModelTags {
                 . "(tag_id, tag_name, tag_description, tag_occurence)"
                 . " VALUES (%s,%s,%s,%s)",
                 array("integer", "text", "text", "integer"),
-                array(self::getNextTagId(), 
+                array($this->tag_id,
                       $this->tag_name, 
                       $this->tag_description, 
                       self::TAG_DEFAULT_OCCURENCE
                     ));
     }
 
-
-    //function for generation of tag_id by using the last tag_id in the table
-    public static function getNextTagId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT tag_id FROM ui_uihk_recsys_tags ORDER BY tag_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $next_tag_id = 1;
-        } else {
-            $last_tag_row = $queryResult->fetchAssoc();
-            $next_tag_id = $last_tag_row->tag_id + 1;
-        }
-        return $next_tag_id;
+    // -----------------------------------------------------------------------------------
+    // update functions
+    public function updateTag($tag_description, $tag_occurence) {
+        $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_tags"
+                ." SET"
+                ." ,description = %s"
+                ." ,occurence = %s"
+                ." WHERE tag_id = %s",
+            array("text", "integer", "integer"),
+            array($tag_description, $tag_occurence, $this->tag_id)
+        );
+        $this->tag_description = $tag_description;
+        $this->tag_occurence = $tag_occurence;
     }
+
+    public function incrementOccurrence() {
+        $this->tag_occurence++;
+        $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_tags"
+                ." SET"
+                ." ,occurence = %s"
+                ." WHERE tag_id = %s",
+            array("text", "integer"),
+            array($this->tag_occurence, $this->tag_id)
+        );
+    }
+
+    public function decrementOccurrence() {
+        $this->tag_occurence--;
+        $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_tags"
+                ."SET"
+                ." ,occurence = %s"
+                ." WHERE tag_id = %s",
+            array("text", "integer"),
+            array($this->tag_occurence, $this->tag_id)
+        );
+    }
+
     //-----------------------------------------------------------------------------------
+    // delete
+    public function deleteTag(){
+    // Validate and sanitize the input with the filter_var() function.
+    $this->tag_id = filter_var($this->tag_id, FILTER_VALIDATE_INT);
+    $this->ilDB->manipulateF("DELETE FROM ui_uihk_recsys_tags WHERE tag_id = %s",
+        array("integer"),
+        array($this->tag_id));
+    }
 
-
-
+    // -----------------------------------------------------------------------------------
+    // simple getter 
 
     public function getTag_id()
     {
@@ -149,32 +171,6 @@ class ilRecSysModelTags {
         return $this->priority;
     }
 
-    public function getTag_counter()
-    {
-        return $this->tag_counter;
-    }
-
-    public function setTag_id($tag_id)
-    {
-        $this->tag_id = $tag_id;
-    }
-
-    public function setTag_name($tag_name)
-    {
-        $this->tag_name = $tag_name;
-    }
-
-    public function setTag_description($tag_description)
-    {
-        $this->tag_description = $tag_description;
-    }
-
-    public function setTag_occurence($tag_occurence)
-    {
-        $this->tag_occurence = $tag_occurence;
-    }
-
-
     public function setUsr_id($usr_id)
     {
         $this->usr_id = $usr_id;
@@ -184,24 +180,4 @@ class ilRecSysModelTags {
     {
         $this->priority = $priority;
     }
-
-    public function setTag_counter($tag_counter)
-    {
-        $this->tag_counter = $tag_counter;
-    }
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

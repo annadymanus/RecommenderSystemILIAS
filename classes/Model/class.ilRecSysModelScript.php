@@ -5,7 +5,7 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 
 //@author Potoskueva Daria
 
-class ilRecSysModelScript extends ilRecSysModelMaterialFromTo{
+class ilRecSysModelScript {
 
     private $script_id;
     private $obj_id;
@@ -23,7 +23,7 @@ class ilRecSysModelScript extends ilRecSysModelMaterialFromTo{
     {
         global $ilDB;
         $this->ilDB = $ilDB;
-        $this->script_id = $script_id;               // TODO: figure  out whether we can put a counter in here and make it thread safe, so that the id is unique.
+        $this->script_id = $script_id;// TODO: figure  out whether we can put a counter in here and make it thread safe, so that the id is unique.
         $this->obj_id = $obj_id;  //ilObject::_lookupObjectId(); //needed to be find out
         $this->start_page = $start_page;
         $this->end_page = $end_page;
@@ -31,15 +31,14 @@ class ilRecSysModelScript extends ilRecSysModelMaterialFromTo{
         $this->rating_count = $rating_count;
     }
 
-
+    // ------------------------------------------------------------------------------------
     //add a new script to the table
-    public function addNewMaterial()
-    {   
+    public function createScript() {   
         $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_m_c_f_s"
                 . " (script_id, obj_id, start_page, end_page, difficulty, rating_count)"
                 . " VALUES (%s,%s,%s,%s,%s,%s) ;",
                 array("integer", "integer", "integer", "integer", "float", "integer"),
-                array(self::getNextScriptId(), 
+                array($this->script_id, 
                       $this->obj_id, 
                       $this->start_page, 
                       $this->end_page, 
@@ -48,22 +47,8 @@ class ilRecSysModelScript extends ilRecSysModelMaterialFromTo{
                     ));
     }
 
-
-    //generate a script_id automatically
-    private static function getNextScriptId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT script_id FROM ui_uihk_recsys_m_c_f_s ORDER BY script_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $next_script_id = 1;
-        } else {
-            $next_script_id = $ilDB->fetchAssoc($queryResult);
-            $next_script_id = $next_script_id['script_id'] + 1;
-        }
-        return $next_script_id;
-    }
-
     //update the script
-    public function updateMaterial(){
+    public function update(){
         $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_m_c_f_s"
             ." SET"
                 ." start_page = %s"
@@ -76,17 +61,23 @@ class ilRecSysModelScript extends ilRecSysModelMaterialFromTo{
         );
     }
 
-    //Not sure if we need this...
     //written by @Anna Eschbach-Dymanus
     public static function fetchByObjID($obj_id, $from=null, $to=null){
         global $ilDB;
         if($from != null && $to != null){
             $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_s WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_page == ".$ilDB->quote($from, "integer")." AND end_page == ".$ilDB->quote($to, "integer"));
-            //if query is empty, return null
-            if ($ilDB->numRows($queryResult) === 0) {
-                return null;
-            }
-            $fetched_script = $ilDB->fetchObject($queryResult);
+        }
+        else if($from == null && $to == null){
+            $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_s WHERE obj_id = ".$ilDB->quote($obj_id, "integer"));
+        }
+        else{
+            throw new Exception("Either both from and to have to be null or both have to be set");
+        }
+        if ($ilDB->numRows($queryResult) === 0) {
+            return null;
+        }
+        $scripts = array();
+        while($fetched_script = $ilDB->fetchObject($queryResult)){
             $script = new ilRecSysModelScript(
                 $fetched_script->script_id, 
                 $fetched_script->obj_id, 
@@ -94,32 +85,9 @@ class ilRecSysModelScript extends ilRecSysModelMaterialFromTo{
                 $fetched_script->end_page, 
                 $fetched_script->difficulty, 
                 $fetched_script->rating_count);
-            return $script;
+            $scripts[] = $script;
         }
-        else if($from == null && $to == null){
-            //get all scripts for the given obj_id
-            $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_s WHERE obj_id = ".$ilDB->quote($obj_id, "integer"));
-            //if query is empty, return null
-            if ($ilDB->numRows($queryResult) === 0) {
-                return null;
-            }
-            $scripts = array();
-            while($fetched_script = $ilDB->fetchObject($queryResult)){
-                $script = new ilRecSysModelScript(
-                    $fetched_script->script_id, 
-                    $fetched_script->obj_id, 
-                    $fetched_script->start_page, 
-                    $fetched_script->end_page, 
-                    $fetched_script->difficulty, 
-                    $fetched_script->rating_count);
-                $scripts[] = $script;
-            }
-            return $scripts;
-        }
-        else{
-            throw new Exception("Either both from and to have to be null or both have to be set");
-        }
-        
+        return $scripts;
     }
 
     //Do we really need getScript? What would be the usecase
@@ -202,9 +170,9 @@ class ilRecSysModelScript extends ilRecSysModelMaterialFromTo{
         $this->end_page = $end_page;
     }
 
-    public function setDifficulty($difficulty)
-    {
-        $this->difficulty = $difficulty;
+    public function calculateDifficulty($rating){
+        $this->difficulty = (($this->difficulty * ($this->rating_count - 1)) + $rating) / $this->rating_count;
+        // TODO: implement a more sofisticated difficulty calculation
     }
 
     /**

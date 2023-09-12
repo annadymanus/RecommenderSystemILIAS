@@ -28,6 +28,35 @@
         $this->rating_count = $rating_count;
     }
 
+    public static function fetchByMaterialID($weblink_id){
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_w WHERE weblink_id = ".$ilDB->quote($weblink_id, "integer"));
+        $fetched_weblink = $ilDB->fetchObject($queryResult);
+        $weblink = new ilRecSysModelWeblink(
+            $fetched_weblink->weblink_id, 
+            $fetched_weblink->obj_id,
+            $fetched_weblink->difficulty, 
+            $fetched_weblink->rating_count);
+        return $weblink;
+    }
+
+    public static function fetchByObjID($obj_id){
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_w WHERE obj_id = ".$ilDB->quote($obj_id, "integer"));
+        if($ilDB->numRows($queryResult)==0){
+            return null;
+        }
+        $weblinks = array();
+        while($fetched_weblink = $ilDB->fetchObject($queryResult)){
+            $weblink = new ilRecSysModelWeblink(
+                $fetched_weblink->weblink_id, 
+                $fetched_weblink->obj_id,
+                $fetched_weblink->difficulty, 
+                $fetched_weblink->rating_count);
+            $weblinks[] = $weblink;
+        }
+        return $weblinks;
+    }
     // ----------------------------------------------------------------------
     /**
      * functions that implement queries to the db
@@ -50,7 +79,7 @@
      * put a new Weblink element in the table
      */
 
-    public function createWeblink(){
+    public function createWeblink() {
         $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_m_c_w"
                 . "(weblink_id, obj_id, difficulty, rating_count)"
                 . " VALUES (%s,%s,%s,%s)",
@@ -65,15 +94,17 @@
     /**
      *  update the attributes of the weblink
      */
-    public function updateWeblink() {
+    public function update($difficulty, $rating_count) {
         $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_m_c_w"
         ."SET"
             ." ,difficulty = %s"
             ." ,rating_count = %s"
         ." WHERE weblink_id = %s",
-    array("double", "integer", "integer"),
-    array($this->difficulty, $this->rating_count, $this->weblink_id)
+        array("double", "integer", "integer"),
+        array($difficulty, $rating_count, $this->weblink_id)
     );
+        $this->difficulty = $difficulty;
+        $this->rating_count = $rating_count;
     }
 
     /**

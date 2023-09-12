@@ -4,9 +4,6 @@
 
 class ilRecSysModelVideo {
 
-    private static $instance;
-    private static $uniquecounter;
-
     private $video_id;
     private $obj_id;
     private $start_min;
@@ -19,7 +16,7 @@ class ilRecSysModelVideo {
     //-----------------------------------------------------------------------------------
 
     //constructor
-    private function __construct($video_id, $obj_id, $start_min, $end_min, $difficulty, $rating_count)
+    public function __construct($video_id, $obj_id, $start_min, $end_min, $difficulty, $rating_count)
     {
         global $ilDB;
         $this->ilDB = $ilDB;
@@ -32,67 +29,50 @@ class ilRecSysModelVideo {
 
     }
 
-
-    public static function getInstance() {
-        if (self::$instance === null) {
-            // set instance to latest Video stored in Table;
-            self::$uniquecounter = self::getLastVideoId();
-            // see wether there is a latest Video stored in the Table
-            if(self::$uniquecounter == 0){
-                // initialize instance with a first dummy object not yet inserted
-                self::$instance = new self(self::$uniquecounter, 0, 0, 0, 0, 0);
-            } else {
-                // initialize everything with the last Video that was stored inside the database
-                $video = self::getVideoById(self::$uniquecounter);
-                self::$instance = new self($video->video_id, $video->obj_id,$video->start_min, $video->end_min, $video->difficulty, $video->rating_count);
-            }
-        }
-        return self::$instance;
-    }
-
-
-    private function clone() {
-        // Private clone method to prevent cloning of the instance
-    }
-
-    private function __wakeup() {
-        // Private wakeup method to prevent unserialization of the instance
-    }
-
-    // --------------------------------------------------------------
-
-        /**
-     * class function that gets the lastVideoId-attribute from the table ui_uihk_recsys_m_c_f_v
-     */
-    private static function getLastVideoId() {
+    public static function fetchByMaterialID($video_id){
         global $ilDB;
-        $queryResult = $ilDB->query("SELECT video_id FROM ui_uihk_recsys_m_c_f_v ORDER BY video_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_video_id = 0;
-        } else {
-            $last_video_id = $ilDB->fetchAssoc($queryResult);
-            $last_video_id = $last_video_id['video_id'];
-        }
-        return $last_video_id;
-    }
-
-        /**
-     * class function that gets the last Video object from the table ui_uihk_recsys_m_c_f_v
-     */
-    public static function getVideoById($video_id) {
-        $queryResult = self::$ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_v WHERE video_id = ".self::$ilDB->quote($video_id, "integer"));
-        $video = self::$ilDB->fetchObject($queryResult);
+        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_v WHERE video_id = ".$ilDB->quote($video_id, "integer"));
+        $fetched_video = $ilDB->fetchObject($queryResult);
+        $video = new ilRecSysModelVideo(
+            $fetched_video->video_id, 
+            $fetched_video->obj_id,
+            $fetched_video->start_min,
+            $fetched_video->end_min,
+            $fetched_video->difficulty, 
+            $fetched_video->rating_count);
         return $video;
     }
 
-        /**
-     * class function that increments the unique counter of the class. This is done to produce unique ids for the ui_uihk_recsys_m_c_f_v table
-     */
-    public static function incrementUniquecounter() {
-        self::$uniquecounter ++;
-        return self::$uniquecounter;
+    public static function fetchByObjID($obj_id, $from=null, $to=null){
+        global $ilDB;
+        if($from != null && $to != null){
+            $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_v WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_min == ".$ilDB->quote($from, "integer")." AND end_min == ".$ilDB->quote($to, "integer"));
+        }
+        else if($from == null && $to == null){
+            //get all video_entries for the given obj_id
+            $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_v WHERE obj_id = ".$ilDB->quote($obj_id, "integer"));
+        }
+        else{
+            throw new Exception("Either both from and to have to be null or both have to be set");
+        }
+        //if query is empty, return null
+        if ($ilDB->numRows($queryResult) === 0) {
+            return null;
+        }
+        $videos = array();
+        while($fetched_video = $ilDB->fetchObject($queryResult)){
+            $video = new ilRecSysModelVideo(
+                $fetched_video->video_id, 
+                $fetched_video->obj_id,
+                $fetched_video->start_min,
+                $fetched_video->end_min,
+                $fetched_video->difficulty, 
+                $fetched_video->rating_count);
+            $videos[] = $video;
+        }
+        return $videos;
     }
-
+        
     // ----------------------------------------------------------------------
         /**
      * functions that implement queries to the db
@@ -117,24 +97,24 @@ class ilRecSysModelVideo {
      * put a new Video element in the table
      */
 
-    public function createWeblink($obj_id, $start_min, $end_min){
+    public function createVideo(){
         $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_m_c_f_v"
                 . "(video_id, obj_id, start_min, end_min, difficulty, rating_count)"
                 . " VALUES (%s,%s,%s,%s,%s,%s)",
                 array("integer", "integer", "timestamp", "timestamp", "float", "integer"),
-                array(self::incrementUniquecounter(), 
-                      $obj_id,
-                      $start_min,
-                      $end_min,  
-                      0.0,          // difficulty
-                      0       // rating_count
+                array($this->video_id, 
+                      $this->obj_id,
+                      $this->start_min,
+                      $this->end_min,  
+                      $this->difficulty,          // difficulty
+                      $this->rating_count       // rating_count
                     ));
     }
 
     /**
      *  update the attributes of the video, give by its id
      */
-    public function updateWeblink($video_id, $start_min, $end_min, $difficulty, $rating_count) {
+    public function update($video_id, $start_min, $end_min, $difficulty, $rating_count) {
         $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_m_c_f_v"
         ."SET"
             ." start_min = %s"

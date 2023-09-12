@@ -1,15 +1,12 @@
 <?php
 /**
- * @author Dasha
- * @author Joel Pflomm <joel.pflomm@students.uni-mannheim.de>
+ *  @author Joel Pflomm <joel.pflomm@students.uni-mannheim.de>
  * 
  *
  */
 
  class ilRecSysModelBibliography{
 
-    private static $instance;
-    private static $biblCounter;
 
     var $ilDB;
     
@@ -19,7 +16,7 @@
     private $rating_count;
 
     //------------------------------------------------------------------
-    private function __construct($bibl_id, $obj_id, $difficulty, $rating_count){
+    public function __construct($bibl_id, $obj_id, $difficulty, $rating_count){
         // global definitions
         global $ilDB;
         $this->ilDB = $ilDB;
@@ -31,65 +28,35 @@
         $this->rating_count = $rating_count;
     }
 
-    public static function getInstance() {
-        if (self::$instance === null) {
-            // set instance to latest Weblink stored in Table;
-            self::$biblCounter = self::getLastBiblId();
-            // see wether there is a latest Weblink stored in the Table
-            if(self::$biblCounter == 0){
-                // initialize instance with a first dummy object not yet inserted
-                self::$instance = new self(self::$biblCounter, 0, 0, 0);
-            } else {
-                // initialize everything with the last Weblink that was stored inside the database
-                $bibliography= self::getBiblById(self::$biblCounter);
-                self::$instance = new self($bibliography->bibl_id, $bibliography->obj_id, $bibliography->difficulty, $bibliography->rating_count);
-            }
-        }
-        return self::$instance;
-    }
-
-    private function clone() {
-        // Private clone method to prevent cloning of the instance
-    }
-
-    private function __wakeup() {
-        // Private wakeup method to prevent unserialization of the instance
-    }
-
-    // --------------------------------------------------------------
-
-        /**
-     * class function that gets the lastBiblId-attribute from the table ui_uihk_recsys_m_c_bib
-     */
-    private static function getLastBiblId() {
+    public static function fetchByMaterialID($bibl_id){
         global $ilDB;
-        $queryResult = $ilDB->query("SELECT bibl_id FROM ui_uihk_recsys_m_c_bib ORDER BY bibl_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_bibl_id = 0;
-        } else {
-            $last_bibl_id = $ilDB->fetchAssoc($queryResult);
-            $last_bibl_id = $last_bibl_id['bibl_id'];
+        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_bib WHERE bibl_id = ".$ilDB->quote($bibl_id, "integer"));
+        $fetched_bibliography = $ilDB->fetchObject($queryResult);
+        $bibliography = new ilRecSysModelWeblink(
+            $fetched_bibliography->bibl_id, 
+            $fetched_bibliography->obj_id,
+            $fetched_bibliography->difficulty, 
+            $fetched_bibliography->rating_count);
+        return $bibliography;
+    }
+
+    public static function fetchByObjID($obj_id){
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_bib WHERE obj_id = ".$ilDB->quote($obj_id, "integer"));
+        if($ilDB->numRows($queryResult)==0){
+            return null;
         }
-        return $last_bibl_id;
+        $bibliography = array();
+        while($fetched_bibliography = $ilDB->fetchObject($queryResult)){
+            $bibliography = new ilRecSysModelWeblink(
+                $fetched_bibliography->bibl_id, 
+                $fetched_bibliography->obj_id,
+                $fetched_bibliography->difficulty, 
+                $fetched_bibliography->rating_count);
+            $weblinks[] = $bibliography;
+        }
+        return $bibliography;
     }
-
-        /**
-     * class function that gets the last Bibliography object from the table ui_uihk_recsys_m_c_bib
-     */
-    public static function getBiblById($bibl_id) {
-        $queryResult = self::$ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_bib WHERE bibl_id = ".self::$ilDB->quote($bibl_id, "integer"));
-        $biblography = self::$ilDB->fetchObject($queryResult);
-        return $biblography;
-    }
-
-    /**
-     * class function that increments the unique counter of the class. This is done to produce unique ids for the ui_uihk_recsys_m_c_w table
-     */
-    public static function incrementBiblCounter() {
-        self::$biblCounter++;
-        return self::$biblCounter;
-    }
-
     // ----------------------------------------------------------------------
     /**
      * functions that implement queries to the db
@@ -107,7 +74,82 @@
         $this->rating_count = $bibliography->rating_count;
         return $this;
     }
-    
+
+    /**
+     * put a new Bibliography element in the table
+     */
+
+     public function createBibliography() {
+        $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_m_c_bib"
+                . "(bibl_id, obj_id, difficulty, rating_count)"
+                . " VALUES (%s,%s,%s,%s)",
+                array("integer", "integer", "double", "integer"),
+                array($this->bibl_id, 
+                      $this->obj_id,  
+                      $this->difficulty,    
+                      $this->rating_count       
+                    ));
+    }
+
+    /**
+     *  update the attributes of the bibliography
+     */
+    public function update($difficulty, $rating_count) {
+        $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_m_c_bib"
+        ."SET"
+            ." ,difficulty = %s"
+            ." ,rating_count = %s"
+        ." WHERE bibl_id = %s",
+        array("double", "integer", "integer"),
+        array($difficulty, $rating_count, $this->bibl_id)
+    );
+        $this->difficulty = $difficulty;
+        $this->rating_count = $rating_count;
+    }
+
+    /**
+     * delete Bibliography with the given $bibl_id
+     */
+    public function deleteBibliography() {
+        // Validate and sanitize the input with the filter_var() function.
+        $this->bibl_id = filter_var($this->bibl_id, FILTER_VALIDATE_INT);
+        $this->ilDB->manipulateF("DELETE FROM ui_uihk_recsys_m_c_bib WHERE bibl_id = %s",
+            array("integer"),
+            array($this->bibl_id));
+    }
+    // ----------------------------------------------------------------------
+   
+    /**
+     * Setter and Getter
+     */
+    public function getBiblId(){
+        return $this->bibl_id;
+    }
+
+    public function getObId() {
+        return $this->obj_id;
+    }
+
+    public function calculateDifficulty($rating){
+        $this->difficulty = (($this->difficulty * ($this->rating_count - 1)) + $rating) / $this->rating_count;
+        // TODO: implement a more sofisticated difficulty calculation
+    }
+
+    public function getDifficulty(){
+        return $this->difficulty;
+    }
+
+    /**
+     * rating_count counts the users that have given a rating
+     * this function increments the rating_count of the given object by 1
+     */
+    public function incrementRatingCount() {
+        $this->rating_count++;
+    }
+
+    public function getRatingCount() {
+        $this->rating_count;
+    }
+   
 }
- 
 ?>

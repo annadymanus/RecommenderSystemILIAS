@@ -537,7 +537,7 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_a_t')){
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
-        'ilias_test_id' => array( // TODO: link to the ilias test object
+        'obj_id' => array( // TODO: link to the ilias test object
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
@@ -558,7 +558,6 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_a_t')){
     $ilDB->createSequence('ui_uihk_recsys_m_a_t');
 }
 
-//material_assessment_exercise (might be interesting later however most times the exercises are also stored in a different folder)
 /**
  *  This table represents the tags given to an Exercise
  * 
@@ -567,6 +566,7 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_a_t')){
  *  exercise_id:        identifier for the test (must coincide with the material_id of tag for type "assessment_test")
  *  ilias_exercise_id:  object identifier of ilias test object
  *  task_no             number of the task that was tagged
+ *  subtask_no          number of the subtask that was tagged
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
  */
@@ -577,11 +577,15 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_a_e')){
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
-        'ilias_exercise_id' => array( // TODO: link to the ilias test object
+        'obj_id' => array( // TODO: link to the ilias test object
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
         'task_no' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true),
+        'subtask_no' => array(
             'type' => 'integer',
             'length' => 4,
             'notnull' => true),

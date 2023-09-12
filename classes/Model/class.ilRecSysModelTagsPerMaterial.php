@@ -26,7 +26,7 @@ class ilRecSysModelTagsPerMaterial{
         $this->material_id = $material_id;
     }
 
-    //written by @Anna Eschbach-Dymanus
+    
     public static function fetchTagsToMaterial($material_id, $tag_id, $material_type)
     {
         global $ilDB;
@@ -42,7 +42,7 @@ class ilRecSysModelTagsPerMaterial{
     }
 
     //written by @Anna Eschbach-Dymanus
-    public static function getAllTagIds($material_id, $material_type){
+    public static function getAllTagIdsForMaterial($material_id, $material_type){
         global $ilDB;
         $result = $ilDB->queryF("SELECT tag_id FROM ui_uihk_recsys_t_p_m WHERE material_id = %s AND material_type = %s",
                 array("integer", "text"),
@@ -53,8 +53,18 @@ class ilRecSysModelTagsPerMaterial{
         }
         return $tag_ids;
     }
+
+    public static function getAllMaterialIDsForTag($tag_id){
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT material_type, material_id FROM ui_uihk_recsys_t_p_m WHERE tag_id = %s", "integer", $tag_id);
+        $material_type_id_pair = array(array());
+        while($row = $ilDB->fetchAssoc($queryResult)){
+            array_push($material_type_id_pair, array($row['material_type'], $row['material_id']));
+        }
+        return $material_type_id_pair;
+    }
     
-    //written by @Anna Eschbach-Dymanus
+
     public function deleteTagToMaterial(){
         $this->ilDB->manipulateF("DELETE FROM ui_uihk_recsys_t_p_m WHERE tag_id = %s AND material_type = %s AND material_id = %s",
                 array("integer", "text", "integer"),

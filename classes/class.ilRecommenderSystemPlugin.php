@@ -1,6 +1,7 @@
 <?php
 
 include_once("./Services/UIComponent/classes/class.ilUserInterfaceHookPlugin.php");
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelUtils.php');
 
 //is this include necessary? i dont understand what it does...
 //include_once ("./Services/EventHandling/classes/class.ilEventHookPlugin.php");
@@ -41,6 +42,7 @@ class ilRecommenderSystemPlugin extends ilUserInterfaceHookPlugin
         */
 
         // Check if its the delete event
+        //TODO: REWRITE SO THAT IT ALSO DELETES RECSYS MODEL ENTRIES FOR DELETED OBJECTS
         
         if ($a_event != "toTrash")
             return True;
@@ -60,6 +62,9 @@ class ilRecommenderSystemPlugin extends ilUserInterfaceHookPlugin
         $queryResult = $ilDB->query("DELETE FROM ui_uihk_recsys_courses where crs_id = " . $a_parameter["crs_id"]);
         $queryResult = $ilDB->query("DELETE FROM ui_uihk_recsys_user where crs_id = " . $a_parameter["crs_id"]);
         return True;
+
+
+        //handle delete events here for file objects
     }
 
 	protected function afterActivation()
@@ -104,6 +109,8 @@ class ilRecommenderSystemPlugin extends ilUserInterfaceHookPlugin
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_bib_seq");
 	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_t");
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_t_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_e");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_e_seq");
 	    $log->info("Uninstalled Recsys");	    
 	    return true; // false would indicate that anything went wrong	    
 	}

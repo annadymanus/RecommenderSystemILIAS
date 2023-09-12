@@ -1,9 +1,11 @@
 @charset "UTF-8";
 
-	/* Style the buttons that are used to open and close the accordion panel */
+/* Style the buttons that are used to open and close the accordion panel */
 .accordion {
 	background-color: #eee;
-	color: #444;
+	background-image: url("../../../../../../../../../libs/ilias/Style/basic_style/images/header.png");
+	color: white; 
+	font-size: larger;
 	cursor: pointer;
 	padding: 18px;
 	width: 100%;
