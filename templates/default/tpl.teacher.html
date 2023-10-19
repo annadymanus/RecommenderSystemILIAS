@@ -179,6 +179,24 @@
 		});
 	}
 
+	//block filetype selectors for all items that have at least one tag set
+	var sectionboxes = document.getElementsByClassName("sectionbox");
+	var tagholders = [];
+	for (var i = 0; i < sectionboxes.length; i++) {
+		tagholders.push(sectionboxes[i].children[0].children[0]);
+	}
+	for (var i = 0; i < tagholders.length; i++) {
+		if (tagholders[i].childElementCount > 2) {
+			blockFileTypeSelector(tagholders[i].id.split("_")[0]);
+		}
+		console.log(tagholders[i].childElementCount);
+		if (tagholders[i].childElementCount == 2) {
+			if (tagholders[i].children[0].children[0].value != "") {
+				blockFileTypeSelector(tagholders[i].id.split("_")[0]);
+			}
+		}
+	}
+
 	function prevent_submit_on_textfield_enter(classname){
 		var input = document.getElementsByClassName(classname);
 		for (var i = 0; i < input.length; i++) {
@@ -198,7 +216,21 @@
 	function removeTag(clicked_id)
 	{
 		var id = clicked_id.replace("_delete", "") + "_box";
-		document.getElementById(id).remove();
+		//check if only one tag left
+		var tag = document.getElementById(id);
+		var tagholder = tag.parentElement;
+		console.log(tag);
+		// 2 means only one left, since newtagfield is always there but hidden
+		if (tagholder.childElementCount <= 2) {
+			//if only one tag left, empty it
+			tag.children[0].value = "";
+			//release filetype selector
+			releaseFileTypeSelector(tagholder.id.split("_")[0]);
+		}
+		else{
+			//if more than one tag left, remove tag
+			tag.remove();
+		}
 	}
 
 	function updateNextI(id){
@@ -216,6 +248,32 @@
 		return tagholder.getAttribute("name");
 	}
 
+	function blockFileTypeSelector(item_id){
+		//get all filetypeselectors
+		selectors = document.getElementsByClassName("filetypeselector");
+		//find the one with correct item_id
+		for (var i = 0; i < selectors.length; i++) {
+			if (selectors[i].name.split("_")[1] == item_id) {
+				var selector = selectors[i];
+				break;
+			}
+		}
+		selector.disabled = true;
+	}
+
+	function releaseFileTypeSelector(item_id){
+		//get all filetypeselectors
+		selectors = document.getElementsByClassName("filetypeselector");
+		//find the one with correct item_id
+		for (var i = 0; i < selectors.length; i++) {
+			if (selectors[i].name.split("_")[1] == item_id) {
+				var selector = selectors[i];
+				break;
+			}
+		}
+		selector.disabled = false;
+	}
+
 	function addTag(clicked_id){
 		var id = clicked_id.replace("_add", "");
 		var box = document.getElementsByClassName("tagbox")[0];
@@ -225,6 +283,7 @@
 		box_clone.id = id_I + "_box";
 		box_clone.children[0].name = id_I;
 		box_clone.children[1].id = id_I + "_delete";
+
 		var select = document.getElementById(id.split("_").slice(0,2).join("_") + "_tagholder");
 		
 		//get text field by id
@@ -232,6 +291,9 @@
 		//insert new tag before text field
 		select.insertBefore(box_clone, newtag);
 		new_id = updateNextI(id);
+
+		blockFileTypeSelector(id.split("_")[0]);
+
 		return [box_clone, new_id];
 	}
 
@@ -314,9 +376,48 @@
 		update_height_of_active_panel();
 	}
 
+	function resetRow(id){
+		var section = document.getElementById(id);
+		//remove all tagboxes
+		tagboxes = section.children[0].children[0].children;
+		console.log(tagboxes);
+		for (var i = tagboxes.length-1; i >= 0; i--) {
+			// if not class newtagfield
+			if (tagboxes[i].className != "newtagfield") {
+				removeTag(tagboxes[i].id.replace("_box", ""));
+			}
+		}
+
+		//empty descfield
+		descfield_children = section.children[1].children;
+		for (var i = 0; i < descfield_children.length; i++) {
+			//if has value, set value to ""
+			if (descfield_children[i].value){
+				descfield_children[i].value = "";
+			}
+		}
+	}
+
 	//new function to remove section
 	function removeRow(clicked_id){
 		var id = clicked_id.replace("_deletesection", "");
-		document.getElementById(id).remove();
+		var item_id = id.split("_")[0];
+		//get number of sections for item id
+		var sections = document.getElementsByClassName("sectionbox");
+		var num_sections = 0;
+		for (var i = 0; i < sections.length; i++) {
+			if (parseInt(sections[i].id.split("_")[0]) == parseInt(item_id)) {
+				num_sections++;
+			}
+		}
+		//if only one section left, do not remove but instead empty all fields
+		if (num_sections == 1) {
+			resetRow(id);
+			//TODO: make material type choice available again
+			releaseFileTypeSelector(item_id);
+		}
+		else{
+			document.getElementById(id).remove();
+		}
 	}
 </script>

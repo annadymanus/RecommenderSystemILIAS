@@ -4,36 +4,103 @@
 <link rel="stylesheet" href="./templates/default/delos.css">
 
 <div class="recsys-module-tile recsys-ig-tile">
-		<div class="recsys-lo container-fluid" style="margin: 5px">
-			<table class="table table-striped fullwidth">
-				<!-- BEGIN RecommendedMaterials -->
-				<tr>
-				<td>
-					<div style="display: flex">
-						<div style="width: 60%; display: flex; flex-direction: row; margin:10px 10px 10px 0px;" class="row recsys-lo-material">
-							<div>
-								{ITEM_HTML}
+	<div class="recsys-lo container-fluid" style="margin: 5px">
+		<table class="table table-striped fullwidth">
+			<!-- BEGIN RecommendedMaterials -->
+			<tr>
+			<td>
+				<div style="display: flex">
+					<div class="item-html-container" style="width: 60%; margin:10px 10px 10px 0px;" class="row recsys-lo-material">
+						<div>
+							{ITEM_HTML}
+						</div>
+					</div>
+					<div class="recdescfield" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" value="{FROM}_{TO}" style="display:flex" style="width: 40%; margin:10px 10px 10px 10px;">
+						<div></div><input name="{ITEM_ID}_{SECTION}_desc"></input>
+					</div>
+				</div>
+				<div style="display: flex">
+					<div style="width: 60%; display: flex; flex-direction: row; flex-wrap: wrap; margin:10px 10px 10px 0px;">
+						<!-- BEGIN Subtags -->
+						<div style="display: flex; margin-right: 5px; margin-bottom: 5px; padding: 4px; box-shadow: 0px 2px 2px 0px gray; color: white; background-color: #4c6586;">{TAG}</div>
+						<!-- END Subtags -->
+					</div>
+					<div style="width: 40%; display: flex;" class=" recsys-ig-progress">
+						<div class="progress" style="height: 40px; width: 100%; margin: auto; position: relative;">
+							<div class="progress-bar blue" role="progressbar" style="width: {MATCH}%;" aria-valuenow="{MATCH}" aria-valuemin="0" aria-valuemax="100">
 							</div>
-						</div>
-						<div style="width: 40%; margin:10px 10px 10px 10px;">
-							6-7
-						</div>
-					</div>
-					<div style="display: flex">
-						<div style="width: 60%; display: flex; flex-direction: row; flex-wrap: wrap; margin:10px 10px 10px 0px;">
-							<!-- BEGIN Subtags -->
-							<div style="display: flex; margin-right: 5px; margin-bottom: 5px; padding: 4px; box-shadow: 0px 2px 2px 0px gray; color: white; background-color: #4c6586;">{TAG}</div>
-							<!-- END Subtags -->
-						</div>
-						<div style="width: 40%" class=" recsys-ig-progress">
-							<div class="progress" style="height: 40px; width: 100%">
-								<div class="progress-bar blue" role="progressbar" style="width: 66%" aria-valuenow="66" aria-valuemin="0" aria-valuemax="100"></div>					  			
-							</div>					
-						</div>	
-					</div>
-				</td>
-				</tr>
-				<!-- END RecommendedMaterials -->
-			</table>
-		</div>
+							<div style="display: flex; font-size: medium; position: absolute; height: 100%; width: 100%; text-align: center; color: white; font-weight: 600;">
+								<div style="margin: auto">Relevance: {MATCH}%</div>
+							</div>					  			
+						</div>					
+					</div>	
+				</div>
+			</td>
+			</tr>
+			<!-- END RecommendedMaterials -->
+		</table>
 	</div>
+</div>
+
+
+<script>
+
+var descfields = document.getElementsByClassName("recdescfield");
+//based on the id of the descfield, set the placeholder
+
+for (var i = 0; i < descfields.length; i++) {
+	from_to = descfields[i].getAttribute("value").split("_");
+	update_descfieldtype(descfields[i], from_to[0], from_to[1]);
+}
+
+function update_descfieldtype(descfield, from="", to=""){
+	var type = descfield.id.split("_")[1];
+	var filetype = descfield.id.split("_")[2];
+	console.log(type);
+	console.log(filetype);
+	console.log(descfield.children[1]);
+	console.log(descfield.children[1].name);
+	var item_id = descfield.children[1].name.split("_")[0];
+	var section = descfield.children[1].name.split("_")[1];
+	if (type == "file") {
+		if (filetype == "excsheet") {
+			descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
+			+ '<div style="margin: auto auto auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desc" >' + from + '</div>';
+		}
+		else if(filetype == "video"){
+			frommin = from.split(":")[0];
+			fromsec = from.split(":")[1];
+			tomin = to.split(":")[0];
+			tosec = to.split(":")[1];
+			descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Time </div>'
+				+ '<div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_descfrommin">' + frommin +'</div>'
+				+ '<div style="margin: auto; text-align: center;">:</div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_descfromsec">' + fromsec +'</div>'
+				+ '<div style="margin: auto; text-align: center;"> - </div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desctomin">' + tomin + '</div>'
+				+ '<div style="margin: auto; text-align: center;">:</div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desctosec">' + tomin + '</div>'
+		}
+		else{
+			input_names = {"script": "Page", "presentation": "Slide"}
+			descfield.innerHTML = '<div style="margin: auto; width:fit-content">' + input_names[filetype]
+				+ '</div><div style="text-align: center; margin: auto 5px auto 5px; width:40px; width:40px;" name="' + item_id + '_' + section + '_descfrom">' + from + '</div>'
+				+ '<div style="margin: auto; text-align: center;"> - </div>'
+				+ '<div style="text-align: center; margin: auto 5px auto 5px; width:40px;" name="' + item_id + '_' + section + '_descto">' + to + '</div>';
+				console.log(descfield.innerHTML);
+		}
+	}
+	else if (type == "webr") {
+		//weblink
+		descfield.innerHTML = null;
+	}
+	else if (type == "exc") {
+		descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
+			+ '<div style="margin: auto auto auto 5px; width:40px;" name="' + item_id + '_' + section + '_desc" >' + from + '</div>';
+	}
+	else if (type == "test") {
+		descfield.innerHTML = "";
+	}
+	else if (type == "bibliography") {
+		descfield.innerHTML = "";
+	}
+}
+
+</script>

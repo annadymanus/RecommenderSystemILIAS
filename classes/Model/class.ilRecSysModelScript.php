@@ -4,75 +4,74 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 
 
 //@author Potoskueva Daria
+//@author Joel Pflomm
 
-class ilRecSysModelScript {
+class ilRecSysModelScript extends ilRecSysModelMaterialSection{
 
-    private $script_id;
-    private $obj_id;
+    const MATERIALTABLENAME = "ui_uihk_recsys_m_s_f_s";
+    const SECTIONIDNAME = "script_id";
+    const MATERIALTYPE = 0;
+
     private $start_page;
     private $end_page;
-    private $difficulty;
-    private $rating_count;
-
-    var $ilDB;
 
     //-----------------------------------------------------------------------------------
 
-    //constructor
-    public function __construct($script_id, $obj_id, $start_page, $end_page, $difficulty, $rating_count)
-    {
-        global $ilDB;
-        $this->ilDB = $ilDB;
-        $this->script_id = $script_id;// TODO: figure  out whether we can put a counter in here and make it thread safe, so that the id is unique.
-        $this->obj_id = $obj_id;  //ilObject::_lookupObjectId(); //needed to be find out
+    public function __construct($script_id, $obj_id, $start_page, $end_page, $difficulty, $rating_count, $no_tags) {
+        parent::__construct($script_id, $obj_id, $difficulty, $rating_count, $no_tags);
+
         $this->start_page = $start_page;
         $this->end_page = $end_page;
-        $this->difficulty = $difficulty;
-        $this->rating_count = $rating_count;
     }
 
-    // ------------------------------------------------------------------------------------
-    //add a new script to the table
-    public function createScript() {   
-        $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_m_c_f_s"
-                . " (script_id, obj_id, start_page, end_page, difficulty, rating_count)"
-                . " VALUES (%s,%s,%s,%s,%s,%s) ;",
-                array("integer", "integer", "integer", "integer", "float", "integer"),
-                array($this->script_id, 
-                      $this->obj_id, 
-                      $this->start_page, 
-                      $this->end_page, 
-                      $this->difficulty, 
-                      $this->rating_count
-                    ));
-    }
-
-    //update the script
-    public function update(){
-        $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_m_c_f_s"
-            ." SET"
-                ." start_page = %s"
-                .", end_page = %s"
-                .", difficulty = %s"
-                .", rating_count = %s"
-            ." WHERE script_id = %s",
-        array("integer","integer","double", "integer", "integer"),
-        array($this->start_page, $this->end_page, $this->difficulty, $this->rating_count, $this->script_id)
-        );
+    public static function fetchByMaterialSectionID($script_id){
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT * FROM ".self::MATERIALTABLENAME." WHERE ".self::SECTIONIDNAME." = ".$ilDB->quote($script_id, "integer"));
+        if($ilDB->numRows($queryResult)==0) {
+            return null;
+        }
+        $fetched_script = $ilDB->fetchObject($queryResult);
+        $script = new ilRecSysModelScript(
+            $fetched_script->script_id, 
+            $fetched_script->obj_id, 
+            $fetched_script->start_page, 
+            $fetched_script->end_page, 
+            $fetched_script->difficulty, 
+            $fetched_script->rating_count,
+            $fetched_script->no_tags);
+        return $script;
     }
 
     //written by @Anna Eschbach-Dymanus
-    public static function fetchByObjID($obj_id, $from=null, $to=null){
+    // edited by @Joel Pflomm
+    public static function fetchByObjID($obj_id, $from_to){
         global $ilDB;
-        if($from != null && $to != null){
-            $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_s WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_page == ".$ilDB->quote($from, "integer")." AND end_page == ".$ilDB->quote($to, "integer"));
+        if(sizeof($from_to) == 2){
+            $queryResult = $ilDB->query("SELECT * FROM ".self::MATERIALTABLENAME." WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_page == ".$ilDB->quote($from_to[0], "integer")." AND end_page == ".$ilDB->quote($from_to[1], "integer"));
+        } else {
+            throw new Exception("Both start end end page have to be defined for this material_type");
         }
-        else if($from == null && $to == null){
-            $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_s WHERE obj_id = ".$ilDB->quote($obj_id, "integer"));
+        // check wheter the queryResult holds some entries
+        if ($ilDB->numRows($queryResult) === 0) {
+            return null;
         }
-        else{
-            throw new Exception("Either both from and to have to be null or both have to be set");
-        }
+        $fetched_script = $ilDB->fetchObject($queryResult);
+        $script = new ilRecSysModelScript(
+            $fetched_script->script_id, 
+            $fetched_script->obj_id, 
+            $fetched_script->start_page, 
+            $fetched_script->end_page, 
+            $fetched_script->difficulty, 
+            $fetched_script->rating_count,
+            $fetched_script->no_tags);
+        return $script;
+    }
+
+    public static function fetchAllSectionsWithObjID($obj_id) {
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT * FROM ".self::MATERIALTABLENAME." WHERE obj_id = ".$ilDB->quote($obj_id, "integer"));
+        
+        //if query is empty, return null
         if ($ilDB->numRows($queryResult) === 0) {
             return null;
         }
@@ -84,104 +83,112 @@ class ilRecSysModelScript {
                 $fetched_script->start_page, 
                 $fetched_script->end_page, 
                 $fetched_script->difficulty, 
-                $fetched_script->rating_count);
-            $scripts[] = $script;
+                $fetched_script->rating_count,
+                $fetched_script->no_tags);
+            array_push($scripts, $script);
         }
         return $scripts;
     }
 
-    //Do we really need getScript? What would be the usecase
-    //written by @Anna Eschbach-Dymanus
-    public static function fetchByMaterialID($script_id){
+    public static function getLastMaterialSectionId() {
         global $ilDB;
-        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_s WHERE script_id = ".$ilDB->quote($script_id, "integer"));
-        $fetched_script = $ilDB->fetchObject($queryResult);
-        $script = new ilRecSysModelScript(
-            $fetched_script->script_id, 
-            $fetched_script->obj_id, 
-            $fetched_script->start_page, 
-            $fetched_script->end_page, 
-            $fetched_script->difficulty, 
-            $fetched_script->rating_count);
-        return $script;
+        $queryResult = $ilDB->query("SELECT ".self::SECTIONIDNAME.
+            " FROM ".self::MATERIALTABLENAME.
+            " ORDER BY ".self::SECTIONIDNAME." DESC LIMIT 1");
+        if ($ilDB->numRows($queryResult) === 0) {
+            $last_section_id = 0;
+        } else {
+            $last_section_id = $ilDB->fetchAssoc($queryResult);
+            $last_section_id = $last_section_id[self::SECTIONIDNAME];
+        }
+        return $last_section_id;
     }
 
-    public function getMaterial(){
-        global $ilDB;
-        $queryResult = $this->$ilDB->query("SELECT * FROM ui_uihk_recsys_m_c_f_s WHERE script_id = ".$this->$ilDB->quote($this->script_id, "integer"));
-        $script = $this->$ilDB->fetchObject($queryResult);
-        $this->script_id = $script->script_id;
-        $this->obj_id = $script->obj_id;
-        $this->start_page = $script->start_page;
-        $this->end_page = $script->end_page;
-        $this->difficulty = $script->difficulty;
-        $this->rating_count = $script->rating_count;
-        return $this;
+    // ------------------------------------------------------------------------------------
+    //add a new script section to the table
+    public function createMaterialSection() {   
+        $this->ilDB->manipulateF("INSERT INTO ".self::MATERIALTABLENAME
+                . " (script_id, obj_id, start_page, end_page, difficulty, rating_count, no_tags)"
+                . " VALUES (%s,%s,%s,%s,%s,%s,%s) ;",
+                array("integer", "integer", "integer", "integer", "float", "integer", "integer"),
+                array($this->section_id, 
+                      $this->obj_id, 
+                      $this->start_page, 
+                      $this->end_page, 
+                      $this->difficulty, 
+                      $this->rating_count,
+                      $this->no_tags
+                    ));
     }
 
-    public static function deleteMaterial($script_id){
-        global $ilDB;
-        // Validate and sanitize the input with the filter_var() function.
-        $script_id = filter_var($script_id, FILTER_VALIDATE_INT);
-        $ilDB->manipulateF("DELETE FROM ui_uihk_recsys_m_c_f_s WHERE script_id = %s",
+    /**
+     *  update the difficulty of the script section
+     */
+    public function updateSectionDifficulty($new_difficulty, $new_rating_count) {
+        $this->ilDB->manipulateF("UPDATE ".self::MATERIALTABLENAME
+        ." SET"
+        ." difficulty = %s,"
+        ." rating_count = %s"
+        ." WHERE ".self::SECTIONIDNAME." = %s",
+        array("double", "integer", "integer"),
+        array($new_difficulty, $new_rating_count, $this->section_id)
+    );
+    $this->difficulty = $new_difficulty;
+    $this->rating_count = $new_rating_count;
+    }
+
+    /**
+     *  update the start and end page attributes of the script section
+     */
+    public function updateStartEndPage($start_page, $end_page){
+        $this->ilDB->manipulateF("UPDATE ".self::MATERIALTABLENAME
+            ." SET"
+            ." start_page = %s"
+            .", end_page = %s"
+            ." WHERE script_id = %s",
+            array("integer", "integer", "integer"),
+            array($start_page, $end_page, $this->section_id)
+        );
+        $this->start_page = $start_page;
+        $this->end_page = $end_page;
+    }
+
+    public function addNewRating($rating){
+        $new_difficulty = $this->calculateDifficulty($rating);
+        $this->updateSectionDifficulty($new_difficulty, ($this->getRatingCount() + 1));
+    }
+
+    /**
+     *  delete given script section object
+     */
+    public function deleteSection(){
+        $script_id = filter_var($this->section_id, FILTER_VALIDATE_INT);
+        $this->ilDB->manipulateF("DELETE FROM " .self::MATERIALTABLENAME." WHERE ".self::SECTIONIDNAME." = %s",
             array("integer"),
             array($script_id));
     }
 
     //-----------------------------------------------------------------------------------
 
-    public function get_id()
-    {
-        return $this->script_id;
+    public function getMaterialType() {
+        return self::MATERIALTYPE;
     }
 
-    public function getObj_id()
-    {
-        return $this->obj_id;
-    }
-
-    public function getStart_page()
-    {
+    public function getStart_page() {
         return $this->start_page;
     }
 
-    public function getEnd_page()
-    {
+    public function getEnd_page() {
         return $this->end_page;
     }
 
-    public function getDifficulty()
-    {
-        return $this->difficulty;
+    public function setNoTags($no_tags) {
+        if($no_tags > 0){
+            $this->ilDB->manipulateF("UPDATE " .self::MATERIALTABLENAME ." SET no_tags = %s WHERE ".self::SECTIONIDNAME." = %s", 
+                array("integer", "integer"),
+                array($no_tags, $this->section_id)
+            );
+            $this->no_tags = $no_tags;
+        }
     }
-
-    public function getRating_count()
-    {
-        return $this->rating_count;
-    }
-
-    public function setStart_page($start_page)
-    {
-        $this->start_page = $start_page;
-    }
-
-    public function setEnd_page($end_page)
-    {
-        $this->end_page = $end_page;
-    }
-
-    public function calculateDifficulty($rating){
-        $this->difficulty = (($this->difficulty * ($this->rating_count - 1)) + $rating) / $this->rating_count;
-        // TODO: implement a more sofisticated difficulty calculation
-    }
-
-    /**
-     * rating_count counts the users that have given a rating
-     * this function increments the rating_count of the given object by 1
-     */
-    public function incrementRating_count()
-    {
-        $this->rating_count++; 
-    }
-    
 }

@@ -16,80 +16,59 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
  *
  */
 
+// for the sake of understandability
+class MaterialType{
+    const SCRIPT = 0;
+    const PRESENTATION = 1;
+    const VIDEO = 2;
+    const PICTURE = 3;
+    const WEBLINK = 4;
+    const BIBLIOGRAPHY = 5;
+    const EXERCISE = 6;
+}
+
+
 class ilRecSysModelTagHandler{
-    /**
-     * new implementation Joel
-     */
 
     // only instance of this class, should be called whenever tags are about to be managed
     private static $instance;
-    // list of all material
+
+    // list of all material section counters. (Used to assign unique identifiers)
     private $script_counter;          
     private $presentation_counter;    
     private $video_counter;           
     private $picture_counter;
     private $weblink_counter;
     private $bibliography_counter;
-    private $test_counter;
     private $exercise_counter;
     
     private $tag_counter;
+
     private $tags_map = []; 
     private $tags_user_map = [];
+
+    // TODO: Implement a class that holds these maps but controlles their size, else they may get too big
 
     private $script_map = [];         // ilRecSysModelScript attributes: script_id, obj_id, start_page, end_page, difficulty, rating_count
     private $presentation_map = [];   // ilRecSysModelPresentation attributes: presentation_id, obj_id, start_slide, end_slide, difficulty, rating_count
     private $video_map = [];          // ilRecSysModelVideo attributes: video_id, obj_id, start_min, end_min, difficulty, rating_count
     private $picture_map = [];        // ilRecSysModelPicture attributes: picture_id, obj_id, difficulty, rating_count
     private $weblink_map = [];        // ilRecSysModelWeblink attributes: weblink_id, obj_id, difficulty, rating_count
-    private $bibleography_map = [];   // ilRecSysModelBibliography attributes: bibl_id, obj_id, difficulty, rating_count
-    private $test_map = [];           
+    private $bibleography_map = [];   // ilRecSysModelBibliography attributes: bibl_id, obj_id, difficulty, rating_count         
     private $exercise_map = [];  
     
-
-    // Attributes:
-    /*
-    private $tags;                  //ilRecSysModelTags attributes: tag_id, tag_name, tag_description, tag_occurence;
-    private $tag_names;                  
-    private $tagsPerMaterial;       //ilRecSysModelTagsPerMaterial attributes: tag_id, material_type, material_id
-    private $overallTagsUser;       //ilRecSysModelOverallTagsUser attributes: tag_id, usr_id, priority, tag_counter
-    private $specificTagsUser;      //ilRecSysModelSpecificTagsUser attributes: usr_id, material_type, material_id
-    private $obj_id;
-    private $material;
-    private $material_id;
-    private $material_type;
-    private $from_to;
-    private $difficulty;
-    private $rating_count;*/
     //-------------------------------------------------------------
     // Constructor and instantiating functions
 
-    // Constructor:
-    //written by @Anna Eschbach-Dymanus
-    /*public function __construct($obj_id, $material_id, $tag_names, $material_type, $from_to=null)
-    {
-        $this->tag_names = $tag_names;
-        $this->obj_id = $obj_id;
-        $this->material_id = $material_id;
-        $this->material_type = $material_type;
-        $this->from_to = $from_to;   
-        $this->difficulty = 0; //future feature
-        $this->rating_count = 0;    //future feature 
-    }*/
-
-    /**
-     * new implementation Joel
-     */
     private function __construct() {
-        $this->script_counter = self::getLastScriptId();
-        $this->presentation_counter = self::getLastPresentationId();
-        $this->video_counter = self::getLastVideoId();
-        $this->picture_counter = self::getLastPictureId();
-        $this->weblink_counter = self::getLastWeblinkId();
-        $this->bibliography_counter = self::getLastBiblId();
-        $this->test_counter = self::getLastTestId();
-        $this->exercise_counter = self::getLastExerciseId();
-        $this->tag_counter = self::getLastTagId();
+        $this->script_counter = ilRecSysModelScript::getLastMaterialSectionId();
+        $this->presentation_counter = ilRecSysModelPresentation::getLastMaterialSectionId();
+        $this->video_counter = ilRecSysModelVideo::getLastMaterialSectionId();
+        $this->picture_counter = ilRecSysModelPicture::getLastMaterialSectionId();
+        $this->weblink_counter = ilRecSysModelWeblink::getLastMaterialSectionId();
+        $this->bibliography_counter = ilRecSysModelBibliography::getLastMaterialSectionId();
+        $this->exercise_counter = ilRecSysModelExercise::getLastMaterialSectionId();
+        $this->tag_counter = ilRecSysModelTags::getLastTagId();
     }
 
 
@@ -109,204 +88,50 @@ class ilRecSysModelTagHandler{
 
     // -------------------------------------------------------------------------------------------------
     // functions for handling the material specific ids
-    
-    /**
-     * class function that gets the lastScriptId-attribute from the table ui_uihk_recsys_m_c_s
-     */
-    private static function getLastScriptId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT script_id FROM ui_uihk_recsys_m_c_f_s ORDER BY script_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_script_id = 0;
-        } else {
-            $last_script_id = $ilDB->fetchAssoc($queryResult);
-            $last_script_id = $last_script_id['script_id'];
-        }
-        return $last_script_id;
-    }
 
     /**
-     * class function that gets the lastPresentationId-attribute from the table ui_uihk_recsys_m_c_p
+     * getter and increment functions for the specific section counter
      */
-    private static function getLastPresentationId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT presentation_id FROM ui_uihk_recsys_m_c_f_p ORDER BY presentation_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_presentation_id = 0;
-        } else {
-            $last_presentation_id = $ilDB->fetchAssoc($queryResult);
-            $last_presentation_id = $last_presentation_id['presentation_id'];
-        }
-        return $last_presentation_id;
+    private function incrementSectionCounter($materialType) {
+        switch($materialType){
+            case MaterialType::SCRIPT: $this->script_counter++;
+                break;
+            case MaterialType::PRESENTATION: $this->presentation_counter++;
+                break;
+            case MaterialType::VIDEO: $this->video_counter++;
+                break;
+            case MaterialType::PICTURE: $this->picture_counter++;
+                break;
+            case MaterialType::WEBLINK: $this->weblink_counter++;
+                break;
+            case MaterialType::BIBLIOGRAPHY: $this->bibliography_counter++;
+                break;        
+            case MaterialType::TEST: $this->test_counter++;
+                break;
+            case MaterialType::EXERCISE: $this->exercise_counter++;
+                break;
+            default:
+                break;
+        } 
     }
 
-    /**
-     * class function that gets the lastVideoId-attribute from the table ui_uihk_recsys_m_c_f_v
-     */
-    private static function getLastVideoId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT video_id FROM ui_uihk_recsys_m_c_f_v ORDER BY video_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_video_id = 0;
-        } else {
-            $last_video_id = $ilDB->fetchAssoc($queryResult);
-            $last_video_id = $last_video_id['video_id'];
-        }
-        return $last_video_id;
+    private function incrementTagCounter() { $this->tag_counter++; }
+
+    public function getMaterialSectionCounter($materialType) {
+        switch($materialType){
+            case MaterialType::SCRIPT: return $this->script_counter;
+            case MaterialType::PRESENTATION: return $this->presentation_counter;
+            case MaterialType::VIDEO: return $this->video_counter;
+            case MaterialType::PICTURE: return $this->picture_counter;
+            case MaterialType::WEBLINK: return $this->weblink_counter;
+            case MaterialType::BIBLIOGRAPHY: return $this->bibliography_counter;
+            case MaterialType::TEST: return $this->test_counter;
+            case MaterialType::EXERCISE: return $this-> exercise_counter;
+            default: return -1;
+        } 
     }
-
-    /**
-     * class function that gets the lastPictureId-attribute from the table ui_uihk_recsys_m_c_pic
-     */
-    private static function getLastPictureId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT picture_id FROM ui_uihk_recsys_m_c_pic ORDER BY picture_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_picture_id = 0;
-        } else {
-            $last_picture_id = $ilDB->fetchAssoc($queryResult);
-            $last_picture_id = $last_picture_id['picture_id'];
-        }
-        return $last_picture_id;
-    }
-
-    /**
-     * class function that gets the lastWeblinkId-attribute from the table ui_uihk_recsys_m_c_w
-     */
-    private static function getLastWeblinkId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT weblink_id FROM ui_uihk_recsys_m_c_w ORDER BY weblink_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_weblink_id = 0;
-        } else {
-            $last_weblink_id = $ilDB->fetchAssoc($queryResult);
-            $last_weblink_id = $last_weblink_id['weblink_id'];
-        }
-        return $last_weblink_id;
-    }
-
-    /**
-     * class function that gets the lastBiblId-attribute from the table ui_uihk_recsys_m_c_bib
-     */
-    private static function getLastBiblId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT bibl_id FROM ui_uihk_recsys_m_c_bib ORDER BY bibl_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_bibl_id = 0;
-        } else {
-            $last_bibl_id = $ilDB->fetchAssoc($queryResult);
-            $last_bibl_id = $last_bibl_id['bibl_id'];
-        }
-        return $last_bibl_id;
-    }
-
-    /**
-     * class function that gets the lastTestId-attribute from the table ui_uihk_recsys_m_a_t
-     */
-    private static function getLastTestId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT test_id FROM ui_uihk_recsys_m_a_t ORDER BY test_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_test_id = 0;
-        } else {
-            $last_test_id = $ilDB->fetchAssoc($queryResult);
-            $last_test_id = $last_test_id['test_id'];
-        }
-        return $last_test_id;
-    }
-
-    /**
-     * class function that gets the lastExerciseId-attribute from the table ui_uihk_recsys_m_a_e
-     */
-    private static function getLastExerciseId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT exercise_id FROM ui_uihk_recsys_m_a_e ORDER BY exercise_id DESC LIMIT 1");
-        if ($ilDB->numRows($queryResult) === 0) {
-            $last_exercise_id = 0;
-        } else {
-            $last_exercise_id = $ilDB->fetchAssoc($queryResult);
-            $last_exercise_id = $last_exercise_id['exercise_id'];
-        }
-        return $last_exercise_id;
-    }
-
-    private static function getLastTagId() {
-        global $ilDB;
-        $queryResult = $ilDB->query("SELECT tag_id FROM ui_uihk_recsys_tags ORDER BY tag_id DESC LIMIT 1");
-        if($ilDB->numRows($queryResult) === 0) {
-            $last_tag_id = 0;
-        } else {
-            $last_tag_id = $ilDB->fetchAssoc($queryResult);
-            $last_tag_id = $last_tag_id['tag_id'];
-        }
-        return $last_tag_id;
-    }
-
-    /**
-     * getter and increment functions for the specific matirial counter
-     */
-    public function incrementScriptCounter() { $this->script_counter++; }
-
-    public function getScriptCounter() { return $this->script_counter; }
-
-    public function incrementPresentationCounter() { $this->presentation_counter++; }
-
-    public function getPresentationCounter() { return $this->presentation_counter; }
-
-    public function incrementVideoCounter() { $this->video_counter++; }
-
-    public function getVideoCounter() { return $this->video_counter; }
-
-    public function incrementPictureCounter() { $this->picture_counter++; }
-
-    public function getPictureCounter() { return $this->picture_counter; }
-
-    public function incrementWeblinkCounter() { $this->weblink_counter++; }
-
-    public function getWeblinkCounter() { return $this->weblink_counter; }
-
-    public function incrementBiblCounter() { $this->bibliography_counter++; }
-
-    public function getBibliographyCounter() { return $this->bibliography_counter; }
-
-    public function incrementTestCounter() { $this->test_counter++; }
-
-    public function getTestCounter() { return $this->test_counter; }
-
-    public function incrementExerciseCounter() { $this->exercise_counter++; }
-
-    public function getExerciseCounter() { return $this->exercise_counter; }
-
-    public function incrementTagCounter() { $this->tag_counter++; }
 
     public function getTagCounter() {return $this->tag_counter; }
-
-
-    //written by @Anna Eschbach-Dymanus
-    /*
-    private function get_material()
-    {
-        switch ($this->material_type){
-            case "script":
-                //a real material_id, an existing material
-                if($this->material_id >= 0){ 
-                    $material = ilRecSysModelScript::fetchByMaterialID($this->material_id);
-                    $material->setStart_page($this->from_to[0]);
-                    $material->setEnd_page($this->from_to[1]);
-                    $material->setDifficulty($this->difficulty);
-                    //$material->rating_count = $this->rating_count;
-                    $material->updateMaterial();
-                }
-                //a new material
-                else{
-                    $material = new ilRecSysModelScript(null, $this->obj_id, $this->from_to[0], $this->from_to[1], 0, 0); //set difficulty and rating_count to null for now
-                    $material->addNewMaterial();
-                }
-                break;
-            // Add other materials           
-        }
-        return $material;
-    }*/
 
     //-------------------------------------------------------------
     // create functions:
@@ -315,375 +140,614 @@ class ilRecSysModelTagHandler{
      * creates tag and adds it to the database as well as into the tags_map
      * @return ilRecSysModelTags - object with the newly created tag
      */
-    public function createNewTag($tag_name, $tag_description){
+    public function createNewTag($tag_name, $tag_description, $crs_id){
         // increment tag counter and create tag object
+        if(ilRecSysModelTags::fetchTagByName($tag_name, $crs_id) != null){
+            throw new Exception("A tag for the provided name already exists.");
+        }
         $this->incrementTagCounter();
         $tag_id = $this->getTagCounter();
-        $tag = new ilRecSysModelTags($tag_id, $tag_name, $tag_description, 0);
-        $tag->addNewTag(); // TODO: change this in Model class
+        $tag = new ilRecSysModelTags($tag_id, $tag_name, $crs_id, $tag_description, 0);
+        $tag->addNewTag(); 
         $this->tags_map[$tag_id] = $tag;
         return $tag;
     }
 
+    
     /**
-     *  args        array of arguments the first 2 are defined the rest depends on the matirial type: 
-     *  args[0]      material_type
-     *  args[1]      obj_id
-     *  args[2]      
-     * ...          (depends on material_type)
+     *  args        array of arguments the first 2 are defined the rest depends on the material type: 
+     *  args[0]     material_type
+     *  args[1]     obj_id
+     *  args[2]     from (optional)
+     *  args[3]     to (optional)
      */
-    public function createMaterialTag($tag_id, array $args){
-        // check whether tag_id exists
-
-        switch($args[0]){
-            case 0:     // script
-                // 1. get unique counter and increment it by one
-                $this->incrementScriptCounter();
-                $script_id = $this->getScriptCounter();
-                
-                // 2. create ilRecSysModelScript "Material" class
-                $script = new ilRecSysModelScript($script_id, $args[1], $args[2], $args[3], 0.0, 0);
-                $script->createScript();
-                $this->script_map[$script_id] = $script;
-                
-                // 3. add script in the tagToMaterial table
-                $tag_to_material = new ilRecSysModelTagsPerMaterial($tag_id, $args[0], $script_id);
-                $tag_to_material->addNewTagToMaterial();
-                
-                break;
-
-            case 1:     // presentation
-                // 1. get unique counter and increment it by one
-                $this->incrementPresentationCounter();
-                $presentation_id = $this->getPresentationCounter();
-                
-                // 2. create ilRecSysModelPresentation "Material" class
-                $presentation = new ilRecSysModelPresentation($presentation_id, $args[1], $args[2], $args[3], 0.0, 0);
-                $presentation->createPresentation();
-                $this->presentation_map[$presentation_id] = $presentation;
-                
-                // 3. add script in the tagToMaterial table
-                $tag_to_material = new ilRecSysModelTagsPerMaterial($tag_id, $args[0], $presentation_id);
-                $tag_to_material->addNewTagToMaterial();
-                
-                break;
-                
-            case 2:     // video
-                // 1. get unique counter and increment it by one
-                $this->incrementVideoCounter();
-                $video_id = $this->getVideoCounter();
-                
-                // 2. create ilRecSysModelPresentation "Material" class
-                $video = new ilRecSysModelVideo($video_id, $args[1], $args[2], $args[3], 0.0, 0);
-                $video->createVideo();
-                $this->video_map[$video_id] = $video;
-                
-                // 3. add script in the tagToMaterial table
-                $tag_to_material = new ilRecSysModelTagsPerMaterial($tag_id, $args[0], $video_id);
-                $tag_to_material->addNewTagToMaterial();
-                break;
-            case 3:     // picture
-                break;
-            case 4:     // weblink
-                // add weblink in weblink table
-                $this->incrementWeblinkCounter();
-                $weblink_id = $this->getWeblinkCounter();
-                $weblink = new ilRecSysModelWeblink($weblink_id, $args[1], 0.0, 0);
-                $weblink->createWeblink();
-                $this->weblink_map[$weblink_id] = $weblink;
-                
-                //add weblink in tagToMaterial table
-                $tag_to_material = new ilRecSysModelTagsPerMaterial($tag_id, $args[0], $weblink_id);
-                $tag_to_material->addNewTagToMaterial();
-                         
-                break;
-
-            case 5:     // bibliography
-                break;
-            case 6:     // test
-                break;
-            case 7:     // exercise
-                // 1. get unique counter and increment it by one
-                $this->incrementExerciseCounter();
-                $exercise_id = $this->getExerciseCounter();
-                
-                // 2. create ilRecSysModelExercise "Material" class
-                $exercise = new ilRecSysModelExercise($exercise_id, $args[1], $args[2], $args[3], 0.0, 0);
-                $exercise->createExercise();
-                $this->exercise_map[$exercise_id] = $exercise;
-                
-                // 3. add script in the tagToMaterial table
-                $tag_to_material = new ilRecSysModelTagsPerMaterial($tag_id, $args[0], $exercise_id);
-                $tag_to_material->addNewTagToMaterial();
-                break;
-            default:    // default case nothing happens. new entries must be inserted here
-                return;
-        }
-        
-        // update tag occurence 
+    public function assignTagToSection($tag_id, $material_type, $obj_id, $from, $to) {
+        // 1. check whether tag_id exists
         $tag = $this->getTag($tag_id);
-        $tag->incrementOccurrence();  
+        if ($tag == null){
+            throw new Exception("The id that was provided for the tag is invalid. \nThe tag does not exist");
+        }
+
+        // 2. check whether a section already exists
+        // 3. if not create a new section / else just increment the no_tags the section was tagged by
+        switch($material_type) {
+            case MaterialType::SCRIPT: 
+                $from_to =[$from, $to];
+                $script = ilRecSysModelScript::fetchByObjID($obj_id, $from_to);
+                if($script == null){
+                    // create new section
+                    $this->incrementSectionCounter($material_type);
+                    $script_id = $this->getMaterialSectionCounter($material_type);
+                    $script = new ilRecSysModelScript($script_id, $obj_id, $from, $to, 0.0, 0, 1);
+                    // add section to according map
+                    $this->script_map[$script_id] = $script;
+                } else {
+                    // check if section was already connected/assigned to the tag
+                    if(ilRecSysModelTagsPerSection::fetchTagsPerSection($script->getSectionID(), $tag_id, $material_type) != null){
+                        throw new Exception("The tag has already been assigned to the section.");
+                    }
+                    //if not increment no_tags
+                    $script->incrementNoTags();
+                }
+                $section = $script;
+                break;
+
+            case MaterialType::PRESENTATION:
+                $from_to =[$from, $to];
+                $presentation = ilRecSysModelPresentation::fetchByObjID($obj_id, $from_to);
+                if($presentation == null){
+                    // create new section
+                    $this->incrementSectionCounter($material_type);
+                    $presentation_id = $this->getMaterialSectionCounter($material_type);
+                    $presentation = new ilRecSysModelPresentation($presentation_id, $obj_id, $from, $to, 0.0, 0, 1);
+                    // add section to according map
+                    $this->presentation_map[$presentation_id] = $presentation;
+                } else {
+                    // check if section was already connected/assigned to the tag
+                    if(ilRecSysModelTagsPerSection::fetchTagsPerSection($presentation->getSectionID(), $tag_id, $material_type) != null){
+                        throw new Exception("The tag has already been assigned to the section.");
+                    }
+                    //if not increment no_tags
+                    $presentation->incrementNoTags();
+                }
+                $section = $presentation;
+                break;
+            case MaterialType::VIDEO:
+                $from_to =[$from, $to];
+                $video = ilRecSysModelVideo::fetchByObjID($obj_id, $from_to);
+                if($video == null){
+                    // create new section
+                    $this->incrementSectionCounter($material_type);
+                    $video_id = $this->getMaterialSectionCounter($material_type);
+                    $video = new ilRecSysModelVideo($video_id, $obj_id, $from, $to, 0.0, 0, 1);
+                    // add section to according map
+                    $this->video_map[$video_id] = $video;
+                } else {
+                    // check if section was already connected/assigned to the tag
+                    if(ilRecSysModelTagsPerSection::fetchTagsPerSection($video->getSectionID(), $tag_id, $material_type) != null){
+                        throw new Exception("The tag has already been assigned to the section.");
+                    }
+                    //if not increment no_tags
+                    $video->incrementNoTags();
+                }
+                $section = $video;
+                break;
+            case MaterialType::PICTURE:
+                $from_to =[];
+                $picture = ilRecSysModelPicture::fetchByObjID($obj_id, $from_to);
+                if($picture == null){
+                    // create new section
+                    $this->incrementSectionCounter($material_type);
+                    $picture_id = $this->getMaterialSectionCounter($material_type);
+                    $picture = new ilRecSysModelPicture($picture, $obj_id, 0.0, 0, 1);
+                    // add section to according map
+                    $this->picture_map[$picture_id] = $picture;
+                } else {
+                    // check if section was already connected/assigned to the tag
+                    if(ilRecSysModelTagsPerSection::fetchTagsPerSection($picture->getSectionID(), $tag_id, $material_type) != null){
+                        throw new Exception("The tag has already been assigned to the section.");
+                    }
+                    //if not increment no_tags
+                    $picture->incrementNoTags();
+                }
+                $section = $picture;
+                break;
+            case MaterialType::WEBLINK:
+                $from_to =[];
+                $weblink = ilRecSysModelWeblink::fetchByObjID($obj_id, $from_to);
+                if($weblink == null){
+                    // create new section
+                    $this->incrementSectionCounter($material_type);
+                    $weblink_id = $this->getMaterialSectionCounter($material_type);
+                    $weblink = new ilRecSysModelPicture($weblink_id, $obj_id, 0.0, 0, 1);
+                    // add section to according map
+                    $this->weblink_map[$weblink_id] = $weblink;
+                } else {
+                    // check if section was already connected/assigned to the tag
+                    if(ilRecSysModelTagsPerSection::fetchTagsPerSection($weblink->getSectionID(), $tag_id, $material_type) != null){
+                        throw new Exception("The tag has already been assigned to the section.");
+                    }
+                    //if not increment no_tags
+                    $weblink->incrementNoTags();
+                }
+                $section = $weblink;
+                break;
+            case MaterialType::BIBLIOGRAPHY:
+                $from_to =[];
+                $bibliography = ilRecSysModelBibliography::fetchByObjID($obj_id, $from_to);
+                if($bibliography == null){
+                    // create new section
+                    $this->incrementSectionCounter($material_type);
+                    $bibliography_id = $this->getMaterialSectionCounter($material_type);
+                    $bibliography = new ilRecSysModelBibliography($bibliography_id, $obj_id, 0.0, 0, 1);
+                    // add section to according map
+                    $this->weblink_map[$bibliography_id] = $bibliography;
+                } else {
+                    // check if section was already connected/assigned to the tag
+                    if(ilRecSysModelTagsPerSection::fetchTagsPerSection($bibliography->getSectionID(), $tag_id, $material_type) != null){
+                        throw new Exception("The tag has already been assigned to the section.");
+                    }
+                    //if not increment no_tags
+                    $bibliography->incrementNoTags();
+                }
+                $section = $bibliography;
+                break;
+            case MaterialType::EXERCISE:
+                $task_subtask =[$from, $to];
+                $exercise = ilRecSysModelExercise::fetchByObjID($obj_id, $task_subtask);
+                if($exercise == null){
+                    // create new section
+                    $this->incrementSectionCounter($material_type);
+                    $exercise_id = $this->getMaterialSectionCounter($material_type);
+                    $exercise = new ilRecSysModelExercise($exercise_id, $obj_id, $from, $to, 0.0, 0, 1);
+                    // add section to according map
+                    $this->video_map[$exercise_id] = $exercise;
+                } else {
+                    // check if section was already connected/assigned to the tag
+                    if(ilRecSysModelTagsPerSection::fetchTagsPerSection($exercise->getSectionID(), $tag_id, $material_type) != null){
+                        throw new Exception("The tag has already been assigned to the section.");
+                    }
+                    //if not increment no_tags
+                    $exercise->incrementNoTags();
+                }
+                $section = $exercise;
+            default:
+                throw new Exception("Provided material type does not exists");
+        }
+        //4. connect section to the tag
+        $tag_to_material = new ilRecSysModelTagsPerSection($tag_id, $material_type, $section->getSectionID());
+        $tag_to_material->addNewTagToSection();
+        
+        //5. update tag occurence 
+        $tag->incrementCount();
+
+        return $section;
     }
     
     // ____________________________________________________________
     // get functions:
     
-    //written by @Anna Eschbach-Dymanus
-    private function getTagsByName($tag_names)
-    {
-        $tags = array();
-        foreach($tag_names as $tag_name){
-            $tag = ilRecSysModelTags::fetchTagByName($tag_name);
-            if($tag == null){
-                $tag = $this -> createNewTag($tag_name, "");
-            }
-            $tags[] = $tag;
-        }
-        return $tags;
-    }
-    
     /**
-     *  get a Tag
+     *  get a Tag by its ID
+     * 
      *  @param tag_id of the tag that is loaded
      *  @return tag if tag exists in database, else it returns null 
      */
-    public function getTag($tag_id) {
+    public function getTagByID($tag_id) {
         if(array_key_exists($tag_id, $this->tags_map)){
             return $this->tags_map[$tag_id];
         }
-        return ilRecSysModelTags::fetchTagById($tag_id);  
+        $tag = ilRecSysModelTags::fetchTagById($tag_id); 
+        if($tag == null){
+            throw new Exception("The provided tag_id must be incorrect as there is no tag with that id.");
+        } 
+        $tags_map[$tag->getTag_id()] = $tag;
+        return $tag;  
     }
 
     /**
-     * returns the tags for which the tag_id array is given
+     * returns the tags for the given tag_ids
+     * 
      * @param tag_ids array
-     * @return result_array that stores all tags that qualify
+     * @return result_array that stores all tags that qualify, in case no tag qualifies the array is empty
      */
     public function getTags($tag_ids) {
         $result_array = array();
         //go through tags_ids to load them eighter from the map or the database
         foreach($tag_ids as $tag_id){
-            $tag = $this->getTag($tag_id);
+            $tag = $this->getTagByID($tag_id);
             if($tag != null){
                 array_push($result_array, $tag);
             }
         }
         return $result_array;
     }
+
+    /**
+     *  get a Tag by its Name
+     * 
+     *  @param tag_name of the tag that is loaded
+     *  @param crs_id of the course the tag belongs to
+     *  @return tag if tag exists in database, else it returns null 
+     *  @author Anna Eschbach-Dymanus, Joel Pflomm
+     */
+    public function getTagByName($tag_name, $crs_id)
+    {
+        $tag = ilRecSysModelTags::fetchTagByName($tag_name, $crs_id);
+        if($tag == null){
+            throw new Exception("The provided tag name is incorrect.");
+        }
+        return $tag;
+    }
+
+    /**
+     *  This function has the purpose of getting all Tags for a provided list of tag names and the according course_id
+     * 
+     *  @return tags (array)
+     *  @author Anna Eschbach-Dymanus, Joel Pflomm
+     */
+    public function getTagsByName($tag_names, $crs_id)
+    {
+        $tags = array();
+        foreach($tag_names as $tag_name){
+            $tag = $this->getTagByName($tag_name, $crs_id);
+            array_push($tags, $tag);
+        }
+        return $tags;
+    }
     
     /**
-     * get the Material for a Tag given the material type and the id of that material (e.g. script_id)
-     * @return material 
+     * get the section for a tag given the material type and the id of that section (e.g. script_id)
+     * 
+     * @return section instance (this is possible due to polymorphism)
      */
-    public function getMaterialTag($material_id, $material_type) {
+    public function getSectionMaterialByID($section_id, $material_type) {
+        // check whether material is already in the according map
+
+        // else, the material tag was not loaded in one map yet
         switch($material_type){
-            case 0: //skript
-                // check wether script is in Map
-                if(array_key_exists($material_id, $this->script_map)){
-                    $script = $this->script_map[$material_id];
+            case MaterialType::SCRIPT:
+                if(array_key_exists($section_id, $this->script_map)){
+                    $section = $this->script_map[$section_id];
                 } else {
-                    $script = ilRecSysModelScript::fetchByMaterialID($material_id);
-                    //check wether this is null
-                    if($script == null){
-                        return null;
+                    $section = ilRecSysModelScript::fetchByMaterialSectionID($section_id);
+                    if($section != null){
+                        $this->script_map[$section_id];
                     }
-                    $this->script_map[$material_id];
                 }
-                return $script;
-            case 1: //presentation
-                // check whether presentation is in Map
-                if(array_key_exists($material_id, $this->presentation_map)){
-                    $presentation = $this->presentation_map[$material_id];
+                break;
+            case MaterialType::PRESENTATION: 
+                if(array_key_exists($section_id, $this->presentation_map)){
+                    $section = $this->presentation_map[$section_id];
                 } else {
-                    $presentation = ilRecSysModelPresentation::fetchByMaterialID($material_id);
-                    //check wether this is null
-                    if($presentation == null){
-                        return null;
+                    $section = ilRecSysModelPresentation::fetchByMaterialSectionID($section_id);
+                    if($section != null){
+                        $this->presentation_map[$section_id];
                     }
-                    $this->presentation_map[$material_id];
-                }
-                return $presentation;
-            case 2: // video
-                // check whether video is in Map
-                if(array_key_exists($material_id, $this->video_map)){
-                    $video = $this->video_map[$material_id];
+                } 
+                break;
+            case MaterialType::VIDEO:
+                if(array_key_exists($section_id, $this->video_map)){
+                    $section = $this->video_map[$section_id];
                 } else {
-                    $video = ilRecSysModelVideo::fetchByMaterialID($material_id);
-                    //check wether this is null
-                    if($video == null){
-                        return null;
+                    $section = ilRecSysModelVideo::fetchByMaterialSectionID($section_id);
+                    if($section != null){
+                        $this->video_map[$section_id];
                     }
-                    $this->video_map[$material_id];
                 }
-                return $video;
-            case 3: // picture
-            case 4: // weblink
-            case 5: // bibliography
-            case 6: // test
-            case 7: // exercise
-                // check whether exercise is in Map
-                if(array_key_exists($material_id, $this->exercise_map)){
-                    $exercise = $this->exercise_map[$material_id];
+                break;
+            case MaterialType::PICTURE:
+                if(array_key_exists($section_id, $this->picture_map)) {
+                    $section = $this->picture_map[$section_id];
                 } else {
-                    $exercise = ilRecSysModelExercise::fetchByMaterialID($material_id);
-                    //check wether this is null
-                    if($exercise == null){
-                        return null;
+                    $section = ilRecSysModelPicture::fetchByMaterialSectionID($section_id);
+                    if($section != null){
+                        $this->picture_map[$section_id];
                     }
-                    $this->exercise_map[$material_id];
                 }
-                return $exercise;
+                break;
+            case MaterialType::WEBLINK: 
+                if(array_key_exists($section_id, $this->weblink_map)) {
+                    $section = $this->weblink_map[$section_id];
+                } else {
+                    $section = ilRecSysModelWeblink::fetchByMaterialSectionID($section_id);
+                    if($section != null){
+                        $this->weblink_map[$section_id];
+                    }
+                }
+                break;
+            case MaterialType::BIBLIOGRAPHY:
+                if(array_key_exists($section_id, $this->bibleography_map)) {
+                    $section = $this->bibleography_map[$section_id];
+                } else {
+                    $section = ilRecSysModelBibliography::fetchByMaterialSectionID($section_id);
+                    if($section != null){
+                        $this->bibleography_map[$section_id];
+                    }
+                }
+                break;
+            case MaterialType::EXERCISE:
+                if(array_key_exists($section_id, $this->exercise_map)) {
+                    $section = $this->exercise_map[$section_id];
+                } else {
+                    $section = ilRecSysModelExercise::fetchByMaterialSectionID($section_id);
+                    if($section != null){
+                        $this->exercise_map[$section_id];
+                    }
+                }
+                break;
             default: 
-                return;
+                throw new Exception("The provided material type does not exist");
         }
+        return $section;
     }
 
-    public function getAllMaterialsForTag($tag_id) {
+    /**
+     *  Collects an array of all section materials that were marked for a given tag
+     *  
+     *  @return sectionMaterials for given tag, or an empty array if there are none
+     */
+    public function getAllSectionMaterialsForTag($tag_id) {
         //get materials that are already stored in hashmap
-        $result_array = array();
-        $material_type_id_pair = ilRecSysModelTagsPerMaterial::getAllMaterialIDsForTag($tag_id);
+        $sectionMaterials = array();
+        $material_type_id_pair = ilRecSysModelTagsPerSection::getAllSectionIDsForTag($tag_id);
         foreach($material_type_id_pair as $pair){
-            array_push($result_array, $this->getMaterialTag($pair[1], $pair[0]));
+            $section = $this->getSectionMaterialByID($pair[1], $pair[0]);
+            if($section != null){
+                array_push($sectionMaterials, $section);
+            } 
         }
-        //null value if empty
-        return $result_array;
+        return $sectionMaterials;
     }
 
-    public function getTagsForMaterial($material_id, $material_type){
+    public function getSectionMaterialByObjID($material_type, $obj_id, $from, $to){
+        $from_to =[$from, $to];
+        switch($material_type) {
+            case MaterialType::SCRIPT:
+                return ilRecSysModelScript::fetchByObjID($obj_id, $from_to);
+            case MaterialType::PRESENTATION:
+                return ilRecSysModelPresentation::fetchByObjID($obj_id, $from_to);
+            case MaterialType::VIDEO:
+                return ilRecSysModelVideo::fetchByObjID($obj_id, $from_to);
+            case MaterialType::PICTURE:
+                return ilRecSysModelPicture::fetchByObjID($obj_id, array());
+            case MaterialType::WEBLINK:
+                return ilRecSysModelWeblink::fetchByObjID($obj_id, array());
+            case MaterialType::BIBLIOGRAPHY:
+                return ilRecSysModelBibliography::fetchByObjID($obj_id, array());
+            case MaterialType::EXERCISE:
+                return ilRecSysModelExercise::fetchByObjID($obj_id, $from_to);
+            default:
+                throw new Exception("Provided material type does not exists");
+        }
+    }
+
+    public function getAllSectionsForObjID($material_type, $obj_id){
         $result_array = array();
-        $tag_ids = ilRecSysModelTagsPerMaterial::getAllTagIdsForMaterial($material_id, $material_type);
-        foreach($tag_ids as $tag_id){
-            array_push($result_array, $this->getTag($tag_id));
+        switch($material_type) {
+            case MaterialType::SCRIPT:
+                return ilRecSysModelScript::fetchAllSectionsWithObjID($obj_id);
+            case MaterialType::PRESENTATION:
+                return ilRecSysModelPresentation::fetchAllSectionsWithObjID($obj_id);
+            case MaterialType::VIDEO:
+                return ilRecSysModelVideo::fetchAllSectionsWithObjID($obj_id);
+            case MaterialType::PICTURE:
+                $picture = ilRecSysModelPicture::fetchByObjID($obj_id, array());
+                array_push($result_array, $picture);
+                return $result_array;
+            case MaterialType::WEBLINK:
+                $weblink = ilRecSysModelWeblink::fetchByObjID($obj_id, array());
+                array_push($result_array, $weblink);
+                return $result_array;
+            case MaterialType::BIBLIOGRAPHY:
+                $bibliography = ilRecSysModelBibliography::fetchByObjID($obj_id, array());
+                array_push($result_array, $bibliography);
+                return $result_array;
+            case MaterialType::EXERCISE:
+                return ilRecSysModelExercise::fetchAllSectionsWithObjID($obj_id);
+            default:
+                throw new Exception("Provided material type does not exists");
         }
-        //null value if empty
+    }
+
+    /**
+     *  Collects all valid tag ids to specific section 
+     *  
+     *  @return tags array
+     */
+    public function getAllTagsForSectionMaterial($section_id, $material_type){
+        $tag_ids = ilRecSysModelTagsPerSection::getAllTagIdsForSection($section_id, $material_type);
+        //this can be empty
+        $result_array = $this->getTags($tag_ids);
         return $result_array;
     }
 
-
+    /**
+     *  Given a crs_id provide all Tags that were created for that course
+     */
+    public function getAllTagsForCourse($crs_id){
+        $tag_ids = ilRecSysModelTags::fetchAllTagIDsForCourse($crs_id);
+        //this can be empty
+        $result_array = $this->getTags($tag_ids);
+        return $result_array;
+    }
     
     // ____________________________________________________________
     // update functions:
 
-   //written by @Anna Eschbach-Dymanus
-   public function update_db($obj_id, $material_id, $tag_names, $material_type, $from_to=null)
-   {
-       //get and create new tag if necessary
-       $tags = $this->getTagsByName($tag_names);
-       $tag_ids = array();
-       foreach($tags as $tag){
-           array_push($tag_ids, $tag->getTag_id());
-       }
-       
-       //if real material id, get the material
-       $this->debug_to_console($material_id, "material_id");
-       if($material_id >= 0){
-           //getMaterialTag has an odd function name since it doesnt do anything with tag
-           $material = $this->getMaterialTag($material_id, $material_type);
-           if($from_to != null){
-               $material->setStart_page($from_to[0]);
-               $material->setEnd_page($from_to[1]);
-           }
-           else{
-               //Todo: set description of material
-           }
-           $material->update();
-       }
-       else{
-           if($from_to == null){
-               $material = $this->createMaterial([$material_type, $obj_id]);
-           }
-           else{
-               $this->debug_to_console("creates Material");
-               $material = $this->createMaterial([$material_type, $obj_id, $from_to[0], $from_to[1]]);
-           }
-           $material_id = $material->get_id();
-       }
-       //update Material in datbase
-       $this->debug_to_console("material updated");
+    /**
+     *  Adds a new Rating to the given tag and thereby adjusts the difficulty as well as the rating-count
+     */
+    public function addNewRatingToDifficulty($section_id, $material_type, $rating){
+        $section = $this->getSectionMaterialByID($section_id, $material_type);
+        if($section == null){
+            throw new Exception("No material tag is found under the given id.");
+            return;
+        }
+        if($section->isRatingValid()){
+            $section->addNewRating($rating);
+        } else {
+            throw new Exception("The provided rating exceeds the rating boundaries.");
+        }
+        
+    }
 
-       //create new tagsPerMaterial
-       $all_tags_per_material_ids = ilRecSysModelTagsPerMaterial::getAllTagIdsForMaterial($material_id , $material_type);
-       //get new and deleted tags
-       $new_tags_ids = array_diff($tag_ids, $all_tags_per_material_ids);
-       $deleted_tags_ids = array_diff($all_tags_per_material_ids, $tag_ids);
-       //delete tagsPerMaterial
-       foreach($deleted_tags_ids as $deleted_tag_id){
-           $deleted_tag_to_mat = ilRecSysModelTagsPerMaterial::fetchTagsToMaterial($material_id, $deleted_tag_id, $material_type);
-           $deleted_tag_to_mat->deleteTagToMaterial();
-           $this->getTag($deleted_tag_id)->decrementOccurrence();
+    /**
+     *  Updates the difficulty as long as it is within the rating intervall.
+     *  Carefull!!! This completely overrides the given difficulty and rating_count attributes.
+     */
+    public function updateDifficulty($material_id, $material_type, $new_difficulty, $new_rating_count){
+        $material = $this->getMaterialTag($material_id, $material_type);
+        if($material == null){
+            throw new Exception("No material tag is found under the given id.");
+            return;
+        }
+        if($material->isRatingValid){
+            $material->updateMaterial($new_difficulty, $new_rating_count);
+        } else {
+            throw new Exception("The provided rating exceeds the rating boundaries");
+        }
+    }
 
-       }
-       foreach($new_tags_ids as $new_tag_id){
-           $new_tag_to_mat = new ilRecSysModelTagsPerMaterial($new_tag_id, $material_type, $material_id);
-           $new_tag_to_mat->addNewTagToMaterial();
-           $this->getTag($new_tag_id)->incrementOccurrence();
-       }
-   }
+    public function updateSectionRangeForTagBySectionID($tag_id, $material_type, $section_id, $from, $to){
+        $section = $this->getSectionMaterialByID($section_id, $material_type);
+        if($section == null){
+            throw new Exception("No material tag is found under the given id.");
+        }
+        $from_to =[$from, $to];
+        $this->updateSectionRange($tag_id, $section, $from_to);
+    }
 
+    public function updateSectionRangeForTagByObjID($tag_id, $material_type, $obj_id, $from, $to){
+        $section = $this->getSectionMaterialByObjID($material_type, $obj_id, $from, $to);
+        if($section == null){
+            throw new Exception("No material tag is found under the given id.");
+        }
+        $from_to =[$from, $to];
+        $this->updateSectionRange($tag_id, $section, $from_to);
+    }
+
+    private function updateSectionRange($tag_id, $section, $from_to) {
+        //1. check whether tag exists
+        $tag = $this->getTagByID($tag_id);
+        //2. check materialType because this function only supports those material sections that can be updated
+        $material_type = $section->getMaterialType();
+        if( $material_type == MaterialType::SCRIPT 
+            || $material_type == MaterialType::PRESENTATION 
+            || $material_type == MaterialType::VIDEO
+            || $material_type == MaterialType::EXERCISE) {
+                //3. delete the tag for the section and delete the section if it is not tagged anymore
+                $this->deleteTaggedSection($tag_id, $section);
+                //5. create section/ assign section
+                $updated_section = $this->assignTagToSection($tag_id, $material_type, $section->getObId(), $from_to[0], $from_to[1]);
+                // change the ilRecSysModelTagsPerSection entry (delete/createnew)
+                $tagPerSection = new ilRecSysModelTagsPerSection($tag_id, $material_type, $updated_section->getSectionID());
+                $tagPerSection->addNewTagToSection();          
+            } else {
+                throw new Exception("The given material_type is not supported by this function.");
+            }
+    }
     //give feedback
     
     // ------------------------------------------------------------------------------------------------------------------------------------------
     // delete functions:
 
+
+
+    //delet Tag
     /**
-     *  deletes a tag by its id and removes every associated material in the according tables
+     *  deletes a tag by its id and decrements the tag count (resolves the conection) for every section that was tagged with it.
      */
-    public function saftyDeletionTag($tag_id) {
+    public function deleteTagByID($tag_id) {
+        // 1. decrement or delete sections
+        $sectionMaterials = $this->getAllSectionMaterialsForTag($tag_id);
+        foreach($sectionMaterials as $section){
+            $this->deleteTaggedSection($tag_id, $section);
+        }
+        // 2. delete Tag
+        $tag = $this->getTagByID($tag_id);
+        if ($tag != null){
+            $tag->deleteTag();
+        }
+    }
+
+    public function deleteTagByName($tag_name, $crs_id){
+        // 1. get tag id
+        $tag = $this->getTagByName($tag_name, $crs_id);
+        // delete tag by using the above function
+        $this->deleteTagByID($tag->getTag_id());
+    }
+
+    //delete Crs
+    public function deleteCourseTags($crs_id) {
+        $tags = $this->getAllTagsForCourse($crs_id);
+        foreach($tags as $tag){
+            $this->deleteTagByID($tag->getTag_id());
+        }
+    }
+
+    //delete Section
+    public function deleteTaggedSection($tag_id, $section) {
+        // check number of Tags
+        $no_tags = $section->getNoTags();
+        if($no_tags < 1){
+            throw new Exception("Internal Server Error: number of tags has reached a state with a negative value.");
+        } else if($no_tags == 1){
+            // delete section
+            $section->deleteCompleteSectionBySectionID($section->getSectionID(), $section->getMaterial_type());
+        } else {
+            //4. decrement $no_tags
+            $section->decrementNoTags();
+            $tagsPerSection = ilRecSysModelTagsPerSection::fetchTagsPerSection($section->getSectionID(), $tag_id, $material_type);
+            $tagsPerSection->deleteTagPerSection();
+        }
+    }
+
+    public function deleteCompleteSectionBySectionID($section_id, $material_type) {
+        $section = $this->getSectionMaterialByID($section_id, $material_type);
+        //delete material in map
         
     }
 
-    /**
-     *  deletes a tag in the tag_table. 
-     *  Carefull, it does not delete the associated material entries in the according tables
-     */
-    public function deleteTag($tag_id) {
-        //get Tag either from map or table
-
+    public function deleteCompleteSectionByObjID($obj_id, $from_to) {
+        
     }
 
-    /**
-     *  delete a piece of Material that was tagged and decrements the tagoccurence
-     */
-    public function deleteSingleMaterialTag($tag_id, $material_id, $material_type) {
-        $this->deleteMaterial($material_id, $material_type);
-        // update tag occurence 
-        $tag = $this->getTag($tag_id);
-        $tag->decrementOccurrence();
-    }
-
-    /**
-     *  delete a piece of material that was tagged
-     */
-    private function deleteMaterial($tag_id, $material_id, $material_type) {
-        $materialTag = $this->getMaterialTag($material_id, $material_type);
-        //if material Tag is empty return 
-
-        switch($material_type){
-            case 0: //skript
-                $materialTag->deleteMaterial($material_id);
+    private function deleteCompleteSection($section) {
+        $material_id = $section->getSectionID();
+        switch($section->getMaterialType()){
+            case MaterialType::SCRIPT:
                 unset($this->script_map[$material_id]);
-            case 1: //presentation
-                $materialTag->deletePresentation($material_id);
+                break;
+            case MaterialType::PRESENTATION:
                 unset($this->presentation_map[$material_id]);
-            case 2: // video
-                $materialTag->deleteVideo($material_id);
+                break;
+            case MaterialType::VIDEO: 
                 unset($this->video_map[$material_id]);
-            case 3: // picture
-                $materialTag->deletePicture($material_id);
+                break;
+            case MaterialType::PICTURE:
                 unset($this->picture_map[$material_id]);
-            case 4: // weblink
-                $materialTag->deleteWeblink();
+                break;
+            case MaterialType::WEBLINK: 
                 unset($this->weblink_map[$material_id]);
-            case 5: // bibliography
-                $materialTag->deleteBibliography();
+                break;
+            case MaterialType::BIBLIOGRAPHY:
                 unset($this->bibleography_map[$material_id]);
-            case 6: // test
-            case 7: // exercise
-                $materialTag->deleteExercise();
+                break;
+            case MaterialType::EXERCISE:
                 unset($this->exercise_map[$material_id]);
-            default: 
-                return;
+                break;
+            default:
+                throw new Exception("The provided material type does not exist");
         }
+        // update tag occurences for every tag that tagged this section
+        $tags = $this->getAllTagsForSectionMaterial($section->getSectionID(), $section->getMaterialType());
+        foreach($tags as $tag) {
+            $tag->decrementOccurrence();
+        }
+        // delete tagsPerSection entry
+        $tagsPerSection = ilRecSysModelTagsPerSection::fetchTagsPerSection($section->getSectionID(), $tag_id, $material_type);
+        $tagsPerSection->deleteTagPerSection();
     }
 
     // ------------------------------------------------------------------------------------------------------------------------------------------

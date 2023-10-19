@@ -21,16 +21,16 @@ global $ilDB;
   * ui_uihk_recsys_user:                               no change
   * ui_uihk_recsys_courses:                            no change
   * ui_uihk_recsys_tags:                               no change
-  * ui_uihk_recsys_tags_per_material:                  ui_uihk_recsys_t_p_m
-  * ui_uihk_recsys_overall_tags_user:                  ui_uihk_recsys_o_t_u
-  * ui_uihk_recsys_specific_tags_user:                 ui_uihk_recsys_s_t_u
-  * ui_uihk_recsys_material_content_file_script:       ui_uihk_recsys_s_t_u
-  * ui_uihk_recsys_material_content_file_presentation: ui_uihk_recsys_m_c_f_p
-  * ui_uihk_recsys_material_content_file_video:        ui_uihk_recsys_m_c_f_v
-  * ui_uihk_recsys_material_content_file_picture:      ui_uihk_recsys_m_c_pic
-  * ui_uihk_recsys_material_content_weblink:           ui_uihk_recsys_m_c_w
-  * ui_uihk_recsys_material_content_file_bibliography: ui_uihk_recsys_m_c_bib
-  * ui_uihk_recsys_material_assessment_test:           ui_uihk_recsys_m_a_t
+  * ui_uihk_recsys_tags_per_section:                   ui_uihk_recsys_t_p_s
+  * ui_uihk_recsys_tags_user:                          ui_uihk_recsys_t_u
+  * ui_uihk_recsys_section_tag_user:                   ui_uihk_recsys_s_t_u
+  * ui_uihk_recsys_material_section_file_script:       ui_uihk_recsys_m_s_f_s
+  * ui_uihk_recsys_material_section_file_presentation: ui_uihk_recsys_m_s_f_p
+  * ui_uihk_recsys_material_section_file_video:        ui_uihk_recsys_m_s_f_v
+  * ui_uihk_recsys_material_section_file_picture:      ui_uihk_recsys_m_s_pic
+  * ui_uihk_recsys_material_section_weblink:           ui_uihk_recsys_m_s_w
+  * ui_uihk_recsys_material_section_file_bibliography: ui_uihk_recsys_m_s_bib
+  * ui_uihk_recsys_material_section_exercise           ui_uihk_recsys_m_s_e
   *
   */
 if (!$ilDB->tableExists('ui_uihk_recsys_config'))
@@ -170,8 +170,9 @@ if (!$ilDB->tableExists('ui_uihk_recsys_courses'))
  * 
  *  tag_id:             identifier of the tag
  *  tag_name:           name of the tag (should be brief but meaningfull)
+ *  crs_id:             identifying number of the course, which is assigend for the recommender system plugin
  *  tag_description:    a quick description of the tag (maybe what it represents, key messages etc.)
- *  occurence:          how often the tag was used 
+ *  tag_count:          how often the tag was used 
  */
 if(!$ilDB->tableExists('ui_uihk_recsys_tags')){
     $fields = array(
@@ -183,11 +184,15 @@ if(!$ilDB->tableExists('ui_uihk_recsys_tags')){
             'type' => 'text',
             'length' => 128,
             'notnull' => true),
+        'crs_id' => array(  
+            'type'      => 'integer',
+            'length'    => 8,
+            'notnull'   => true),
         'tag_description' => array(
             'type' => 'text',
             'length' => 1000,
             'notnull' => true),
-        'tag_occurence' => array(
+        'tag_count' => array(
             'type' => 'integer',
             'length' => 4,
             'notnull' => true)
@@ -198,14 +203,13 @@ if(!$ilDB->tableExists('ui_uihk_recsys_tags')){
 }
 
 /**
- *  This table holds a list of specific materials and their type, for which a tag was assigned
- *  tags per material 
+ *  This table holds a list of specific material sections and their material type, to which the tag was assigned
  * 
  *  tag_id:             identifier of the tag
  *  material_type:      type of material (script, presentation, video, picture, weblink, bibliography, test, forum_entry) for each material a tag can be assigned to there is a table in the following
- *  material_id:        identifier of the material
+ *  section_id:         identifier of the section
  */
-if(!$ilDB->tableExists('ui_uihk_recsys_t_p_m')){
+if(!$ilDB->tableExists('ui_uihk_recsys_t_p_s')){
     $fields = array(
         'tag_id' => array(
             'type' => 'integer',
@@ -215,26 +219,26 @@ if(!$ilDB->tableExists('ui_uihk_recsys_t_p_m')){
             'type' => 'integer',
             'length' => 4,
             'notnull' => true),
-        'material_id' => array(
+        'section_id' => array(
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
     );
-    $ilDB->createTable('ui_uihk_recsys_t_p_m', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_t_p_m', array("tag_id", "material_type", "material_id"));
-    $ilDB->createSequence('ui_uihk_recsys_t_p_m');
+    $ilDB->createTable('ui_uihk_recsys_t_p_s', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_t_p_s', array("tag_id", "material_type", "section_id"));
+    $ilDB->createSequence('ui_uihk_recsys_t_p_s');
 }
 
 /**
  *  This table is for holding records on which tags the user has to work on. For that purpose it stores the following attributes:
- *  Formerly known as ui_uihk_recsys_overall_tags_user 
+ *  Formerly known as ui_uihk_recsys_tags_user 
  * 
  *  tag_id:         identifier of the tag
  *  usr_id:         identifier of the user that the tag was assigned to
  *  priority:       priority of the tag (using some kind of heuristic)
  *  tag_count:      counts how often the tag was assigned to the user (can be used for the priority-heuristic)
  */
-if(!$ilDB->tableExists('ui_uihk_recsys_o_t_u')){
+if(!$ilDB->tableExists('ui_uihk_recsys_t_u')){ 
     $fields = array(
         'tag_id' => array(
             'type' => 'integer',
@@ -252,20 +256,20 @@ if(!$ilDB->tableExists('ui_uihk_recsys_o_t_u')){
             'length' => 4,
             'notnull' => true)
     );
-    $ilDB->createTable('ui_uihk_recsys_o_t_u', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_o_t_u', array("tag_id", "usr_id"));
-    $ilDB->createSequence('ui_uihk_recsys_o_t_u');
+    $ilDB->createTable('ui_uihk_recsys_t_u', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_t_u', array("tag_id", "usr_id"));
+    $ilDB->createSequence('ui_uihk_recsys_t_u');
 }
 
 /**
- *  This table holds the specific subtasks a user has to fullfill in order to get rid of a tag (/accomplish to learn all recomended materials).
- *  It is also used to for the recommendation of specific materials (not just a topic).
+ *  This table holds the specific section a user has to fullfill in order to get rid of a tag (/accomplish to learn all recomended materials).
+ *  It is also used to for the recommendation of specific materials sections (not just a topic).
  * 
- *  Earlier ui_uihk_recsys_specific_tags_user
+ *  Earlier ui_uihk_recsys_section_tags_user
  * 
  *  usr_id:             identifier of the user that the tag was assigned to
  *  material_type:      type of material
- *  material_id:        identifier of the material        
+ *  section_id:         identifier of the material        
  */
 if(!$ilDB->tableExists('ui_uihk_recsys_s_t_u')){
     $fields = array(
@@ -277,20 +281,20 @@ if(!$ilDB->tableExists('ui_uihk_recsys_s_t_u')){
             'type' => 'integer',
             'length' => 4,
             'notnull' => true),
-        'material_id' => array(
+        'section_id' => array(
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
     );
     $ilDB->createTable('ui_uihk_recsys_s_t_u', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_s_t_u', array("usr_id", "material_type", "material_id"));
+    $ilDB->addPrimaryKey('ui_uihk_recsys_s_t_u', array("usr_id", "material_type", "section_id"));
     $ilDB->createSequence('ui_uihk_recsys_s_t_u');
 }
 
 /**
- *  This table represents the tags given to a script (pdf, docx, etc.)
+ *  This table represents sections of a script (pdf, docx, etc.) that are taged
  * 
- *  Earlier: ui_uihk_recsys_material_content_file_script
+ *  Earlier: ui_uihk_recsys_material_section_file_script
  * 
  *  script_id:          identifier for the script (must coincide with material_id of tag for type "content_file_script")
  *  obj_id:             object identifier of ilias object
@@ -298,8 +302,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_s_t_u')){
  *  end_page:           page the tag(/topic) assignation ends at
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
+ *  no_tags:            counts the number tags that use/tag the section
  */
-if(!$ilDB->tableExists('ui_uihk_recsys_m_c_f_s')){
+if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_s')){
     $fields = array(
         'script_id' => array(
             'type' => 'integer',
@@ -324,16 +329,20 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_c_f_s')){
             'type' => 'integer', 
             'length' => 4,
             'notnull' => true),
+        'no_tags' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true)
     );
-    $ilDB->createTable('ui_uihk_recsys_m_c_f_s', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_m_c_f_s', array("script_id"));
-    $ilDB->createSequence('ui_uihk_recsys_m_c_f_s');
+    $ilDB->createTable('ui_uihk_recsys_m_s_f_s', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_m_s_f_s', array("script_id"));
+    $ilDB->createSequence('ui_uihk_recsys_m_s_f_s');
 }
 
 /**
- *  This table represents the tags given to a presentation (pptx, ppt, etc.)
+ *  This table represents sections of a presentation (pptx, ppt, etc.) that are tagged
  * 
- * ui_uihk_recsys_material_content_file_presentation
+ * ui_uihk_recsys_material_section_file_presentation
  * 
  *  presentation_id:    identifier for the presentation (must coincide with material_id of tag for type "content_file_presentation")
  *  obj_id:             object identifier of ilias object
@@ -341,8 +350,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_c_f_s')){
  *  end_page:           the slide the tag(/topic) assignation ends at
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
+ *  no_tags:            counts the number tags that use/tag the section
  */
-if(!$ilDB->tableExists('ui_uihk_recsys_m_c_f_p')){
+if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_p')){
     $fields = array(
         'presentation_id' => array(
             'type' => 'integer',
@@ -367,16 +377,20 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_c_f_p')){
             'type' => 'integer', 
             'length' => 4,
             'notnull' => true),
+        'no_tags' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true)
     );
-    $ilDB->createTable('ui_uihk_recsys_m_c_f_p', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_m_c_f_p', array("presentation_id"));
-    $ilDB->createSequence('ui_uihk_recsys_m_c_f_p');
+    $ilDB->createTable('ui_uihk_recsys_m_s_f_p', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_m_s_f_p', array("presentation_id"));
+    $ilDB->createSequence('ui_uihk_recsys_m_s_f_p');
 }
 
 /**
- *  This table represents the tags given to a video (mp4, etc.)
+ *  This table holds records of sections of a videos (mp4, etc.) that are tagged
  *
- *  ui_uihk_recsys_material_content_file_video
+ *  ui_uihk_recsys_material_section_file_video
  * 
  *  video_id:           identifier for the video (must coincide with material_id of tag for type "content_file_video")
  *  obj_id:             object identifier of ilias object
@@ -384,8 +398,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_c_f_p')){
  *  end_min:            the minute the tag(/topic) assignation ends at
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
+ *  no_tags:            counts the number tags that use/tag the section
  */
-if(!$ilDB->tableExists('ui_uihk_recsys_m_c_f_v')){
+if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_v')){
     $fields = array(
         'video_id' => array(
             'type' => 'integer',
@@ -408,23 +423,28 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_c_f_v')){
             'type' => 'integer', 
             'length' => 4,
             'notnull' => true),
+        'no_tags' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true)
     );
-    $ilDB->createTable('ui_uihk_recsys_m_c_f_v', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_m_c_f_v', array("video_id"));
-    $ilDB->createSequence('ui_uihk_recsys_m_c_f_v');
+    $ilDB->createTable('ui_uihk_recsys_m_s_f_v', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_m_s_f_v', array("video_id"));
+    $ilDB->createSequence('ui_uihk_recsys_m_s_f_v');
 }
 
 /**
- *  This table represents the tags given to a picture (jpg, png, etc.)
+ *  This table holds records of pictures (jpg, png, etc.) that are tagged
  * 
- * ui_uihk_recsys_material_content_file_picture
+ * ui_uihk_recsys_material_section_file_picture
  * 
  *  picture_id:         identifier of the picture (must coincide with material_id of tag for type "content_file_picture")
  *  obj_id:             object identifier of ilias object
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
+ *  no_tags:            counts the number tags that use/tag the section
  */
-if(!$ilDB->tableExists('ui_uihk_recsys_m_c_pic')){
+if(!$ilDB->tableExists('ui_uihk_recsys_m_s_pic')){
     $fields = array(
         'picture_id' => array(
             'type' => 'integer',
@@ -441,23 +461,28 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_c_pic')){
             'type' => 'integer', 
             'length' => 4,
             'notnull' => true),
+        'no_tags' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true)
     );
-    $ilDB->createTable('ui_uihk_recsys_m_c_pic', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_m_c_pic', array("picture_id"));
-    $ilDB->createSequence('ui_uihk_recsys_m_c_pic');
+    $ilDB->createTable('ui_uihk_recsys_m_s_pic', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_m_s_pic', array("picture_id"));
+    $ilDB->createSequence('ui_uihk_recsys_m_s_pic');
 }
 
 /**
- *  This table represents the tags given to a weblink
+ *  This table holds records of weblinks that are tagged
  * 
- * ui_uihk_recsys_material_content_weblink
+ * ui_uihk_recsys_material_section_weblink
  * 
  *  weblink_id:         identifier for the weblink (must coincide with material_id of tag for type "content_weblink")
  *  obj_id:             object identifier of ilias object
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
+ *  no_tags:            counts the number tags that use/tag the section
  */
-if(!$ilDB->tableExists('ui_uihk_recsys_m_c_w')){
+if(!$ilDB->tableExists('ui_uihk_recsys_m_s_w')){
     $fields = array(
         'weblink_id' => array(
             'type' => 'integer',
@@ -474,26 +499,28 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_c_w')){
             'type' => 'integer', 
             'length' => 4,
             'notnull' => true),
-
-        //TODO: find out how weblinks are stored to connect this to the db
-        //answ: class.ilObjLinkResource, class.ilObjLinkResourceGUI, class.ilObjLinkItems
+        'no_tags' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true)
     );
-    $ilDB->createTable('ui_uihk_recsys_m_c_w', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_m_c_w', array("weblink_id"));
-    $ilDB->createSequence('ui_uihk_recsys_m_c_w');
+    $ilDB->createTable('ui_uihk_recsys_m_s_w', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_m_s_w', array("weblink_id"));
+    $ilDB->createSequence('ui_uihk_recsys_m_s_w');
 }
 
 /**
  *  This table represents the tags given to a bibliography
  * 
- * ui_uihk_recsys_material_content_file_bibliography
+ *  ui_uihk_recsys_material_section_file_bibliography
  * 
  *  bibl_id:            identifier for the bibliography (must coincide with material_id of tag for type "content_bibliography")
  *  obj_id:             object identifier of ilias object
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
+ *  no_tags:            counts the number tags that use/tag the section
  */
-if(!$ilDB->tableExists('ui_uihk_recsys_m_c_bib')){
+if(!$ilDB->tableExists('ui_uihk_recsys_m_s_bib')){
     $fields = array(
         'bibl_id' => array(
             'type' => 'integer',
@@ -510,74 +537,35 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_c_bib')){
             'type' => 'integer', 
             'length' => 4,
             'notnull' => true),
-
-        //TODO: find out how weblinks are stored to connect this to the db
-        //answ: class.ilObjBibliographicGUI
-    );
-    $ilDB->createTable('ui_uihk_recsys_m_c_bib', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_m_c_bib', array("bibl_id"));
-    $ilDB->createSequence('ui_uihk_recsys_m_c_bib');
-}
-
-/**
- *  This table represents the tags given to a test
- * 
- * ui_uihk_recsys_material_assessment_test
- * 
- *  test_id:            identifier for the test (must coincide with the material_id of tag for type "assessment_test")
- *  ilias_test_id:      object identifier of ilias test object
- *  question_no         number of the question that was taged
- *  difficulty:         percieved difficulty of this material snippet
- *  rating_count:       number of users that rated this material snippet
- */
-//material_assessment_test (core bases of the recommendation system)
-if(!$ilDB->tableExists('ui_uihk_recsys_m_a_t')){
-    $fields = array(
-        'test_id' => array(
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true),
-        'obj_id' => array( // TODO: link to the ilias test object
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true),
-        'question_no' => array(
+        'no_tags' => array(
             'type' => 'integer',
             'length' => 4,
-            'notnull' => true),
-        'difficulty' => array(
-            'type' => 'float',
-            'notnull' => true),
-        'rating_count' => array(
-            'type' => 'integer', 
-            'length' => 4,
-            'notnull' => true),
+            'notnull' => true)
     );
-    $ilDB->createTable('ui_uihk_recsys_m_a_t', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_m_a_t', array("test_id"));
-    $ilDB->createSequence('ui_uihk_recsys_m_a_t');
+    $ilDB->createTable('ui_uihk_recsys_m_s_bib', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_m_s_bib', array("bibl_id"));
+    $ilDB->createSequence('ui_uihk_recsys_m_s_bib');
 }
 
 /**
  *  This table represents the tags given to an Exercise
  * 
- * ui_uihk_recsys_material_assessment_exercise
+ * ui_uihk_recsys_material_section_exercise
  * 
  *  exercise_id:        identifier for the test (must coincide with the material_id of tag for type "assessment_test")
- *  ilias_exercise_id:  object identifier of ilias test object
  *  task_no             number of the task that was tagged
  *  subtask_no          number of the subtask that was tagged
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
+ *  no_tags:            counts the number tags that use/tag the section
  */
-//material_assessment_test (core bases of the recommendation system)
-if(!$ilDB->tableExists('ui_uihk_recsys_m_a_e')){
+if(!$ilDB->tableExists('ui_uihk_recsys_m_s_e')){
     $fields = array(
         'exercise_id' => array(
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
-        'obj_id' => array( // TODO: link to the ilias test object
+        'obj_id' => array( 
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
@@ -596,84 +584,97 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_a_e')){
             'type' => 'integer', 
             'length' => 4,
             'notnull' => true),
+        'no_tags' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true)
     );
-    $ilDB->createTable('ui_uihk_recsys_m_a_e', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_m_a_e', array("exercise_id"));
-    $ilDB->createSequence('ui_uihk_recsys_m_a_e');
+    $ilDB->createTable('ui_uihk_recsys_m_s_e', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_m_s_e', array("exercise_id"));
+    $ilDB->createSequence('ui_uihk_recsys_m_s_e');
 }
-/** 
- * This table can later be added in case tags are also implemented for forum entries
- * 
- * //material_forum_entry
- * if(!$ilDB->tableExists('ui_uihk_recsys_material_forum_entry')){
- *     $fields = array(
- *         'entry_id' => array(
- *             'type' => 'integer',
- *             'length' => 8,
- *             'notnull' => true),
- *         'ilias_forum_entry_id' => array( //TODO: link to the ilias forum entry
- *             'type' => 'integer',
- *             'length' => 8,
- *             'notnull' => true),
- *     );
- *     $ilDB->createTable('ui_uihk_recsys_material_forum_entry', $fields);
- *     $ilDB->addPrimaryKey('ui_uihk_recsys_material_forum_entry', array("entry_id"));
- *     $ilDB->createSequence('ui_uihk_recsys_material_content_forum_entry');
- * }
- */
 
 
 /**
- *  This table can be used later as inspiration for a feedback system
- * if (!$ilDB->tableExists('ui_uihk_recsys_feedback')) {
- *     $fields = array(
- *         'feed_id' => array(
- *             'type' => 'integer',
- *             'length' => 8,
- *             'notnull' => true ),        
- *         'topic_id' => array(
- *             'type' => 'integer',
- *             'length' => 8,
- *             'notnull' => true ),
- *         'usr_id' => array(
- *             'type' => 'integer',
- *    		   'length' => 8,
- *    		   'notnull' => true ),
- *         'crs_id' =>  array(  
- *             'type' => 'integer',
- *             'length' => 8,
- *             'notnull' => true ),
- *         'rating' => array(  
- *             'type' => 'integer',
- *             'length' => 4,
- *             'notnull' => true ),
- *         'text' => array(
- *             'type' => 'text',
- *             'length' => 1000,
- *             'notnull' => true,),
- *         'lastupdate' => array(
- *             'type' => 'integer',
- *             'length' => 4,
- *             'notnull' => true ),
- *     );
- *     $ilDB->createTable("ui_uihk_recsys_feedback", $fields);
- *     $ilDB->addPrimaryKey("ui_uihk_recsys_feedback", array("feed_id"));
- *     $ilDB->createSequence('ui_uihk_recsys_feedback');    
- * } 
+ *  This table represents the users spefic information to give them recommendations. The idea of the table is to save 
+ *  the materials and the corresponding tags for which a user asked for a recommendation. Additionally, the 
+ *  information on what recommended materials the user actually clicked on.
+ * 
+ *  ui_uihk_recsys_user_recommendations_and_clicks
+ * 
+ *  The table holds the following attributes:
+ * 
+ *  user_id:                    identifier of the user that wants a recommendation
+ *  material_type:              type of material (script, presentation, video, picture, weblink, bibliography, test, forum_entry)
+ *  material_id:                identifier of the material that a user chooses to get a recommendation for
+ *  tag_id:                     identifier of the tag that was assigned to the material
+ *  timestamp:                  timestamp of the request
+ *  clicked_material_type:      type of material (script, presentation, video, picture, weblink, bibliography, test, forum_entry)
+ *  clicked_material_id:        identifier of the material that a user clicked on
+ *  timestamp_clicked:          timestamp of the click
  */
+if (!$ilDB->tableExists('ui_uihk_recsys_u_r_a_c'))
+{
+    $fields = array(
+    	'usr_id' => array(
+            'type' => 'integer',
+   			'length' => 8,
+   			'notnull' => true ),
+        'material_type' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true),
+        'material_id' => array(
+            'type' => 'integer',
+            'length' => 8,
+            'notnull' => true),
+        'tag_id' => array(
+            'type' => 'integer',
+            'length' => 8,
+            'notnull' => true),
+        'timestamp' => array(
+            'type' => 'timestamp', // or 'datetime'
+            'notnull' => true),
+        'clicked_material_type' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true),
+        'clicked_material_id' => array(
+            'type' => 'integer',
+            'length' => 8,
+            'notnull' => true),
+        'timestamp_clicked' => array(
+            'type' => 'timestamp', // or 'datetime'
+            'notnull' => true),
+    );
+    $ilDB->createTable("ui_uihk_recsys_u_r_a_c", $fields);
+    $ilDB->addPrimaryKey("ui_uihk_recsys_u_r_a_c", array("usr_id", "material_type", "material_id", "tag_id"));
+    $ilDB->createSequence('ui_uihk_recsys_u_r_a_c');    
+}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+//Not sure whether it's right, but this is my idea of how to store the tags for questions in a test
+if(!$ilDB->tableExists('ui_uihk_recsys_q_a_t')){
+    $fields = array(
+        'test_id' => array(
+            'type' => 'integer',
+            'length' => 8,
+            'notnull' => true),
+        'obj_id' => array( // TODO: link to the ilias test object
+            'type' => 'integer',
+            'length' => 8,
+            'notnull' => true),
+        'question_id' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true),
+        'tag_id' => array(
+            'type' => 'integer',
+            'length' => 8,
+            'notnull' => true),
+    );
+    $ilDB->createTable('ui_uihk_recsys_q_a_t', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_q_a_t', array("test_id"));
+    $ilDB->createSequence('ui_uihk_recsys_q_a_t');
+}
 ?>

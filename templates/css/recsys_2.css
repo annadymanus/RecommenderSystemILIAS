@@ -38,3 +38,5 @@
 	vertical-align: middle;
 }
 
+.item-html-container * {vertical-align: middle !important; margin: auto !important; padding-left: 0px !important; padding-top: 0px !important; padding-bottom: 0px !important; padding-right: 2px !important;}
+

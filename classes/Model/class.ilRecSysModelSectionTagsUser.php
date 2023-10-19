@@ -5,7 +5,7 @@
  * 
  *
  */
-class ilRecSysModelSpecificTagsUser {
+class ilRecSysModelSectionTagsUser {
 
 }
 

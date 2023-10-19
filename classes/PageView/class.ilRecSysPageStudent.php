@@ -94,6 +94,7 @@ class ilRecSysPageStudent {
         $status = $_POST['form_recsys'];
         foreach ($_POST as $key => $value) {
             $this->debug_to_console($key);
+            $this->debug_to_console($value);
         }
         //$this->debug_to_console("test");
         //$this->debug_to_console($_POST);
@@ -111,10 +112,9 @@ class ilRecSysPageStudent {
     
     private function addModuleMaterials($tplMain) {
         $tpl = new ilTemplate("tpl.materials_student.html", true, true, self::PLUGIN_DIR);
-        
+
         $material_types = ilRecSysPageUtils::getAllValidObjTypes();
         foreach ($material_types as $material_type){
-
             // Get Materials
             $materials = ilRecSysPageUtils::getItemsOfCourse($this->CourseObject, $material_type);
 

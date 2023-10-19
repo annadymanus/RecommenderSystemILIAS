@@ -5,16 +5,13 @@
 class ilRecSysModelTags {
 
     //default values
-    const TAG_DEFAULT_OCCURENCE = 1;
+    const TAG_DEFAULT_COUNT = 0;
 
     private $tag_id;
     private $tag_name;
+    private $crs_id;
     private $tag_description;
-    private $tag_occurence;
-
-    //tags per user
-    private $usr_id;
-    private $priority;
+    private $tag_count;
    
     
     private $ilDB;
@@ -22,32 +19,35 @@ class ilRecSysModelTags {
     // -----------------------------------------------------------------------------------
     // constructor
 
-    public function __construct($tag_id, $tag_name, $tag_description, $tag_occurence)
+    public function __construct($tag_id, $tag_name, $crs_id, $tag_description, $tag_count)
     {
         global $ilDB;
         $this->ilDB = $ilDB;
         $this->tag_id = $tag_id; //check if it's possible to use directly the getNextTagId() function
         $this->tag_name = $tag_name;
+        $this->crs_id = $crs_id;
         $this->tag_description = $tag_description;
-        $this->tag_occurence = $tag_occurence;
+        $this->tag_count = $tag_count;
     }
 
     // -----------------------------------------------------------------------------------
     // static functions to get tag ids
 
-    public static function fetchTagByName($tag_name)
+    public static function fetchTagByName($tag_name, $crs_id)
     {
         global $ilDB;
-        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_tags WHERE tag_name = ".$ilDB->quote($tag_name, "text"));
+        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_tags WHERE tag_name = ".$ilDB->quote($tag_name, "text") 
+            . "AND crs_id = " .$ilDB->quote($crs_id, "integer"));
         if($ilDB->numRows($queryResult) === 0){
             return null;
         }
         $tag = $ilDB->fetchAssoc($queryResult);
         $tag_id = $tag['tag_id'];
         $tag_name = $tag['tag_name'];
+        $crs_id = $tag['crs_id'];
         $tag_description = $tag['tag_description'];
-        $tag_occurence = $tag['tag_occurence'];
-        return new ilRecSysModelTags($tag_id, $tag_name, $tag_description, $tag_occurence);
+        $tag_count = $tag['tag_count'];
+        return new ilRecSysModelTags($tag_id, $tag_name, $crs_id, $tag_description, $tag_count);
     }
 
     public static function fetchTagById($tag_id){
@@ -59,19 +59,44 @@ class ilRecSysModelTags {
         $tag = $ilDB->fetchAssoc($queryResult);
         $tag_id = $tag['tag_id'];
         $tag_name = $tag['tag_name'];
+        $crs_id = $tag['crs_id'];
         $tag_description = $tag['tag_description'];
-        $tag_occurence = $tag['tag_occurence'];
-        return new ilRecSysModelTags($tag_id, $tag_name, $tag_description, $tag_occurence);
+        $tag_count= $tag['tag_count'];
+        return new ilRecSysModelTags($tag_id, $tag_name, $crs_id, $tag_description, $tag_count);
     }
 
-    public static function fetchAllTagNames(){
+    public static function fetchAllTagIDsForCourse($crs_id){
         global $ilDB;
-        $queryResult = $ilDB->query("SELECT tag_name FROM ui_uihk_recsys_tags");
-        $tag_names = array();
+        $queryResult = $ilDB->query("SELECT tag_id FROM ui_uihk_recsys_tags WHERE crs_id = ".$ilDB->quote($crs_id, "integer"));
+        $tag_ids = array();
         while($tag = $ilDB->fetchAssoc($queryResult)){
-            $tag_names[] = $tag['tag_name'];
+            $tag_ids[] = $tag['tag_id'];
         }
-        return $tag_names;
+        return $tag_ids;
+    }
+
+    public static function checkIfNameExists($name, $crs_id) {
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_tags WHERE tag_name = ".$ilDB->quote($name, "text") 
+            . "AND crs_id = " .$ilDB->quote($crs_id, "integer"));
+        if($ilDB->numRows($queryResult) === 0){
+            return false;
+        }
+        else { 
+            return true;
+        }
+    }
+
+    public static function getLastTagId() {
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT tag_id FROM ui_uihk_recsys_tags ORDER BY tag_id DESC LIMIT 1");
+        if ($ilDB->numRows($queryResult) === 0) {
+            $last_tag_id = 0;
+        } else {
+            $last_tag_id = $ilDB->fetchAssoc($queryResult);
+            $last_tag_id = $last_tag_id['tag_id'];
+        }
+        return $last_tag_id;
     }
 
     // -----------------------------------------------------------------------------------
@@ -80,51 +105,56 @@ class ilRecSysModelTags {
     //function for adding a new tag to a tag table
     public function addNewTag()
     {   
+        //checks whether Name was already Given to a Tag
+        if(self::checkIfNameExists($this->tag_name, $this->crs_id)){
+            throw new Exception("The given tag name is already assigned.");
+        }
         $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_tags"
-                . "(tag_id, tag_name, tag_description, tag_occurence)"
-                . " VALUES (%s,%s,%s,%s)",
-                array("integer", "text", "text", "integer"),
+                . "(tag_id, tag_name, crs_id, tag_description, tag_occurence)"
+                . " VALUES (%s,%s,%s,%s, %s)",
+                array("integer", "text", "integer", "text", "integer"),
                 array($this->tag_id,
-                      $this->tag_name, 
+                      $this->tag_name,
+                      $this->crs_id, 
                       $this->tag_description, 
-                      self::TAG_DEFAULT_OCCURENCE
+                      self::TAG_DEFAULT_COUNT
                     ));
     }
 
     // -----------------------------------------------------------------------------------
     // update functions
-    public function updateTag($tag_description, $tag_occurence) {
+    public function updateTag($tag_description, $tag_count) {
         $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_tags"
                 ." SET"
-                ." ,description = %s"
-                ." ,occurence = %s"
+                ." tag_description = %s"
+                ." , tag_count = %s"
                 ." WHERE tag_id = %s",
             array("text", "integer", "integer"),
-            array($tag_description, $tag_occurence, $this->tag_id)
+            array($tag_description, $tag_count, $this->tag_id)
         );
         $this->tag_description = $tag_description;
-        $this->tag_occurence = $tag_occurence;
+        $this->tag_count = $tag_count;
     }
 
-    public function incrementOccurrence() {
-        $this->tag_occurence++;
+    public function incrementCount() {
+        $this->tag_count++;
         $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_tags"
                 ." SET"
-                ." ,occurence = %s"
+                ." tag_count = %s"
                 ." WHERE tag_id = %s",
             array("text", "integer"),
-            array($this->tag_occurence, $this->tag_id)
+            array($this->tag_count, $this->tag_id)
         );
     }
 
-    public function decrementOccurrence() {
-        $this->tag_occurence--;
+    public function decrementCount() {
+        $this->tag_count--;
         $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_tags"
                 ."SET"
-                ." ,occurence = %s"
+                ." tag_count = %s"
                 ." WHERE tag_id = %s",
             array("text", "integer"),
-            array($this->tag_occurence, $this->tag_id)
+            array($this->tag_count, $this->tag_id)
         );
     }
 
@@ -151,33 +181,17 @@ class ilRecSysModelTags {
         return $this->tag_name;
     }
 
+    public function getCrs_ID(){
+        return $this->crs_id;
+    }
+
     public function getTag_description()
     {
         return $this->tag_description;
     }
 
-    public function getTag_occurence()
+    public function getTag_count()
     {
-        return $this->tag_occurence;
-    }
-
-    public function getUsr_id()
-    {
-        return $this->usr_id;
-    }
-
-    public function getPriority()
-    {
-        return $this->priority;
-    }
-
-    public function setUsr_id($usr_id)
-    {
-        $this->usr_id = $usr_id;
-    }
-
-    public function setPriority($priority)
-    {
-        $this->priority = $priority;
+        return $this->tag_count;
     }
 }

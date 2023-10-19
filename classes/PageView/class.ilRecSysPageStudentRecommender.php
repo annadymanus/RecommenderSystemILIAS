@@ -61,16 +61,21 @@ class ilRecSysPageStudentRecommender {
     }   
 
     public function addModuleRecommendedMaterials($tplMain) {
-        $tpl = new ilTemplate("tpl.student_recommender.html", true, false, self::PLUGIN_DIR); //set to true true later
+        $tpl = new ilTemplate("tpl.student_recommender.html", true, true, self::PLUGIN_DIR); //set to true true later
 
         //placeholder function for recommendation
         //array of [section_id, material_type, [subtags], [from, to]] blocks
         $materials = array(
-            array(0,"script", array("Semantic Knowledge", "Graphs and Networks", "Sublayer Performance Review Attacks"), array(3,5)),
-            array(1, "webr", array("Process Trees","Process Mining"), array(null, null)),
+            array(1,"script", array("Semantic Knowledge", "Graphs and Networks", "Sublayer Performance Review Attacks"), array(3,5), 50),
+            array(2, "webr", array("Process Trees","Process Mining"), array(null, null), 2.52),
         );
         //$materials = getRecommendations()
 
+        //Sort materials by last entry (match)
+        usort($materials, function($a, $b) {
+            return !($a[4] <=> $b[4]);
+        });
+        
         $ilObjGUI = new ilObjCourseGUI("", $this->crs_id, true, false);
         $CourseContent = new ilRecSysListMaterials($ilObjGUI);
         
@@ -78,7 +83,7 @@ class ilRecSysPageStudentRecommender {
         foreach ($materials as $material) {
             
             //$material_tags = ilRecSysPageUtils::getMaterialTagEntries($item['obj_id'], $file_type == null ?  $material_type : $file_type);
-            $this->debug_to_console($material[2]);
+
             foreach ($material[2] as $subtag){
                 $tpl->setCurrentBlock("Subtags");
                 $tpl->setVariable("TAG", $subtag);
@@ -88,6 +93,7 @@ class ilRecSysPageStudentRecommender {
             $tpl->setVariable("SECTION", $material[0]);
             $tpl->setVariable("FROM", $material[3][0]);
             $tpl->setVariable("TO", $material[3][1]);
+            $tpl->setVariable("MATCH", round($material[4]));
 
             //TODO: get obj from material, IMPLEMENT IN UTILS
             //PLACEHOLDER:
@@ -97,16 +103,15 @@ class ilRecSysPageStudentRecommender {
             else{
                 $item = $this->course_items_map[347];
             }
-            $this->debug_to_console($i);
-            $this->debug_to_console($item);
 
             $tpl->setVariable("ITEM_ID", $item["obj_id"]);
+            $tpl->setVariable("MATERIAL_TYPE", $item["type"]);
+            $tpl->setVariable("FILE_TYPE", $material[1]);
             $itemHtml = $CourseContent->getHtmlItem($item);
             $tpl->setVariable("ITEM_HTML", $itemHtml);
             $tpl->parseCurrentBlock(); 
-            $i++;               
-        }
-
+            $i++;
+        }             
         $tplMain->setVariable("RECOMMENDATIONS", $tpl->get());
         return $tplMain;
     }
