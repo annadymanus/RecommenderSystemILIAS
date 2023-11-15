@@ -25,6 +25,7 @@ class MaterialType{
     const WEBLINK = 4;
     const BIBLIOGRAPHY = 5;
     const EXERCISE = 6;
+    const TEST = 7;
 }
 
 
@@ -41,6 +42,7 @@ class ilRecSysModelTagHandler{
     private $weblink_counter;
     private $bibliography_counter;
     private $exercise_counter;
+    private $test_counter;
     
     private $tag_counter;
 
@@ -69,6 +71,8 @@ class ilRecSysModelTagHandler{
         $this->bibliography_counter = ilRecSysModelBibliography::getLastMaterialSectionId();
         $this->exercise_counter = ilRecSysModelExercise::getLastMaterialSectionId();
         $this->tag_counter = ilRecSysModelTags::getLastTagId();
+        $this->test_counter = ilRecSysModelTest::getLastTestId();
+
     }
 
 
@@ -85,6 +89,73 @@ class ilRecSysModelTagHandler{
     private function __wakeup() {
         // Private wakeup method to prevent unserialization of the instance
     }
+
+    // -------------------------------------------------------------------------------------------------
+    // frontend intersection functions
+
+    public function deleteSection($section_id, $material_type){
+        $this->debug_to_console($section_id, "deleteSection");
+        $this->debug_to_console($material_type, "deleteSectionMaterial");
+
+        $this->deleteCompleteSectionBySectionID($section_id, $material_type);
+    }
+
+    public function updateSection($crs_id, $obj_id, $section_id, $material_type, $tag_names, $from_to){
+        //if($from_to[0] == null){
+        //    throw new Exception(implode(",", array($crs_id, $obj_id, $section_id, $material_type, $tag_names, $from_to[0], $from_to[1])));
+        //}
+        $this->debug_to_console(implode(",", array($crs_id, $obj_id, $section_id, $material_type, $tag_names, $from_to[0], $from_to[1])));
+        //get all tags of course
+        $tags = $this->getAllTagsForCourse($crs_id);
+        //get all tagnames from these tags
+        $course_tag_names = array();
+        foreach($tags as $tag){
+            array_push($course_tag_names, $tag->getTag_name());
+        }
+        //create tags for tag_names that are not in the course yet
+        $new_tag_names = array_diff($tag_names, $course_tag_names);
+        foreach($new_tag_names as $tag_name){
+            $this->createNewTag($tag_name, "", $crs_id);
+        }
+        //get all tags for tag_names
+        $tags = $this->getTagsByName($tag_names, $crs_id);
+        $section_tags = $this->getAllTagsForSectionMaterial($section_id, $material_type);
+        $section_tag_ids = array();
+        $section_tag_names = array();
+        foreach($section_tags as $tag){
+            array_push($section_tag_names, $tag->getTag_name());
+            array_push($section_tag_ids, $tag->getTag_id());
+        }
+
+        $section_exists = $this->getSectionMaterialByID($section_id, $material_type) == null ? false : true;
+        //assign tags to section
+        $this->debug_to_console($tags, "tags");
+        foreach($tags as $tag){
+            $tag_id = $tag->getTag_id();
+            //check if id in section_tag_ids
+            if(!in_array($tag_id, $section_tag_ids) | !$section_exists){
+               $section = $this->assignTagToSection($tag->getTag_id(), $material_type, $obj_id, $from_to[0], $from_to[1]);
+               $section_id = $section->getSectionID();
+               $section_exists = true;
+            }
+        }
+        //remove tags from section that are not in tag_names
+        $tags_to_remove = array_diff($section_tag_names, $tag_names);
+        $section = $this->getSectionMaterialByID($section_id, $material_type);
+        foreach($tags_to_remove as $tag_name){
+            $tag = $this->getTagByName($tag_name, $crs_id);
+            $this->deleteTaggedSection($tag->getTag_id(), $section);
+        }
+
+        if($section == null){
+            throw new Exception(implode(",", array($crs_id, $obj_id, $section_id, $material_type, $tag_names, $from_to)));
+        }
+        //Update FromTo information
+        if ($from_to[0] != null){
+            $this->updateSectionRange($section, $from_to);
+        }
+    }
+
 
     // -------------------------------------------------------------------------------------------------
     // functions for handling the material specific ids
@@ -163,10 +234,12 @@ class ilRecSysModelTagHandler{
      */
     public function assignTagToSection($tag_id, $material_type, $obj_id, $from, $to) {
         // 1. check whether tag_id exists
-        $tag = $this->getTag($tag_id);
+        $tag = $this->getTagByID($tag_id);
         if ($tag == null){
             throw new Exception("The id that was provided for the tag is invalid. \nThe tag does not exist");
         }
+
+        $this->debug_to_console($material_type, "material_type is here:");
 
         // 2. check whether a section already exists
         // 3. if not create a new section / else just increment the no_tags the section was tagged by
@@ -179,15 +252,18 @@ class ilRecSysModelTagHandler{
                     $this->incrementSectionCounter($material_type);
                     $script_id = $this->getMaterialSectionCounter($material_type);
                     $script = new ilRecSysModelScript($script_id, $obj_id, $from, $to, 0.0, 0, 1);
+                    $script->createMaterialSection();
                     // add section to according map
                     $this->script_map[$script_id] = $script;
                 } else {
                     // check if section was already connected/assigned to the tag
-                    if(ilRecSysModelTagsPerSection::fetchTagsPerSection($script->getSectionID(), $tag_id, $material_type) != null){
+                    if (ilRecSysModelTagsPerSection::fetchTagsPerSection($script->getSectionID(), $tag_id, $material_type) != null){
                         throw new Exception("The tag has already been assigned to the section.");
                     }
+                    
                     //if not increment no_tags
                     $script->incrementNoTags();
+
                 }
                 $section = $script;
                 break;
@@ -200,6 +276,7 @@ class ilRecSysModelTagHandler{
                     $this->incrementSectionCounter($material_type);
                     $presentation_id = $this->getMaterialSectionCounter($material_type);
                     $presentation = new ilRecSysModelPresentation($presentation_id, $obj_id, $from, $to, 0.0, 0, 1);
+                    $presentation->createMaterialSection();
                     // add section to according map
                     $this->presentation_map[$presentation_id] = $presentation;
                 } else {
@@ -219,7 +296,9 @@ class ilRecSysModelTagHandler{
                     // create new section
                     $this->incrementSectionCounter($material_type);
                     $video_id = $this->getMaterialSectionCounter($material_type);
-                    $video = new ilRecSysModelVideo($video_id, $obj_id, $from, $to, 0.0, 0, 1);
+                    $parsed_time = ilRecSysModelVideo::parseFromTo($from, $to);
+                    $video = new ilRecSysModelVideo($video_id, $obj_id, $parsed_time[0], $parsed_time[1], $parsed_time[2], $parsed_time[3], 0.0, 0, 1);
+                    $video->createMaterialSection();
                     // add section to according map
                     $this->video_map[$video_id] = $video;
                 } else {
@@ -240,6 +319,7 @@ class ilRecSysModelTagHandler{
                     $this->incrementSectionCounter($material_type);
                     $picture_id = $this->getMaterialSectionCounter($material_type);
                     $picture = new ilRecSysModelPicture($picture, $obj_id, 0.0, 0, 1);
+                    $picture->createMaterialSection();
                     // add section to according map
                     $this->picture_map[$picture_id] = $picture;
                 } else {
@@ -259,7 +339,8 @@ class ilRecSysModelTagHandler{
                     // create new section
                     $this->incrementSectionCounter($material_type);
                     $weblink_id = $this->getMaterialSectionCounter($material_type);
-                    $weblink = new ilRecSysModelPicture($weblink_id, $obj_id, 0.0, 0, 1);
+                    $weblink = new ilRecSysModelWeblink($weblink_id, $obj_id, 0.0, 0, 1);
+                    $weblink->createMaterialSection();
                     // add section to according map
                     $this->weblink_map[$weblink_id] = $weblink;
                 } else {
@@ -280,6 +361,7 @@ class ilRecSysModelTagHandler{
                     $this->incrementSectionCounter($material_type);
                     $bibliography_id = $this->getMaterialSectionCounter($material_type);
                     $bibliography = new ilRecSysModelBibliography($bibliography_id, $obj_id, 0.0, 0, 1);
+                    $bibliography->createMaterialSection();
                     // add section to according map
                     $this->weblink_map[$bibliography_id] = $bibliography;
                 } else {
@@ -293,6 +375,7 @@ class ilRecSysModelTagHandler{
                 $section = $bibliography;
                 break;
             case MaterialType::EXERCISE:
+                $this->debug_to_console("MADE IT TO RIGHT CASE");
                 $task_subtask =[$from, $to];
                 $exercise = ilRecSysModelExercise::fetchByObjID($obj_id, $task_subtask);
                 if($exercise == null){
@@ -300,6 +383,8 @@ class ilRecSysModelTagHandler{
                     $this->incrementSectionCounter($material_type);
                     $exercise_id = $this->getMaterialSectionCounter($material_type);
                     $exercise = new ilRecSysModelExercise($exercise_id, $obj_id, $from, $to, 0.0, 0, 1);
+                    $exercise->createMaterialSection();
+
                     // add section to according map
                     $this->video_map[$exercise_id] = $exercise;
                 } else {
@@ -311,9 +396,11 @@ class ilRecSysModelTagHandler{
                     $exercise->incrementNoTags();
                 }
                 $section = $exercise;
+                break;
             default:
-                throw new Exception("Provided material type does not exists");
+                throw new Exception("Provided material type ".$material_type." does not exists.");
         }
+
         //4. connect section to the tag
         $tag_to_material = new ilRecSysModelTagsPerSection($tag_id, $material_type, $section->getSectionID());
         $tag_to_material->addNewTagToSection();
@@ -492,7 +579,7 @@ class ilRecSysModelTagHandler{
         $sectionMaterials = array();
         $material_type_id_pair = ilRecSysModelTagsPerSection::getAllSectionIDsForTag($tag_id);
         foreach($material_type_id_pair as $pair){
-            $section = $this->getSectionMaterialByID($pair[1], $pair[0]);
+            $section = $this->getSectionMaterialByID($pair[0], $pair[1]);
             if($section != null){
                 array_push($sectionMaterials, $section);
             } 
@@ -557,6 +644,7 @@ class ilRecSysModelTagHandler{
      */
     public function getAllTagsForSectionMaterial($section_id, $material_type){
         $tag_ids = ilRecSysModelTagsPerSection::getAllTagIdsForSection($section_id, $material_type);
+        $this->debug_to_console($tag_ids, "retrieved tag_ids for ".$material_type." ".$section_id);
         //this can be empty
         $result_array = $this->getTags($tag_ids);
         return $result_array;
@@ -609,43 +697,52 @@ class ilRecSysModelTagHandler{
         }
     }
 
-    public function updateSectionRangeForTagBySectionID($tag_id, $material_type, $section_id, $from, $to){
+    public function updateSectionRangeForTagBySectionID($material_type, $section_id, $from, $to){
         $section = $this->getSectionMaterialByID($section_id, $material_type);
         if($section == null){
             throw new Exception("No material tag is found under the given id.");
         }
         $from_to =[$from, $to];
-        $this->updateSectionRange($tag_id, $section, $from_to);
+        $this->updateSectionRange($section, $from_to);
     }
 
-    public function updateSectionRangeForTagByObjID($tag_id, $material_type, $obj_id, $from, $to){
+    public function updateSectionRangeForTagByObjID($material_type, $obj_id, $from, $to){
         $section = $this->getSectionMaterialByObjID($material_type, $obj_id, $from, $to);
         if($section == null){
             throw new Exception("No material tag is found under the given id.");
         }
         $from_to =[$from, $to];
-        $this->updateSectionRange($tag_id, $section, $from_to);
+        $this->updateSectionRange($section, $from_to);
     }
 
-    private function updateSectionRange($tag_id, $section, $from_to) {
-        //1. check whether tag exists
-        $tag = $this->getTagByID($tag_id);
+    private function updateSectionRange($section, $from_to) {
+        
         //2. check materialType because this function only supports those material sections that can be updated
         $material_type = $section->getMaterialType();
-        if( $material_type == MaterialType::SCRIPT 
-            || $material_type == MaterialType::PRESENTATION 
-            || $material_type == MaterialType::VIDEO
-            || $material_type == MaterialType::EXERCISE) {
-                //3. delete the tag for the section and delete the section if it is not tagged anymore
-                $this->deleteTaggedSection($tag_id, $section);
-                //5. create section/ assign section
-                $updated_section = $this->assignTagToSection($tag_id, $material_type, $section->getObId(), $from_to[0], $from_to[1]);
-                // change the ilRecSysModelTagsPerSection entry (delete/createnew)
-                $tagPerSection = new ilRecSysModelTagsPerSection($tag_id, $material_type, $updated_section->getSectionID());
-                $tagPerSection->addNewTagToSection();          
-            } else {
-                throw new Exception("The given material_type is not supported by this function.");
-            }
+        if($material_type == MaterialType::SCRIPT ){
+            $section = ilRecSysModelScript::fetchByMaterialSectionID($section->getSectionID());
+            $section->updateStartEndPage($from_to[0], $from_to[1]);
+        }
+        else if($material_type == MaterialType::PRESENTATION){
+            $section = ilRecSysModelPresentation::fetchByMaterialSectionID($section->getSectionID());
+            $section->updateStartEndSlide($from_to[0], $from_to[1]);
+        }
+        else if($material_type == MaterialType::VIDEO){
+            $section = ilRecSysModelVideo::fetchByMaterialSectionID($section->getSectionID());
+            $parsed_time = ilRecSysModelVideo::parseFromTo($from_to);
+            $from_min = $parsed_time[0];
+            $from_sec = $parsed_time[1];
+            $to_min = $parsed_time[2];
+            $to_sec = $parsed_time[3];
+            $section->updateTimeInterval($from_min, $from_sec, $to_min, $to_sec);
+        }
+        else if($material_type == MaterialType::EXERCISE) {
+            $section = ilRecSysModelExercise::fetchByMaterialSectionID($section->getSectionID());
+            $section = $section->updateTask($from_to[0], 0); //No subtask implementation (yet?)
+        }            
+        else {
+            throw new Exception("The given material_type is not supported by this function.");
+        }
     }
     //give feedback
     
@@ -690,23 +787,32 @@ class ilRecSysModelTagHandler{
     public function deleteTaggedSection($tag_id, $section) {
         // check number of Tags
         $no_tags = $section->getNoTags();
-        if($no_tags < 1){
+        $tag = $this->getTagByID($tag_id);
+        $tagcount = $tag->getTag_count();
+        if($no_tags < 1 or $tagcount < 1){
             throw new Exception("Internal Server Error: number of tags has reached a state with a negative value.");
-        } else if($no_tags == 1){
+        } 
+        if($no_tags == 1){
             // delete section
-            $section->deleteCompleteSectionBySectionID($section->getSectionID(), $section->getMaterial_type());
+            $section->deleteSection();    
         } else {
             //4. decrement $no_tags
             $section->decrementNoTags();
-            $tagsPerSection = ilRecSysModelTagsPerSection::fetchTagsPerSection($section->getSectionID(), $tag_id, $material_type);
-            $tagsPerSection->deleteTagPerSection();
         }
+        if($tagcount == 1){
+            // delete tag
+            $tag->deleteTag();
+        } else {
+            //5. decrement $tagcount
+            $tag->decrementCount();
+        }
+        $tagsPerSection = ilRecSysModelTagsPerSection::fetchTagsPerSection($section->getSectionID(), $tag_id, $section->getMaterialType());
+        $tagsPerSection->deleteTagPerSection();
     }
 
     public function deleteCompleteSectionBySectionID($section_id, $material_type) {
         $section = $this->getSectionMaterialByID($section_id, $material_type);
-        //delete material in map
-        
+        $this->deleteCompleteSection($section);
     }
 
     public function deleteCompleteSectionByObjID($obj_id, $from_to) {
@@ -743,11 +849,9 @@ class ilRecSysModelTagHandler{
         // update tag occurences for every tag that tagged this section
         $tags = $this->getAllTagsForSectionMaterial($section->getSectionID(), $section->getMaterialType());
         foreach($tags as $tag) {
-            $tag->decrementOccurrence();
+            $this->deleteTaggedSection($tag->getTag_id(), $section);
         }
-        // delete tagsPerSection entry
-        $tagsPerSection = ilRecSysModelTagsPerSection::fetchTagsPerSection($section->getSectionID(), $tag_id, $material_type);
-        $tagsPerSection->deleteTagPerSection();
+        $section->deleteSection();
     }
 
     // ------------------------------------------------------------------------------------------------------------------------------------------

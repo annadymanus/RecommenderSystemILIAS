@@ -14,8 +14,6 @@ class ilRecSysModelStudent {
 	private $usr_id;
 	private $crs_id;   // ref_id of the course
 	private $status;
-	private $updates = array();
-	private $lastvisit;
 	
 	private function __construct($usr_id, $crs_id, $default_status=self::USER_STATUS_INACTIVE)
 	{
@@ -26,7 +24,6 @@ class ilRecSysModelStudent {
 		$this->usr_id = $usr_id;
 		$this->crs_id = $crs_id;
 		$this->status = $default_status;
-		$this->updates[] = date("Y-m-d H:i:s", time())."->".$this->status;
 	}
 				
 	// ----------------------------------------------------------------
@@ -36,13 +33,13 @@ class ilRecSysModelStudent {
 	    global $ilDB;	    
 
         #create entry in the recsys database
- 	    #$queryResult = $ilDB->query("SELECT * FROM ui_uihk_leap2_users WHERE usr_id=".$ilDB->quote($usr_id, "integer")." AND crs_id=".$ilDB->quote($crs_id, "integer")." ;");	    
+ 	    $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_user WHERE usr_id=".$ilDB->quote($usr_id, "integer")." AND crs_id=".$ilDB->quote($crs_id, "integer")." ;");	    
 	    
-	    #if ($ilDB->numRows($queryResult) == 1) {
-	    #    return true;
-	    #} else {
-	    #    return false;
-	    #}
+	    if ($ilDB->numRows($queryResult) == 1) {
+	        return true;
+	    } else {
+	        return false;
+	    }
 	}
 	
 	
@@ -109,7 +106,7 @@ class ilRecSysModelStudent {
 	    $this->update();
 	}
 	
-	
+
 	public function refreshLeapStudent() {
 	    $this->read();
 	}
@@ -117,32 +114,29 @@ class ilRecSysModelStudent {
 	// -----------------------------------------------------------------------------------
 	
 	private function read() {
-	    #global $ilDB;
-        #create database for recsys first then uncomment the code and change the name of the table ofcourse
-	    #$queryResult = $ilDB->query("SELECT * FROM ui_uihk_leap2_users WHERE usr_id=".$ilDB->quote($this->usr_id, "integer")." AND crs_id=".$ilDB->quote($this->crs_id, "integer")." ;");
-	    #$student = $ilDB->fetchObject($queryResult);	    
-	    #$this->status = $student->status;
-	    #$this->updates = json_decode($student->updates);
-	    #$this->lastvisit = $student->lastvisit;
-	    #return $this;
+	    global $ilDB;
+	    $queryResult = $ilDB->query("SELECT * FROM ui_uihk_recsys_user WHERE usr_id=".$ilDB->quote($this->usr_id, "integer")." AND crs_id=".$ilDB->quote($this->crs_id, "integer")." ;");
+	    $student = $ilDB->fetchObject($queryResult);	    
+	    $this->status = $student->status;
+	    return $this;
 	}
 	
 	private function create()
 	{    
         #same here with the database creation first 
-	    #$this->ilDB->manipulateF("INSERT INTO ui_uihk_leap2_users (usr_id, crs_id, status, updates)"
-         #                          ." VALUES (%s,%s,%s,%s) ;",
-	      #  array("integer", "integer", "text", "text"),
-	       # array($this->usr_id, $this->crs_id, $this->status, json_encode($this->updates) ) );
+	    $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_user (usr_id, crs_id, usr_status)"
+                                   ." VALUES (%s,%s,%s) ;",
+	        array("integer", "integer", "integer"),
+	        array($this->usr_id, $this->crs_id, $this->status));
 	}
 	
 	
 	private function update() 
 	{
         #same here with the database creation first
-		#$this->ilDB->manipulateF("UPDATE ui_uihk_leap2_users SET status=%s, updates=%s, lastvisit=%s WHERE usr_id=%s AND crs_id=%s ;",
-		#    array("integer", "text", "integer", "integer", "integer"),
-		#	array($this->status, json_encode($this->updates),$this->lastvisit, $this->usr_id, $this->crs_id) );
+		$this->ilDB->manipulateF("UPDATE ui_uihk_recsys_user SET usr_status=%s WHERE usr_id=%s AND crs_id=%s;",
+		    array("integer", "integer", "integer"),
+			array($this->status, $this->usr_id, $this->crs_id));
 	}
 	
 	private static function countRecSysStudentsOfCourseWithStatus($crs_id, $status)
@@ -151,16 +145,14 @@ class ilRecSysModelStudent {
 	   $obj_id = ilObject::_lookupObjectId($crs_id);
     
        #create database first and adjust the query below as the LEAP team was also mentioning some mistake in the query
-          /*
-            $query = "SELECT * "
-                   ." FROM ui_uihk_leap2_users LEFT JOIN obj_members on ui_uihk_leap2_users.usr_id = obj_members.usr_id"
-                   ." WHERE ui_uihk_leap2_users.crs_id = ".$ilDB->quote($crs_id, "integer")
-                   ." AND ui_uihk_leap2_users.status = ".$ilDB->quote($status, "integer")
-                   ." AND obj_members.obj_id = ".$ilDB->quote($obj_id, "integer")
-                   ." AND obj_members.member = 1";
-	           $queryResult = $ilDB->query($query);
-	           return $ilDB->numRows($queryResult);
-              */
+		$query = "SELECT * "
+			." FROM ui_uihk_recsys_user LEFT JOIN obj_members on ui_uihk_recsys_user.usr_id = obj_members.usr_id"
+			." WHERE ui_uihk_recsys_user.crs_id = ".$ilDB->quote($crs_id, "integer")
+			." AND ui_uihk_recsys_user.usr_status = ".$ilDB->quote($status, "integer")
+			." AND obj_members.obj_id = ".$ilDB->quote($obj_id, "integer")
+			." AND obj_members.member = 1";
+		$queryResult = $ilDB->query($query);
+		return $ilDB->numRows($queryResult);
 	}
 	
 	// --- Getters and Setters ------------------------------------------------------------------------------	
@@ -194,31 +186,5 @@ class ilRecSysModelStudent {
     {
         $this->crs_id = $crs_id;
     }
-
-    /**
-     * Set new Status and update updates
-     * @param int $status
-     */
-    public function setStatus($status)
-    {
-        $this->updates[] = date("Y-m-d H:i:s", time())."->".$status;        
-        $this->updates = array_slice($this->updates, -10); // Merkt sich nur die letzten 10 Änderungen.        
-        $this->status = $status;
-    }
-
-    public function getUpdates()
-    {        
-        return $this->updates;
-    }
-    public function getLastvisit()
-    {
-        return $this->lastvisit;
-    }
-
-    public function setLastvisit($lastvisit)
-    {
-        $this->lastvisit = $lastvisit;
-    }
- 
 
 }

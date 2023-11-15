@@ -5,6 +5,7 @@
 
 <form id="form_recsys" role="form"
 	action="{RECSYS_TEACHER_SAVE}"
+	onsubmit="enable_filetypeselectors();"
 	method="post" 
 	novalidate="novalidate">
 
@@ -34,6 +35,18 @@
 				<tr class="sectionbox" id="{ITEM_ID}_{SECTION}" style="display: flex">
 					<td style="width: 100%; display:flex">
 						<div style="display: flex;" id="{ITEM_ID}_{SECTION}_tagholder" name="{I}">
+						
+						<div class="tagbox" id="{ITEM_ID}_{SECTION}_-1_box" style="display:none">
+							<select class="selector" name="{ITEM_ID}_{SECTION}_-1" style="width: 100px; ">
+								<!-- BEGIN TemplateAlltags -->
+								<option style="overflow: hidden; text-overflow:ellipsis" value="{ALL_TAG}" {TAG_SELECTED}>{ALL_TAG}</option>
+								<!-- END TemplateAlltags -->
+							</select>
+							<input type="button" style=" background-color: transparent; font-size: 130%; align-self: center; width:20px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
+								class="material-icons btn" value="delete" id="{ITEM_ID}_{SECTION}_-1_delete" onclick="removeTag(this.id);" />
+						</div>
+						
+						
 						<!-- BEGIN Subtags -->
 							<div class="tagbox" id="{ITEM_ID}_{SECTION}_{I}_box" style="display:flex">
 								<select class="selector" name="{ITEM_ID}_{SECTION}_{I}" style="width: 100px; ">
@@ -52,7 +65,7 @@
 						<input type="button" style="margin-right: 5px" class="btn btn-default btn-sm" value="{NEW_TAG}" id="{ITEM_ID}_{SECTION}_create" onclick="showNewTag(this.id);"/>
 					</td>
 					<!--Make distinction on material types and on types of file-->
-					<td class="descfield" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" value="{FROM}_{TO}" style="display:flex"><div></div><input name="{ITEM_ID}_{SECTION}_desc"></input></td>
+					<td class="descfield" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" value="{FROM}_{TO}" style="display:flex" name="{ITEM_ID}_{SECTION}_desc"><div></div><input name="{ITEM_ID}_{SECTION}_desc"></input></td>
 					<td><input type="button" style=" background-color: transparent; font-size: 180%; align-self: center; width:25px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
 						class="material-icons btn" value="deletesection" id="{ITEM_ID}_{SECTION}_deletesection" onclick="removeRow(this.id);" /></td>
 				</tr>	
@@ -60,16 +73,24 @@
 			<!-- END Tags -->
 			</table>		
 
-			<input style="margin-bottom: 5px; margin-left: 8px;" class="btn btn-default btn-sm" type="button" value="{ADD_SECTION}" id="{ITEM_ID}_{SECTION}_addsection" onclick="addRow(this.id);"  />
+			<input style="margin-bottom: 5px; margin-left: 8px;" class="btn btn-default btn-sm addsection" type="button" value="{ADD_SECTION}" id="{ITEM_ID}_{SECTION}_addsection" onclick="addRow(this.id);"  />
 		</div> 
 		<!-- END Materials -->
 	</div>
 	<!-- END Types -->
 	<input class="btn btn-default" style="width: 100%; padding: 18px;" type="submit" name="cmd[save]" value="{SAVING}"></input>
+	<input style="display:none" class="deletetracker" name="DELETE" value=""></input>
 </form>
 
 
-<script>	
+<script>
+	function enable_filetypeselectors(){
+		selectors = document.getElementsByClassName('filetypeselector');
+		for (var i = 0; i < selectors.length; i++) {
+			selectors[i].disabled = false;
+		}
+	}
+	
 	function render_accordion(){
 		var acc = document.getElementsByClassName("accordion");
 		var i;
@@ -108,6 +129,7 @@
 	for (var i = 0; i < filetypeselectors.length; i++) {
 		if (filetypeselectors[i].name.split("_")[0] != "file") {
 			filetypeselectors[i].parentElement.style.display = "none";
+			filetypeselectors[i].value = filetypeselectors[i].name.split("_")[0];
 		}
 	}
 
@@ -118,11 +140,26 @@
 		update_descfieldtype(descfields[i], from_to[0], from_to[1]);
 	}
 
+	function get_materialtype_by_item_id(item_id){
+		var descfields = document.getElementsByClassName("descfield");
+		for (var i = 0; i < descfields.length; i++) {
+			if (descfields[i].id.split("_")[0] == item_id) {
+				descfield =  descfields[i];
+				if (descfield.id.split("_")[1] == "file") {
+					return descfield.id.split("_")[2];
+				}
+				else{
+					return descfield.id.split("_")[1];
+				}
+			}
+		}
+	}
+
 	function update_descfieldtype(descfield, from="", to=""){
 		var type = descfield.id.split("_")[1];
 		var filetype = descfield.id.split("_")[2];
-		var item_id = descfield.children[1].name.split("_")[0];
-		var section = descfield.children[1].name.split("_")[1];
+		var item_id = descfield.getAttribute("name").split("_")[0];
+		var section = descfield.getAttribute("name").split("_")[1];
 		if (type == "file") {
 			if (filetype == "excsheet") {
 				descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
@@ -189,7 +226,6 @@
 		if (tagholders[i].childElementCount > 2) {
 			blockFileTypeSelector(tagholders[i].id.split("_")[0]);
 		}
-		console.log(tagholders[i].childElementCount);
 		if (tagholders[i].childElementCount == 2) {
 			if (tagholders[i].children[0].children[0].value != "") {
 				blockFileTypeSelector(tagholders[i].id.split("_")[0]);
@@ -219,17 +255,14 @@
 		//check if only one tag left
 		var tag = document.getElementById(id);
 		var tagholder = tag.parentElement;
-		console.log(tag);
 		// 2 means only one left, since newtagfield is always there but hidden
+		tag.remove();
+
 		if (tagholder.childElementCount <= 2) {
 			//if only one tag left, empty it
-			tag.children[0].value = "";
+			//tag.children[0].value = "";
 			//release filetype selector
-			releaseFileTypeSelector(tagholder.id.split("_")[0]);
-		}
-		else{
-			//if more than one tag left, remove tag
-			tag.remove();
+			//releaseFileTypeSelector(tagholder.id.split("_")[0]);
 		}
 	}
 
@@ -245,7 +278,10 @@
 
 	function getNextI(id){
 		var tagholder = document.getElementById(id + "_tagholder");
-		return tagholder.getAttribute("name");
+		var this_I = tagholder.getAttribute("name");
+		var new_I = parseInt(this_I) + 1;
+		tagholder.setAttribute("name", new_I);
+		return this_I;
 	}
 
 	function blockFileTypeSelector(item_id){
@@ -278,6 +314,7 @@
 		var id = clicked_id.replace("_add", "");
 		var box = document.getElementsByClassName("tagbox")[0];
 		var box_clone = box.cloneNode(true);
+		box_clone.style.display = "flex";
 		
 		id_I = id + "_" + getNextI(id)
 		box_clone.id = id_I + "_box";
@@ -290,11 +327,10 @@
 		var newtag = document.getElementById(id + "_newtag");
 		//insert new tag before text field
 		select.insertBefore(box_clone, newtag);
-		new_id = updateNextI(id);
 
 		blockFileTypeSelector(id.split("_")[0]);
 
-		return [box_clone, new_id];
+		return box_clone;
 	}
 
 	function showNewTag(clicked_id)
@@ -307,31 +343,69 @@
 
 	function newTag(clicked_id, input_value)
 	{
-		//add new selector to current box
-		var new_tag_id = clicked_id.replace("_newtag", "_add");
-		var [box_clone, new_I] = addTag(new_tag_id);
+		if (input_value != "") {
+			//add new selector to current box
+			var new_tag_id = clicked_id.replace("_newtag", "_add");
+			var box_clone = addTag(new_tag_id);
 
-		
-		//add new input_value as option to all selects
-		var all_selects = document.getElementsByClassName("selector");
-		for (var i = 0; i < all_selects.length; i++) {
-			var option = document.createElement("option");
-			option.text = input_value;
-			option.value = input_value;
-			all_selects[i].add(option);
+			
+			//add new input_value as option to all selects
+			var all_selects = document.getElementsByClassName("selector");
+			for (var i = 0; i < all_selects.length; i++) {
+				var option = document.createElement("option");
+				option.text = input_value;
+				option.value = input_value;
+				all_selects[i].add(option);
+			}
+
+			//set new select to input_value
+			var new_select = box_clone.children[0];
+			new_select.value = input_value;
 		}
-
-		//set new select to input_value
-		var new_select = box_clone.children[0];
-		new_select.value = input_value;
 		
 		//hide input field and reset value
-		console.log(clicked_id);
 		var newtag = document.getElementById(clicked_id);
 		newtag.style.display = "none";
 		newtag.value = "";
 	}
+
+	function get_addsection_by_item_id(item_id){
+		var addsections = document.getElementsByClassName("addsection");
+		for (var i = 0; i < addsections.length; i++) {
+			if (addsections[i].id.split("_")[0] == item_id) {
+				return addsections[i];
+			}
+		}
+	}
 	
+	function updateSectionId(section, new_id){
+		section.id = new_id;
+		section.children[0].children[0].id = new_id + "_tagholder";
+		section.children[0].children[0].setAttribute("name", "0");
+
+		//remove all but last child (hidden input field) and first child (hidden tag to copy)
+		while (section.children[0].children[0].childElementCount > 2) {
+			section.children[0].children[0].removeChild(section.children[0].children[0].children[1]);
+		}
+
+
+		section.children[0].children[0].children[0].id = new_id + "_-1_box";
+		section.children[0].children[0].children[1].id = new_id + "_newtag";
+		section.children[0].children[1].id = new_id + "_add";
+		section.children[0].children[2].id = new_id + "_create";
+		
+		section.children[1].setAttribute("name", new_id + "_desc");
+		section.children[2].children[0].id = new_id + "_deletesection";
+	}
+
+	function updateAddSectionId(item_id){
+		var addsection = get_addsection_by_item_id(item_id);
+		var last_section = addsection.id.split("_")[1];
+		var new_section = parseInt(last_section) - 1;
+		var new_id = item_id + "_" + new_section;
+		addsection.id = new_id + "_addsection";
+	}
+
 	//new function to add new section with tags and comment field
 	function addRow(clicked_id){
 		var id = clicked_id.replace("_addsection", "");
@@ -348,29 +422,17 @@
 
 		var section_clone = section.cloneNode(true);
 
-		section_clone.id = id;
-		section_clone.children[0].children[0].id = id + "_tagholder";
-		section_clone.children[0].children[0].setAttribute("name", "0");
-
-		//remove all but last child (hidden input field)
-		while (section_clone.children[0].children[0].childElementCount > 1) {
-			section_clone.children[0].children[0].removeChild(section_clone.children[0].children[0].firstChild);
-		}
-
-		section_clone.children[0].children[0].children[0].id = id + "_newtag";
-		section_clone.children[0].children[1].id = id + "_add";
-		section_clone.children[0].children[2].id = id + "_create";
-		
-		section_clone.children[1].setAttribute("name", id + "_desc");
-		section_clone.children[2].children[0].id = id + "_deletesection";
+		updateSectionId(section_clone, id);
 
 		var item_id = id.split("_")[0];
 		document.getElementById(item_id + "_table").children[0].appendChild(section_clone);
 
-		var last_section = id.split("_")[1];
-		var new_section = parseInt(last_section) - 1;
-		var new_id = item_id + "_" + new_section;
-		document.getElementById(clicked_id).id = new_id + "_addsection";
+		console.log(get_addsection_by_item_id(item_id));
+		updateAddSectionId(item_id);
+		console.log(get_addsection_by_item_id(item_id));
+
+		update_descfieldtype(section_clone.children[1], "", "")
+
 		prevent_submit_on_textfield_enter("newtagfield");
 		prevent_submit_on_textfield_enter("descfield");
 		update_height_of_active_panel();
@@ -379,14 +441,20 @@
 	function resetRow(id){
 		var section = document.getElementById(id);
 		//remove all tagboxes
-		tagboxes = section.children[0].children[0].children;
-		console.log(tagboxes);
+		
+		//remove all but last child (hidden input field) and first child (hidden tag to copy)
+		//while (section.children[0].children[0].childElementCount > 2) {
+		//	console.log(section.children[0].children[0].children[1])
+		//	section.children[0].children[0].removeChild(section.children[0].children[0].children[1]);
+		//}
+
+		/*tagboxes = section.children[0].children[0].children;
 		for (var i = tagboxes.length-1; i >= 0; i--) {
 			// if not class newtagfield
 			if (tagboxes[i].className != "newtagfield") {
 				removeTag(tagboxes[i].id.replace("_box", ""));
 			}
-		}
+		}*/
 
 		//empty descfield
 		descfield_children = section.children[1].children;
@@ -396,6 +464,10 @@
 				descfield_children[i].value = "";
 			}
 		}
+		addsection = get_addsection_by_item_id(id.split("_")[0]);
+		updateSectionId(section, addsection.id.replace("_addsection", ""));
+		updateAddSectionId(id.split("_")[0]);
+
 	}
 
 	//new function to remove section
@@ -419,5 +491,12 @@
 		else{
 			document.getElementById(id).remove();
 		}
+		//add to deletetracker if non-negative section id
+		if (id.split("_")[1] >= 0) {
+			type = get_materialtype_by_item_id(item_id);
+			var deletetracker = document.getElementsByClassName("deletetracker")[0];
+			deletetracker.setAttribute("value", deletetracker.getAttribute("value") + id + "_" + type + "__");
+		}	
+
 	}
 </script>

@@ -107,6 +107,20 @@ class ilRecSysModelTest {
         return $questions;
     }
 
+    public static function getLastTestId() {
+
+        global $ilDB;
+        $queryResult = $ilDB->query("SELECT test_id FROM ui_uihk_recsys_q_a_t ORDER BY test_id DESC LIMIT 1");
+        if ($ilDB->numRows($queryResult) === 0) {
+            $last_test_id = 0;
+        } else {
+            $last_test_id = $ilDB->fetchAssoc($queryResult);
+            $last_test_id = $last_test_id['test_id'];
+        }
+        return $last_test_id;
+
+    }
+
 
 
 }

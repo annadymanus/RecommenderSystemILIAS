@@ -110,7 +110,7 @@ class ilRecSysModelTags {
             throw new Exception("The given tag name is already assigned.");
         }
         $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_tags"
-                . "(tag_id, tag_name, crs_id, tag_description, tag_occurence)"
+                . "(tag_id, tag_name, crs_id, tag_description, tag_count)"
                 . " VALUES (%s,%s,%s,%s, %s)",
                 array("integer", "text", "integer", "text", "integer"),
                 array($this->tag_id,
@@ -150,7 +150,7 @@ class ilRecSysModelTags {
     public function decrementCount() {
         $this->tag_count--;
         $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_tags"
-                ."SET"
+                ." SET"
                 ." tag_count = %s"
                 ." WHERE tag_id = %s",
             array("text", "integer"),

@@ -47,7 +47,7 @@ class ilRecSysModelScript extends ilRecSysModelMaterialSection{
     public static function fetchByObjID($obj_id, $from_to){
         global $ilDB;
         if(sizeof($from_to) == 2){
-            $queryResult = $ilDB->query("SELECT * FROM ".self::MATERIALTABLENAME." WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_page == ".$ilDB->quote($from_to[0], "integer")." AND end_page == ".$ilDB->quote($from_to[1], "integer"));
+            $queryResult = $ilDB->query("SELECT * FROM ".self::MATERIALTABLENAME." WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_page = ".$ilDB->quote($from_to[0], "integer")." AND end_page = ".$ilDB->quote($from_to[1], "integer"));
         } else {
             throw new Exception("Both start end end page have to be defined for this material_type");
         }
@@ -180,6 +180,10 @@ class ilRecSysModelScript extends ilRecSysModelMaterialSection{
 
     public function getEnd_page() {
         return $this->end_page;
+    }
+
+    public function getFromTo(){
+        return array($this->start_page, $this->end_page);
     }
 
     public function setNoTags($no_tags) {

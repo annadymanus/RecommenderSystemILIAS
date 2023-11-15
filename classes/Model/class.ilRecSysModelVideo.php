@@ -11,15 +11,19 @@ class ilRecSysModelVideo extends ilRecSysModelMaterialSection{
     //attribute
     private $start_min;
     private $end_min;
+    private $start_sec;
+    private $end_sec;
 
     //-----------------------------------------------------------------------------------
 
     //constructor
-    public function __construct($video_id, $obj_id, $start_min, $end_min, $difficulty, $rating_count, $no_tags) {
+    public function __construct($video_id, $obj_id, $start_min, $start_sec, $end_min, $end_sec, $difficulty, $rating_count, $no_tags) {
         parent::__construct($video_id, $obj_id, $difficulty, $rating_count, $no_tags);
 
         $this->$start_min = $start_min;
         $this->$end_min = $end_min;
+        $this->$start_sec = $start_sec;
+        $this->$end_sec = $end_sec;
     }
 
     public static function fetchByMaterialSectionID($video_id){
@@ -33,19 +37,38 @@ class ilRecSysModelVideo extends ilRecSysModelMaterialSection{
             $fetched_video->video_id, 
             $fetched_video->obj_id,
             $fetched_video->start_min,
+            $fetched_video->start_sec,
             $fetched_video->end_min,
+            $fetched_video->end_sec,
             $fetched_video->difficulty, 
             $fetched_video->rating_count,
             $fetched_video->no_tags);
         return $video;
     }
 
+    public static function parseFromTo($from_to){
+        $from_min = explode(":", $from_to[0])[0];
+        $from_sec = explode(":", $from_to[0])[1];
+        $to_min = explode(":", $from_to[1])[0];
+        $to_sec = explode(":", $from_to[1])[1];
+        return array($from_min, $from_sec, $to_min, $to_sec);
+    }
+
+    public function getFromTo(){
+        return array($this->start_min.":".$this->start_sec, $this->end_min.":".$this->end_sec);
+    }
+
     public static function fetchByObjID($obj_id, $from_to){
+        $parsed_time = ilRecSysModelVideo::parseFromTo($from_to);
+        $start_min = $parsed_time[0];
+        $start_sec = $parsed_time[1];
+        $end_min = $parsed_time[2];
+        $end_sec = $parsed_time[3];
         global $ilDB;
-        if(sizeof($from_to) == 2){
-            $queryResult = $ilDB->query("SELECT * FROM ".self::MATERIALTABLENAME." WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_min == ".$ilDB->quote($from_to[0], "integer")." AND end_min == ".$ilDB->quote($from_to[1], "integer"));
+        if(sizeof($parsed_time) == 4){
+            $queryResult = $ilDB->query("SELECT * FROM ".self::MATERIALTABLENAME." WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_min == ".$ilDB->quote($start_min, "integer")." AND end_min == ".$ilDB->quote($end_min, "integer")." AND start_sec == ".$ilDB->quote($start_sec, "integer")." AND end_sec == ".$ilDB->quote($end_sec, "integer") );
         } else {
-            throw new Exception("Both start end end page have to be defined for this material_type");
+            throw new Exception("FromTo Attribute could not be parsed correctly: ".$from_to);
         }
         //if query is empty, return null
         if ($ilDB->numRows($queryResult) === 0) {
@@ -56,7 +79,9 @@ class ilRecSysModelVideo extends ilRecSysModelMaterialSection{
             $fetched_video->video_id, 
             $fetched_video->obj_id,
             $fetched_video->start_min,
+            $fetched_video->start_sec,
             $fetched_video->end_min,
+            $fetched_video->end_sec,
             $fetched_video->difficulty, 
             $fetched_video->rating_count,
             $fetched_video->no_tags);
@@ -77,7 +102,9 @@ class ilRecSysModelVideo extends ilRecSysModelMaterialSection{
                 $fetched_video->video_id, 
                 $fetched_video->obj_id,
                 $fetched_video->start_min,
+                $fetched_video->start_sec,
                 $fetched_video->end_min,
+                $fetched_video->end_sec,
                 $fetched_video->difficulty, 
                 $fetched_video->rating_count,
                 $fetched_video->no_tags);
@@ -112,11 +139,13 @@ class ilRecSysModelVideo extends ilRecSysModelMaterialSection{
         $this->ilDB->manipulateF("INSERT INTO ".self::MATERIALTABLENAME
                 . "(video_id, obj_id, start_min, end_min, difficulty, rating_count, no_tags)"
                 . " VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                array("integer", "integer", "timestamp", "timestamp", "float", "integer", "integer"),
+                array("integer", "integer", "integer", "integer","integer", "integer", "float", "integer", "integer"),
                 array($this->section_id, 
                       $this->obj_id,
                       $this->start_min,
-                      $this->end_min,  
+                      $this->start_sec,
+                      $this->end_min, 
+                      $this->end_sec,
                       $this->difficulty,          // difficulty
                       $this->rating_count,       // rating_count
                       $this->no_tags
@@ -142,17 +171,21 @@ class ilRecSysModelVideo extends ilRecSysModelMaterialSection{
     /**
      *  update the start and end minute attributes of the video section
      */
-    public function updateTimeInterval($start_min, $end_min) {
+    public function updateTimeInterval($start_min, $start_sec, $end_min, $end_sec) {
         $this->ilDB->manipulateF("UPDATE ".self::MATERIALTABLENAME
             ."SET"
             ." start_min = %s"
+            ." ,start_sec = %s"
             ." ,end_min = %s"
+            ." ,end_sec = %s"
             ." WHERE video_id = %s",
-            array("timestamp", "timestamp", "integer"),
-            array($start_min, $end_min, $this->section_id)
+            array("integer", "integer", "integer", "integer", "integer"),
+            array($start_min, $start_sec, $end_min, $end_sec, $this->section_id)
         );
         $this->start_min = $start_min;
         $this->end_min = $end_min;
+        $this->start_sec = $start_sec;
+        $this->end_sec = $end_sec;
     }
 
     public function addNewRating($rating){
@@ -177,6 +210,14 @@ class ilRecSysModelVideo extends ilRecSysModelMaterialSection{
 
     public function getMaterialType () {
         return self::MATERIALTABLENAME;
+    }
+
+    public function getStart_sec() {
+        return $this->start_sec;
+    }
+
+    public function getEnd_sec() {
+        return $this->end_sec;
     }
 
     public function getStart_min() {

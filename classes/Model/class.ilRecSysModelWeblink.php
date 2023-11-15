@@ -136,5 +136,9 @@
             $this->no_tags = $no_tags;
         }
     }
+
+    public function getFromTo(){
+        return null;
+    }
 }
 ?>

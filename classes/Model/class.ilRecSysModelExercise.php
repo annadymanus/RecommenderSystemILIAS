@@ -2,7 +2,7 @@
 /**
  * @author Joel Pflomm <joel.pflomm@students.uni-mannheim.de>
  * 
- *
+ * Note: subtask_no is currently unused in the frontend. Possible future use.
  */
 
  class ilRecSysModelExercise extends ilRecSysModelMaterialSection{
@@ -78,8 +78,8 @@
             $exercise = new ilRecSysModelExercise(
                 $fetched_exercise->exercise_id, 
                 $fetched_exercise->obj_id,
-                $fetched_exercise->task,
-                $fetched_exercise->subtask,
+                $fetched_exercise->task_no,
+                $fetched_exercise->subtask_no,
                 $fetched_exercise->difficulty, 
                 $fetched_exercise->rating_count,
                 $fetched_exercise->no_tags);
@@ -146,9 +146,9 @@
      */
     public function updateTask($task_no, $subtask_no) {
         $this->ilDB->manipulateF("UPDATE ".self::MATERIALTABLENAME
-            ."SET"
-            ." , task_no = %s"
-            ." , subtask_no = %s"
+            ." SET"
+            ." task_no = %s,"
+            ." subtask_no = %s"
             ." WHERE ".self::SECTIONIDNAME." = %s",
             array("integer", "integer", "integer"),
             array($task_no, $subtask_no, $this->section_id)
@@ -170,6 +170,10 @@
         $this->ilDB->manipulateF("DELETE FROM " .self::MATERIALTABLENAME." WHERE ".self::SECTIONIDNAME." = %s",
             array("integer"),
             array($exercise_id));
+    }
+
+    public function getFromTo(){
+        return array($this->task_no, $this->task_no);
     }
 
 

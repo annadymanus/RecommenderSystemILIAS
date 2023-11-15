@@ -3,7 +3,7 @@
 include_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecommenderSystemConst.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelCourse.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelStudent.php');
-require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelFeedback.php');
+#require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelFeedback.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDB.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/util/class.ilRecSysListMaterials.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudentRecommender.php');
@@ -15,7 +15,7 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelPresentation.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelWeblink.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelTagHandler.php');
-require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelTagsPerMaterial.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelTagsPerSection.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageUtils.php');
 /**
  * Handles the Commands of the Student Overview.
@@ -89,12 +89,35 @@ class ilRecSysPageTeacher {
         //create empty map in map of obj_id to section_id to tags
         $material_tags = array();
         $types = array();
+        $deletions = array();
         foreach ($_POST as $key => $value) {
+            $this->debug_to_console($key, 'key');
+            $this->debug_to_console($value, 'value');
+
+            if($key == "DELETE"){
+                $item_sections = explode("__", $value);
+                foreach ($item_sections as $item_section){
+                    if($item_section == ""){
+                        continue;
+                    }
+                    $item_section = explode("_", $item_section);
+                    $obj_id = $item_section[0];
+                    $section_id = $item_section[1];
+                    $material_type = $item_section[2];
+                    if (!array_key_exists($obj_id, $deletions)){
+                        $deletions[$obj_id] = array();
+                    }
+                    array_push($deletions[$obj_id], array($section_id, $material_type));
+                }
+                continue;
+            }
+
             //parse what is posted
             list($column_1, $column_2, $column_3) = explode("_", $key);
 
-            //Here column_1 is obj id and $column_2 the material type and $column_3 the file type if mat is file
-            if($column_3 == "file_type"){
+            //Here column_2 is obj id and $column_1 the material type and $column_3 the file type if mat is file
+            if($column_3 == "filetype"){
+                $this->debug_to_console($value, 'got here');
                 $types[$column_2] = $value;
             }
             else if(ctype_digit($column_1) & ctype_digit(trim($column_2, "-"))){
@@ -123,7 +146,7 @@ class ilRecSysPageTeacher {
                         else{
                             $material_tags[$column_1][$column_2]["fromto"] = array("0", $value);
                         }
-                    }
+                    } //TODO: FIX THIS CODE TO PROPERLY ENCODE INFO
                     else if($column_3 == "descfrommin"){
                         if (array_key_exists("fromto", $material_tags[$column_1][$column_2])){
                             $material_tags[$column_1][$column_2]["fromto"][0] = $value.$material_tags[$column_1][$column_2]["fromto"][0];
@@ -170,6 +193,9 @@ class ilRecSysPageTeacher {
             
         }
 
+        $this->debug_to_console($deletions, 'deletions');
+
+
         //fill in missing types
         foreach ($material_tags as $obj_id => $sections){
             if (!array_key_exists($obj_id, $types)){
@@ -182,13 +208,27 @@ class ilRecSysPageTeacher {
         //remove negative section ids without tags from material_tags
         foreach ($material_tags as $obj_id => $sections){
             foreach ($sections as $section_id => $desc_tags){
-                if ($section_id < 0 && empty($desc_tags["tags"])){
-                    unset($material_tags[$column_1][$section_id]);
+                if (empty($desc_tags["tags"])){
+                    unset($material_tags[$obj_id][$section_id]);
                 }
             }
         }
 
-        //iterate over materials
+        $this->debug_to_console($material_tags, 'saved material_tag_entries');
+        $this->debug_to_console($types, 'saved types');
+
+        //remove deleted sections
+        foreach ($deletions as $obj_id => $sections){
+            $material_type = $types[$obj_id];
+            foreach ($sections as $section_id_and_type){
+                $section_id = $section_id_and_type[0];
+                $material_type = ilRecSysPageUtils::MATERIAL_TYPE_TO_INDEX[$section_id_and_type[1]];
+                $this->tag_handler->deleteSection($section_id, $material_type);
+            }
+        }
+
+
+        //iterate over materials and create new
         foreach ($material_tags as $obj_id => $sections){
             //iterate over sections
             foreach ($sections as $section_id => $desc_tags){
@@ -196,7 +236,9 @@ class ilRecSysPageTeacher {
                 if(!array_key_exists("fromto", $desc_tags)){
                     $desc_tags["fromto"] = null;
                 }
-                //$this->tag_handler->update_db($obj_id, $section_id, $desc_tags["tags"], $types[$obj_id], $desc_tags["fromto"]);
+                $type = ilRecSysPageUtils::MATERIAL_TYPE_TO_INDEX[$types[$obj_id]];
+                $this->debug_to_console($type, 'type');
+                $this->tag_handler->updateSection($this->crs_id, $obj_id, $section_id, $type, $desc_tags["tags"], $desc_tags["fromto"]);
             }
         }
 
@@ -227,7 +269,11 @@ class ilRecSysPageTeacher {
             }
 
 
-            $all_tags = ilRecSysModelTags::fetchAllTagNames();
+            $all_tags = ilRecSysModelTags::fetchAllTagIDsForCourse($this->crs_id);
+            //get names
+            $all_tags = array_map(function($tag_id){
+                return ilRecSysModelTags::fetchTagById($tag_id)->getTag_name();
+            }, $all_tags);
             $all_tags[] = "";
 
 
@@ -260,6 +306,12 @@ class ilRecSysPageTeacher {
                         $tpl->setVariable("SECTION", $section);
                         $tpl->parseCurrentBlock();
                         $counter++;
+                    }
+                    foreach ($all_tags as $all_tag){
+                        $tpl->setCurrentBlock("TemplateAlltags");
+                        $tpl->setVariable("ALL_TAG", $all_tag);
+                        $tpl->setVariable("TAG_SELECTED", $all_tag == "" ? "selected" : "");
+                        $tpl->parseCurrentBlock();
                     }
                     $tpl->setCurrentBlock("Tags");
                     $tpl->setVariable("I", $counter);

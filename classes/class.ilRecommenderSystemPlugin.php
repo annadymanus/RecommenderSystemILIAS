@@ -81,6 +81,23 @@ class ilRecommenderSystemPlugin extends ilUserInterfaceHookPlugin
 	    $log = ilLoggerFactory::getLogger('ilRecommenderSystemPlugin');
 	    global $ilDB;
 	    
+         /**
+         * ui_uihk_recsys_config:                             no change
+        * ui_uihk_recsys_user:                               no change
+        * ui_uihk_recsys_courses:                            no change
+        * ui_uihk_recsys_tags:                               no change
+        * ui_uihk_recsys_tags_per_section:                   ui_uihk_recsys_t_p_s
+        * ui_uihk_recsys_tags_user:                          ui_uihk_recsys_t_u
+        * ui_uihk_recsys_section_tag_user:                   ui_uihk_recsys_s_t_u
+        * ui_uihk_recsys_material_section_file_script:       ui_uihk_recsys_m_s_f_s
+        * ui_uihk_recsys_material_section_file_presentation: ui_uihk_recsys_m_s_f_p
+        * ui_uihk_recsys_material_section_file_video:        ui_uihk_recsys_m_s_f_v
+        * ui_uihk_recsys_material_section_file_picture:      ui_uihk_recsys_m_s_pic
+        * ui_uihk_recsys_material_section_weblink:           ui_uihk_recsys_m_s_w
+        * ui_uihk_recsys_material_section_file_bibliography: ui_uihk_recsys_m_s_bib
+        * ui_uihk_recsys_material_section_exercise           ui_uihk_recsys_m_s_e
+        *
+        */
 	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_config");
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_config_seq");
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_user");
@@ -89,28 +106,35 @@ class ilRecommenderSystemPlugin extends ilUserInterfaceHookPlugin
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_courses_seq");
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_tags");
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_tags_seq");
-	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_t_p_m");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_t_p_m_seq");
-	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_o_t_u");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_o_t_u_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_t_p_s");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_t_p_s_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_t_u");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_t_u_seq");
 	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_s_t_u");
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_s_t_u_seq");
-	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_s");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_s_seq");
-	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_p");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_p_seq");
-	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_v");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_f_v_seq");
-	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_pic");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_pic_seq");
-	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_w");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_w_seq");
-	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_bib");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_c_bib_seq");
-	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_t");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_t_seq");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_e");
-        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_a_e_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_f_s");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_f_s_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_f_p");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_f_p_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_f_v");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_f_v_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_pic");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_pic_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_w");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_w_seq");
+	    $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_bib");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_bib_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_e");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_m_s_e_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_u_r_a_c");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_u_r_a_c_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_q_a_t");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_q_a_t_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_u_q");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_u_q_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_u_c");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_u_c_seq");
+
 	    $log->info("Uninstalled Recsys");	    
 	    return true; // false would indicate that anything went wrong	    
 	}

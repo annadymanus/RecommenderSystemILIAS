@@ -58,10 +58,10 @@ class ilRecSysModelTagsPerSection{
 
     public static function getAllSectionIDsForTag($tag_id){
         global $ilDB;
-        $queryResult = $ilDB->query("SELECT material_type, section_id FROM ui_uihk_recsys_t_p_s WHERE tag_id = %s", "integer", $tag_id);
+        $queryResult = $ilDB->queryF("SELECT material_type, section_id FROM ui_uihk_recsys_t_p_s WHERE tag_id = %s", array("integer"), array($tag_id));
         $material_type_id_pair = array(array());
         while($row = $ilDB->fetchAssoc($queryResult)){
-            array_push($material_type_id_pair, array($row['material_type'], $row['section_id']));
+            array_push($material_type_id_pair, array($row['section_id'], $row['material_type']));
         }
         return $material_type_id_pair;
     }

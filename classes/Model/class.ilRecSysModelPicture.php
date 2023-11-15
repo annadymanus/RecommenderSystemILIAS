@@ -93,8 +93,8 @@ class ilRecSysModelPicture extends ilRecSysModelMaterialSection{
     public function updateSectionDifficulty($new_difficulty, $new_rating_count) {
         $this->ilDB->manipulateF("UPDATE " .self::MATERIALTABLENAME
             ." SET"
-                ." difficulty = %s,"
-                ." rating_count = %s"
+            ." difficulty = %s,"
+            ." rating_count = %s"
             ." WHERE ".self::SECTIONIDNAME." = %s",
             array("double", "integer", "integer"),
             array($new_difficulty, $new_rating_count, $this->section_id)
@@ -135,5 +135,9 @@ class ilRecSysModelPicture extends ilRecSysModelMaterialSection{
             );
             $this->no_tags = $no_tags;
         }
+    }
+
+    public function getFromTo(){
+        return null;
     }
 }

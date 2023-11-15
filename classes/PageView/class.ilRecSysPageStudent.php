@@ -3,7 +3,8 @@
 include_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecommenderSystemConst.php");
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelCourse.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelStudent.php');
-require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelFeedback.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelRecommender.php');
+#require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelFeedback.php');
 #require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelRating.php');
 #require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysEventTracker.php');
 require_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDB.php");
@@ -33,6 +34,7 @@ class ilRecSysPageStudent {
     private $RecSysStudent;
     private $CoreDB;
     private $plugin;
+    private $recommender;
     
     
     public function __construct( $crs_id ) {
@@ -49,6 +51,8 @@ class ilRecSysPageStudent {
         $this->RecSysStudent  = ilRecSysModelStudent::getOrCreateRecSysStudent($this->ilUser->getId(), $this->crs_id, $this->RecSysCourse->getOpt_default());
         $this->CoreDB          = null;//new ilRecSysCoreDB("admin");
         
+        $this->recommender = new ilRecSysModelRecommender($this->ilUser->getId(), $this->crs_id);
+
         $this->plugin = ilPlugin::getPluginObject(IL_COMP_SERVICE, 'UIComponent', 'uihk', 'RecommenderSystem');
     }
     
@@ -92,10 +96,24 @@ class ilRecSysPageStudent {
 
     public function save_student_recommendations() {
         $status = $_POST['form_recsys'];
+        $section_mattype_tuples = array();
         foreach ($_POST as $key => $value) {
-            $this->debug_to_console($key);
-            $this->debug_to_console($value);
+            $this->debug_to_console($key, "key");
+            $this->debug_to_console($value, "value");
+            $item_id = explode("_", $key)[0];
+            $section_id = explode("_", $key)[1];
+            //go sure item and section id are integers
+            if(!is_numeric($item_id) || !is_numeric($section_id)){
+                continue;
+            }
+            $material_type = ilRecSysPageUtils::objIsType($item_id);
+            $material_type = ilRecSysPageUtils::MATERIAL_TYPE_TO_INDEX[$material_type];
+            $section_mattype_tuples[] = array($section_id, $material_type);
         }
+        $this->debug_to_console($section_mattype_tuples, "sections");
+
+        //$recs = new ilRecSysModelRecommender($this->ilUser->getId(), $this->crs_id);
+        $this->recommender->setRecommendationQuery($section_mattype_tuples);
         //$this->debug_to_console("test");
         //$this->debug_to_console($_POST);
         //$this->debug_to_console($_POST["exc 2_Topic1"]);
@@ -104,7 +122,7 @@ class ilRecSysPageStudent {
 
         //ilUtil::sendSuccess($this->plugin->txt('recsys_saved_sucessfully'), true);
         
-        //$this->show_student_settings();
+        $this->show_student();
     }
 
 
@@ -130,8 +148,8 @@ class ilRecSysPageStudent {
                 if($material_type == "file"){
                     $file_type = ilRecSysPageUtils::fileIsType($item['obj_id']);	
                 }
-                //$material_tags = ilRecSysPageUtils::getMaterialTagEntries($item['obj_id'], $file_type == null ?  $material_type : $file_type);
-                $material_tags = array(array(0,array("Semantic Knowledge", "Graphs and Networks", "Sublayer Performance Review Attacks"), array(3,5)), array(1,array("Topic2"), array(7,9)), array(2,array("Topic3","Topic4","Topic5"), array(11,13)));
+                $material_tags = ilRecSysPageUtils::getMaterialTagEntries($item['obj_id'], $file_type == null ?  $material_type : $file_type);
+                //$material_tags = array(array(0,array("Semantic Knowledge", "Graphs and Networks", "Sublayer Performance Review Attacks"), array(3,5)), array(1,array("Topic2"), array(7,9)), array(2,array("Topic3","Topic4","Topic5"), array(11,13)));
 
                 //if no tags given, skip material
                 if($material_tags[0][1][0]==""){
@@ -163,6 +181,7 @@ class ilRecSysPageStudent {
             $tpl->parseCurrentBlock(); 
         }
         $tpl->setVariable("RECOMMEND", $this->plugin->txt("recsys_student_recommend"));
+        $tpl->setVariable("CLEAR_SELECTION", "Clear Selection"); //PUT TO LOCALE FILE
         $tpl->setVariable("RECSYS_STUDENT_RECOMMEND", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_STUDENT_RECOMMEND));
         $tplMain->setVariable("MATERIALS", $tpl->get());
         return $tplMain;

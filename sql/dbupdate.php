@@ -54,8 +54,6 @@ if (!$ilDB->tableExists('ui_uihk_recsys_config'))
  *  usr_id:         identifying number of the 
  *  crs_id:         id of the course the user utilizes the Recommender System for
  *  usr_status:     status of the user. 3 options: INACTIVE, ANONYM, ACTIVE (define whether tracking is active or not)
- *  updates:        an array of the last 10 times the userstatus was changed (timestamp (timeformat: Y-m-d H:i:s) + status)
- *  last_visit:     the last time the user was assigned a tag
  */
 if (!$ilDB->tableExists('ui_uihk_recsys_user'))
 {
@@ -72,14 +70,6 @@ if (!$ilDB->tableExists('ui_uihk_recsys_user'))
             'type' => 'integer',
             'length' => 1,
             'notnull' => true, ),
-        'updates' => array(  
-            'type' => 'text',
-            'length' => 1000,
-            'notnull' => true ),
-        'lastvisit' => array(
-            'type' => 'integer',
-            'length' => 4,
-            'notnull' => false ),
     );
     $ilDB->createTable("ui_uihk_recsys_user", $fields);
     $ilDB->addPrimaryKey("ui_uihk_recsys_user", array("usr_id", "crs_id"));
@@ -411,10 +401,16 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_v')){
             'length' => 8,
             'notnull' => true),
         'start_min' => array(
-            'type' => 'timestamp',
+            'type' => 'integer',
             'notnull' => true),
         'end_min' => array(
-            'type' => 'timestamp',
+            'type' => 'integer',
+            'notnull' => true),
+        'start_sec' => array(
+            'type' => 'integer',
+            'notnull' => true),
+        'end_sec' => array(
+            'type' => 'integer',
             'notnull' => true),
         'difficulty' => array(
             'type' => 'float',
@@ -597,29 +593,29 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_e')){
 
 /**
  *  This table represents the users spefic information to give them recommendations. The idea of the table is to save 
- *  the materials and the corresponding tags for which a user asked for a recommendation. Additionally, the 
- *  information on what recommended materials the user actually clicked on.
+ *  the materials and the corresponding tags for which a user asked for a recommendation.
  * 
- *  ui_uihk_recsys_user_recommendations_and_clicks
+ *  ui_uihk_recsys_user_query
  * 
  *  The table holds the following attributes:
  * 
  *  user_id:                    identifier of the user that wants a recommendation
+ * crs_id:                     identifier of the course the user utilizes the Recommender System for
  *  material_type:              type of material (script, presentation, video, picture, weblink, bibliography, test, forum_entry)
  *  material_id:                identifier of the material that a user chooses to get a recommendation for
- *  tag_id:                     identifier of the tag that was assigned to the material
- *  timestamp:                  timestamp of the request
- *  clicked_material_type:      type of material (script, presentation, video, picture, weblink, bibliography, test, forum_entry)
- *  clicked_material_id:        identifier of the material that a user clicked on
- *  timestamp_clicked:          timestamp of the click
- */
-if (!$ilDB->tableExists('ui_uihk_recsys_u_r_a_c'))
+ *  timestamp:                  unix timestamp in seconds of the request
+ *  */
+if (!$ilDB->tableExists('ui_uihk_recsys_u_q'))
 {
     $fields = array(
     	'usr_id' => array(
             'type' => 'integer',
    			'length' => 8,
    			'notnull' => true ),
+        'crs_id' =>  array(  
+            'type' => 'integer',
+            'length' => 8,
+            'notnull' => true ),
         'material_type' => array(
             'type' => 'integer',
             'length' => 4,
@@ -628,29 +624,56 @@ if (!$ilDB->tableExists('ui_uihk_recsys_u_r_a_c'))
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
-        'tag_id' => array(
+        'timestamp' => array(
+            'type' => 'integer', // or 'datetime'
+            'notnull' => true),
+    );
+    $ilDB->createTable("ui_uihk_recsys_u_q", $fields);
+    $ilDB->addPrimaryKey("ui_uihk_recsys_u_q", array("usr_id", "material_type", "material_id", "timestamp"));
+    $ilDB->createSequence('ui_uihk_recsys_u_q');    
+}
+
+/**
+ *  This table represents the materials that a user was interested in (clicked on).
+ * 
+ *  ui_uihk_recsys_user_clicks
+ * 
+ *  The table holds the following attributes:
+ * 
+ *  user_id:                    identifier of the user that wants a recommendation
+ * crs_id:                     identifier of the course the user utilizes the Recommender System for
+ *  material_type:              type of material (script, presentation, video, picture, weblink, bibliography, test, forum_entry)
+ *  material_id:                identifier of the material that a user clicked on
+ *  timestamp:                  unix timestamp in seconds of the click
+ *  */
+if (!$ilDB->tableExists('ui_uihk_recsys_u_c'))
+{
+    $fields = array(
+    	'usr_id' => array(
+            'type' => 'integer',
+   			'length' => 8,
+   			'notnull' => true ),
+        'crs_id' =>  array(  
+            'type' => 'integer',
+            'length' => 8,
+            'notnull' => true ),
+        'material_type' => array(
+            'type' => 'integer',
+            'length' => 4,
+            'notnull' => true),
+        'material_id' => array(
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
         'timestamp' => array(
-            'type' => 'timestamp', // or 'datetime'
-            'notnull' => true),
-        'clicked_material_type' => array(
-            'type' => 'integer',
-            'length' => 4,
-            'notnull' => true),
-        'clicked_material_id' => array(
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true),
-        'timestamp_clicked' => array(
-            'type' => 'timestamp', // or 'datetime'
+            'type' => 'integer', // or 'datetime'
             'notnull' => true),
     );
-    $ilDB->createTable("ui_uihk_recsys_u_r_a_c", $fields);
-    $ilDB->addPrimaryKey("ui_uihk_recsys_u_r_a_c", array("usr_id", "material_type", "material_id", "tag_id"));
-    $ilDB->createSequence('ui_uihk_recsys_u_r_a_c');    
+    $ilDB->createTable("ui_uihk_recsys_u_c", $fields);
+    $ilDB->addPrimaryKey("ui_uihk_recsys_u_c", array("usr_id", "material_type", "material_id", "timestamp"));
+    $ilDB->createSequence('ui_uihk_recsys_u_c');    
 }
+
 
 
 //Not sure whether it's right, but this is my idea of how to store the tags for questions in a test

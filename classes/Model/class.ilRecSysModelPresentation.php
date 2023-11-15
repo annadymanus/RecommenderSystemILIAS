@@ -186,6 +186,10 @@ class ilRecSysModelPresentation extends ilRecSysModelMaterialSection{
         return $this->end_slide;
     }
 
+    public function getFromTo(){
+        return array($this->start_slide, $this->end_slide);
+    }
+
     public function setNoTags($no_tags) {
         if($no_tags > 0){
             $this->ilDB->manipulateF("UPDATE " .self::MATERIALTABLENAME ." SET no_tags = %s WHERE ".self::SECTIONIDNAME." = %s", 
