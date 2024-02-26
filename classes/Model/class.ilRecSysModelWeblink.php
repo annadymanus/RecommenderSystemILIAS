@@ -13,8 +13,8 @@
 
     // --------------------------------------------------------
 
-    public function __construct($weblink_id, $obj_id, $difficulty, $rating_count, $no_tags) {
-        parent::__construct($weblink_id, $obj_id, $difficulty, $rating_count, $no_tags);
+    public function __construct($weblink_id, $obj_id, $difficulty, $rating_count, $no_tags, $teach_diff) {
+        parent::__construct($weblink_id, $obj_id, $difficulty, $rating_count, $no_tags, $teach_diff);
     }
 
     public static function fetchByMaterialSectionID($weblink_id){
@@ -29,7 +29,9 @@
             $fetched_weblink->obj_id,
             $fetched_weblink->difficulty,
             $fetched_weblink->rating_count,
-            $fetched_weblink->no_tags);
+            $fetched_weblink->no_tags,
+            $fetched_weblink->teach_diff
+        );
         return $weblink;
     }
 
@@ -49,7 +51,9 @@
             $fetched_weblink->obj_id,
             $fetched_weblink->difficulty, 
             $fetched_weblink->rating_count,
-            $fetched_weblink->no_tags);
+            $fetched_weblink->no_tags,
+            $fetched_weblink->teach_diff
+        );
         return $weblink;
     }
 
@@ -76,14 +80,15 @@
      */
     public function createMaterialSection() {
         $this->ilDB->manipulateF("INSERT INTO ".self::MATERIALTABLENAME
-                . "(weblink_id, obj_id, difficulty, rating_count, no_tags)"
-                . " VALUES (%s,%s,%s,%s,%s)",
-                array("integer", "integer", "double", "integer", "integer"),
+                . "(weblink_id, obj_id, difficulty, rating_count, no_tags, teach_diff)"
+                . " VALUES (%s,%s,%s,%s,%s,%s)",
+                array("integer", "integer", "double", "integer", "integer", "double"),
                 array($this->section_id, 
                       $this->obj_id,  
                       $this->difficulty,    
                       $this->rating_count,
-                      $this->no_tags       
+                      $this->no_tags,
+                      $this->teach_diff       
                     ));
     }
 
@@ -106,6 +111,18 @@
     public function addNewRating($rating){
         $new_difficulty = $this->calculateDifficulty($rating);
         $this->updateSectionDifficulty($new_difficulty, ($this->getRatingCount() + 1));
+    }
+
+    public function setTeacherDifficulty($new_teach_diff)
+    {
+        $this->ilDB->manipulateF("UPDATE " .self::MATERIALTABLENAME
+            ." SET"
+                ." teach_diff = %s"
+            ." WHERE ".self::SECTIONIDNAME." = %s",
+            array("double", "integer"),
+            array($new_teach_diff, $this->section_id)
+        );
+        $this->teach_diff;
     }
 
     /**

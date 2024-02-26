@@ -3,19 +3,23 @@
 
 <link rel="stylesheet" href="./templates/default/delos.css">
 
-<div class="recsys-module-tile recsys-ig-tile">
-	<div class="recsys-lo container-fluid" style="margin: 5px">
+<form id="click_form" role="form"
+	class="recsys-module-tile recsys-ig-tile"
+	action="{RECSYS_STUDENT_CLICK}"
+	method="post" 
+	novalidate="novalidate">
+	<div class="recommender_section recsys-lo container-fluid" style="margin: 5px">
 		<table class="table table-striped fullwidth">
 			<!-- BEGIN RecommendedMaterials -->
 			<tr>
 			<td>
 				<div style="display: flex">
-					<div class="item-html-container" style="width: 60%; margin:10px 10px 10px 0px;" class="row recsys-lo-material">
+					<div class="item-html-container" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" name="{ITEM_ID}_{SECTION}_htmlcontainer style="width: 60%; margin:10px 10px 10px 0px;" class="row recsys-lo-material">
 						<div>
 							{ITEM_HTML}
 						</div>
 					</div>
-					<div class="recdescfield" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" value="{FROM}_{TO}" style="display:flex" style="width: 40%; margin:10px 10px 10px 10px;">
+					<div class="recdescfield" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" value="{FROM}_{TO}" style="width: 40%; display:flex; margin:10px 10px 10px auto;">
 						<div></div><input name="{ITEM_ID}_{SECTION}_desc"></input>
 					</div>
 				</div>
@@ -40,51 +44,48 @@
 			<!-- END RecommendedMaterials -->
 		</table>
 	</div>
-</div>
+</form>
 
 
 <script>
 
 var descfields = document.getElementsByClassName("recdescfield");
 //based on the id of the descfield, set the placeholder
-
 for (var i = 0; i < descfields.length; i++) {
 	from_to = descfields[i].getAttribute("value").split("_");
 	update_descfieldtype(descfields[i], from_to[0], from_to[1]);
 }
 
+overwriteRecommendedLinks();
+
 function update_descfieldtype(descfield, from="", to=""){
 	var type = descfield.id.split("_")[1];
 	var filetype = descfield.id.split("_")[2];
-	console.log(type);
-	console.log(filetype);
-	console.log(descfield.children[1]);
-	console.log(descfield.children[1].name);
 	var item_id = descfield.children[1].name.split("_")[0];
 	var section = descfield.children[1].name.split("_")[1];
+	console.log("descfield", [type, filetype, item_id, section]);
 	if (type == "file") {
-		if (filetype == "excsheet") {
-			descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
-			+ '<div style="margin: auto auto auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desc" >' + from + '</div>';
+		if (filetype == "exc") {
+			descfield.innerHTML = '<div style="margin: auto 0px auto auto;"> Task </div>'
+			+ '<div style="margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desc" >' + from + '</div>';
 		}
 		else if(filetype == "video"){
 			frommin = from.split(":")[0];
 			fromsec = from.split(":")[1];
 			tomin = to.split(":")[0];
 			tosec = to.split(":")[1];
-			descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Time </div>'
+			descfield.innerHTML = '<div style="margin: auto 0px auto auto"> Time </div>'
 				+ '<div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_descfrommin">' + frommin +'</div>'
 				+ '<div style="margin: auto; text-align: center;">:</div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_descfromsec">' + fromsec +'</div>'
-				+ '<div style="margin: auto; text-align: center;"> - </div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desctomin">' + tomin + '</div>'
+				+ '<div style="text-align: center;"> - </div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desctomin">' + tomin + '</div>'
 				+ '<div style="margin: auto; text-align: center;">:</div><div style=" margin: auto 5px auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desctosec">' + tomin + '</div>'
 		}
 		else{
 			input_names = {"script": "Page", "presentation": "Slide"}
-			descfield.innerHTML = '<div style="margin: auto; width:fit-content">' + input_names[filetype]
+			descfield.innerHTML = '<div style="margin: auto 0px auto auto">' + input_names[filetype]
 				+ '</div><div style="text-align: center; margin: auto 5px auto 5px; width:40px; width:40px;" name="' + item_id + '_' + section + '_descfrom">' + from + '</div>'
-				+ '<div style="margin: auto; text-align: center;"> - </div>'
+				+ '<div style="text-align: center;"> - </div>'
 				+ '<div style="text-align: center; margin: auto 5px auto 5px; width:40px;" name="' + item_id + '_' + section + '_descto">' + to + '</div>';
-				console.log(descfield.innerHTML);
 		}
 	}
 	else if (type == "webr") {
@@ -101,6 +102,55 @@ function update_descfieldtype(descfield, from="", to=""){
 	else if (type == "bibliography") {
 		descfield.innerHTML = "";
 	}
+}
+
+function overwriteRecommendedLinks(){
+	//get all il_ContainerItemTitle that are within recsys-lo
+	console.log( document.getElementsByClassName("recommender_section"));
+	var item_titles = document.getElementsByClassName("recommender_section")[0].getElementsByTagName("a");
+	//for each item_title, get the link and overwrite the onclick function
+	console.log("overwriteRecommendedLinks");
+	console.log(item_titles);
+	for (var i = 0; i < item_titles.length; i++) {
+		var link = item_titles[i];
+		link.setAttribute("onclick", "onRecommendedLinkClick(this)");
+		//replace the <a> tag with <input> tag	
+		//var d = document.createElement('input');
+		//d.innerHTML = link.innerHTML;
+		//link.parentNode.replaceChild(d, link);
+		//make it submit
+		//d.setAttribute("type", "submit");
+	}
+}
+
+function onRecommendedLinkClick(element){
+	console.log("onRecommendedLinkClick");
+	var identifier_element = element.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement;
+	var item_id = identifier_element.id.split("_")[0];
+	var mat_type = identifier_element.id.split("_")[1];
+	if (mat_type == "file"){
+		var mat_type = identifier_element.id.split("_")[2];
+	}
+	var section = identifier_element.getAttribute("name").split("_")[1];
+	//get recsysstudenclick
+	var recsysstudentclick = document.getElementsByClassName("recsys-module-tile recsys-ig-tile")[0].getAttribute("name");
+	console.log(recsysstudentclick);
+
+	let item_data = {
+		"item_id": item_id,
+		"mat_type": mat_type,
+		"section": section,
+		"url": element.href,
+	};
+
+	//add hidden input to form
+	var input = document.createElement('input');
+	input.setAttribute("type", "hidden");
+	input.setAttribute("name", "item_data");
+	input.setAttribute("value", JSON.stringify(item_data));
+	document.getElementById("click_form").appendChild(input);
+	//submit form
+	document.getElementById("click_form").submit();
 }
 
 </script>

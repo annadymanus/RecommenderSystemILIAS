@@ -5,7 +5,7 @@
 
 <form id="form_recsys" role="form"
 	action="{RECSYS_TEACHER_SAVE}"
-	onsubmit="enable_filetypeselectors();"
+	onsubmit="on_submit_function();"
 	method="post" 
 	novalidate="novalidate">
 
@@ -23,7 +23,7 @@
 				<div style="display: flex">
 					<div style="margin-left: 20px; margin-right: 10px;"> Material Type: </div>
 					<select class="filetypeselector" name="{MATERIAL_TYPE}_{ITEM_ID}_filetype" style="max-width: 100px;">
-						<option style="overflow: hidden; text-overflow:ellipsis" value="excsheet" {IS_EXERCISE}>Exercise</option>
+						<option style="overflow: hidden; text-overflow:ellipsis" value="exc" {IS_EXERCISE}>Exercise</option>
 						<option style="overflow: hidden; text-overflow:ellipsis" value="script" {IS_SCRIPT}>Script</option>
 						<option style="overflow: hidden; text-overflow:ellipsis" value="presentation" {IS_PRESENTATION}>Presentation</option>
 						<option style="overflow: hidden; text-overflow:ellipsis" value="video" {IS_VIDEO}>Video</option>
@@ -66,6 +66,11 @@
 					</td>
 					<!--Make distinction on material types and on types of file-->
 					<td class="descfield" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" value="{FROM}_{TO}" style="display:flex" name="{ITEM_ID}_{SECTION}_desc"><div></div><input name="{ITEM_ID}_{SECTION}_desc"></input></td>
+					<td style="display:flex;">
+						<!-- BEGIN Stars -->
+						<a class="glyphicon glyphicon-star{STAR_EMPTY}" id="{ITEM_ID}_{SECTION}_{STAR_COUNT}_star" style="color:#4c6586; align-self: center;" onclick="setDifficulty(this.id);"></a>
+						<!-- END Stars -->						
+					</td>
 					<td><input type="button" style=" background-color: transparent; font-size: 180%; align-self: center; width:25px; min-width: 0px; padding:0px; margin-right: 5px; text-align:left" 
 						class="material-icons btn" value="deletesection" id="{ITEM_ID}_{SECTION}_deletesection" onclick="removeRow(this.id);" /></td>
 				</tr>	
@@ -84,6 +89,87 @@
 
 
 <script>
+	function setDifficulty(clicked_id){
+		console.log(clicked_id);
+		var star_count = parseInt(clicked_id.split("_")[2]);
+		var item_id = clicked_id.split("_")[0];
+		var section = clicked_id.split("_")[1];
+		//get all stars of same item_id and section
+		var stars_to_update = [];
+		
+		var stars = document.getElementsByClassName("glyphicon-star");		
+		for (var i = 0; i < stars.length; i++) {
+			if (stars[i].id.split("_")[0] == item_id && stars[i].id.split("_")[1] == section) {
+				stars_to_update.push(stars[i]);
+			}
+		}
+		var stars_empty = document.getElementsByClassName("glyphicon-star-empty");
+		for (var i = 0; i < stars_empty.length; i++) {
+			if (stars_empty[i].id.split("_")[0] == item_id && stars_empty[i].id.split("_")[1] == section) {
+				stars_to_update.push(stars_empty[i]);
+			}
+		}
+
+		//set all stars with count <= star_count to full and rest to empty
+		for (var i = 0; i < stars_to_update.length; i++) {
+			if (parseInt(stars_to_update[i].id.split("_")[2]) <= star_count) {
+				stars_to_update[i].classList.remove("glyphicon-star-empty");
+				stars_to_update[i].classList.add("glyphicon-star");
+			}
+			else{
+				stars_to_update[i].classList.remove("glyphicon-star");
+				stars_to_update[i].classList.add("glyphicon-star-empty");
+			}
+		}
+		convert_glyphicons_to_numeric_input();
+	}
+
+	function convert_glyphicons_to_numeric_input(){
+		//get form_recsys html element as anchor
+		var form_recsys = document.getElementById("form_recsys");
+		//get all stars
+		var stars = form_recsys.getElementsByClassName("glyphicon-star");
+		//for each item_id section combination, get star with highest count
+		var star_counts = {};
+		for (var i = 0; i < stars.length; i++) {
+			var item_id = stars[i].id.split("_")[0];
+			var section = stars[i].id.split("_")[1];
+			var star_count = stars[i].id.split("_")[2];
+			if (item_id in star_counts) {
+				if (section in star_counts[item_id]) {
+					if (star_counts[item_id][section] < star_count) {
+						star_counts[item_id][section] = star_count;
+					}
+				}
+				else{
+					star_counts[item_id][section] = star_count;
+				}
+			}
+			else{
+				star_counts[item_id] = {};
+				star_counts[item_id][section] = star_count;
+			}
+		}
+		console.log(star_counts);
+		//for each item_id section combination, create input field with value of highest count
+		for (var item_id in star_counts) {
+			for (var section in star_counts[item_id]) {
+				var star_count = star_counts[item_id][section];
+				var input = document.createElement("input");
+				input.setAttribute("type", "number");
+				input.setAttribute("name", item_id + "_" + section + "_difficulty");
+				input.setAttribute("value", star_count);
+				input.setAttribute("style", "display:none");
+				form_recsys.appendChild(input);
+			}
+		}
+	}
+
+	function on_submit_function(){
+		enable_filetypeselectors();
+		//convert_glyphicons_to_numeric_input();
+	}
+
 	function enable_filetypeselectors(){
 		selectors = document.getElementsByClassName('filetypeselector');
 		for (var i = 0; i < selectors.length; i++) {
@@ -161,7 +247,7 @@
 		var item_id = descfield.getAttribute("name").split("_")[0];
 		var section = descfield.getAttribute("name").split("_")[1];
 		if (type == "file") {
-			if (filetype == "excsheet") {
+			if (filetype == "exc") {
 				descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
 				+ '<input style="margin-left: 5px; width:50px" name="' + item_id + '_' + section + '_desc" type="number" value=' + from + '></input>';
 			}

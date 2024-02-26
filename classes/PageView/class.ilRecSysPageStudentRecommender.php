@@ -34,7 +34,7 @@ class ilRecSysPageStudentRecommender {
         
         $this->ctrl         = $ilCtrl;
         $this->crs_id       = $crs_id;       
-        $this->il_crs_id       = ilObject::_lookupObjectId($crs_id);
+        $this->il_crs_id      = ilObject::_lookupObjectId($crs_id);
         $this->RecSysCourse   = $RecSysCourse;
         $this->RecSysStudent  = $RecSysStudent;
         $this->recommender = new ilRecSysModelRecommender($this->RecSysStudent->getUsr_id(), $this->crs_id);
@@ -45,6 +45,9 @@ class ilRecSysPageStudentRecommender {
         foreach ($all_course_items as $item){
             $course_items_map[$item['obj_id']] = $item;
         }
+        $this->debug_to_console($crs_id, "crs_id");
+        $this->debug_to_console($course_items_map, "course_items_map");
+
         $this->course_items_map = $course_items_map;
 
 
@@ -105,15 +108,17 @@ class ilRecSysPageStudentRecommender {
             $tpl->setVariable("TO", $material[4][1]);
             $tpl->setVariable("MATCH", round($material[5]));
 
-            
+            $this->debug_to_console($material[0], "MATERIAL_ID");
             $item = $this->course_items_map[$material[0]];
             $tpl->setVariable("ITEM_ID", $item["obj_id"]);
+            $this->debug_to_console($item["obj_id"], "ITEM_ID");
             $tpl->setVariable("MATERIAL_TYPE", $item["type"]);
             $tpl->setVariable("FILE_TYPE", $material[2]);
             $itemHtml = $CourseContent->getHtmlItem($item);
             $tpl->setVariable("ITEM_HTML", $itemHtml);
             $tpl->parseCurrentBlock(); 
         }
+        $tpl->setVariable("RECSYS_STUDENT_CLICK", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_STUDENT_CLICK));
         $tplMain->setVariable("RECOMMENDATIONS", $tpl->get());
         return $tplMain;
     }

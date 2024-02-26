@@ -189,6 +189,9 @@ class ilRecSysPageTeacher {
                         array_push($material_tags[$column_1][$column_2]["tags"], $value);
                     }
                 }
+                else if(str_contains($column_3, 'difficulty')){
+                    $material_tags[$column_1][$column_2]["difficulty"] = $value;
+                }
             }
             
         }
@@ -236,9 +239,11 @@ class ilRecSysPageTeacher {
                 if(!array_key_exists("fromto", $desc_tags)){
                     $desc_tags["fromto"] = null;
                 }
+                if(!array_key_exists("difficulty", $desc_tags)){
+                    $desc_tags["difficulty"] = null;
+                }
                 $type = ilRecSysPageUtils::MATERIAL_TYPE_TO_INDEX[$types[$obj_id]];
-                $this->debug_to_console($type, 'type');
-                $this->tag_handler->updateSection($this->crs_id, $obj_id, $section_id, $type, $desc_tags["tags"], $desc_tags["fromto"]);
+                $this->tag_handler->updateSection($this->crs_id, $obj_id, $section_id, $type, $desc_tags["tags"], $desc_tags["fromto"], $desc_tags["difficulty"]);
             }
         }
 
@@ -313,6 +318,26 @@ class ilRecSysPageTeacher {
                         $tpl->setVariable("TAG_SELECTED", $all_tag == "" ? "selected" : "");
                         $tpl->parseCurrentBlock();
                     }
+                    $difficulty = $tags[3];                    
+                    $star_list = []; 
+                    for ($i = 0; $i < 5; $i++){
+                        if ($i <= $difficulty){
+                            array_push($star_list, "");
+                        }
+                        else{
+                            array_push($star_list, "-empty");
+                        }
+                    }
+                    $star_counter = 0;
+                    foreach ($star_list as $star){
+                        $tpl->setCurrentBlock("Stars");
+                        $tpl->setVariable("ITEM_ID", $item['obj_id']);
+                        $tpl->setVariable("SECTION", $section);
+                        $tpl->setVariable("STAR_EMPTY", $star);
+                        $tpl->setVariable("STAR_COUNT", $star_counter);
+                        $tpl->parseCurrentBlock();
+                        $star_counter++;
+                    }
                     $tpl->setCurrentBlock("Tags");
                     $tpl->setVariable("I", $counter);
                     $tpl->setVariable("ADD_TAG", "Add Tag");#$this->plugin->txt("recsys_add_tag"));
@@ -326,7 +351,6 @@ class ilRecSysPageTeacher {
                     $tpl->setVariable("MATERIAL_TYPE", $material_type);
                     $tpl->setVariable("FILE_TYPE", $file_type);
 
-
                     $tpl->parseCurrentBlock();
                 }
                 $tpl->setCurrentBlock("Materials");
@@ -334,7 +358,7 @@ class ilRecSysPageTeacher {
                 
                 //Maybe solve with iterator in future
                 $tpl->setVariable("IS_SCRIPT", $file_type=="script" ? "selected" : "");
-                $tpl->setVariable("IS_EXERCISE", $file_type=="excsheet" ? "selected" : "");
+                $tpl->setVariable("IS_EXERCISE", $file_type=="exc" ? "selected" : "");
                 $tpl->setVariable("IS_VIDEO", $file_type=="video" ? "selected" : "");
                 $tpl->setVariable("IS_PRESENTATION", $file_type=="presentation" ? "selected" : "");
 
@@ -346,7 +370,9 @@ class ilRecSysPageTeacher {
                 //$item_count++;                
             }
             $tpl->setCurrentBlock("Types");
-            $tpl->setVariable("MATERIAL_TYPE", $material_type);
+            //$tpl->setVariable("MATERIAL_TYPE", $material_type);
+            $tpl->setVariable("MATERIAL_TYPE",  $this->plugin->txt($material_type));
+
             $tpl->parseCurrentBlock(); 
         }
         $tpl->setVariable("SAVING", $this->plugin->txt("recsys_teacher_save"));

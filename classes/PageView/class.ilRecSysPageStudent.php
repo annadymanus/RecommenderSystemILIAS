@@ -95,7 +95,7 @@ class ilRecSysPageStudent {
     }   
 
     public function save_student_recommendations() {
-        $status = $_POST['form_recsys'];
+        //$status = $_POST['form_recsys'];
         $section_mattype_tuples = array();
         foreach ($_POST as $key => $value) {
             $this->debug_to_console($key, "key");
@@ -122,6 +122,23 @@ class ilRecSysPageStudent {
 
         //ilUtil::sendSuccess($this->plugin->txt('recsys_saved_sucessfully'), true);
         
+        $this->show_student();
+    }
+
+    public function save_student_click(){
+        $this->debug_to_console("save_student_click");
+        foreach ($_POST as $key => $value) {
+            $this->debug_to_console($key, "key");
+            $this->debug_to_console($value, "value");
+            if($key=="item_data"){
+                $content = json_decode($value, true);
+                $mat_type = ilRecSysPageUtils::MATERIAL_TYPE_TO_INDEX[$content["mat_type"]];
+                $section_id = $content["section"];
+                $this->debug_to_console(array($section_id, $mat_type));
+                $this->recommender->setClickedItem(array($section_id, $mat_type));
+            }
+        }
+        $this->debug_to_console("test");
         $this->show_student();
     }
 
@@ -177,7 +194,8 @@ class ilRecSysPageStudent {
                 $tpl->parseCurrentBlock();                
             }
             $tpl->setCurrentBlock("Types");
-            $tpl->setVariable("MATERIAL_TYPE", $material_type);
+            //$tpl->setVariable("MATERIAL_TYPE", $material_type);
+            $tpl->setVariable("MATERIAL_TYPE",  $this->plugin->txt($material_type));
             $tpl->parseCurrentBlock(); 
         }
         $tpl->setVariable("RECOMMEND", $this->plugin->txt("recsys_student_recommend"));

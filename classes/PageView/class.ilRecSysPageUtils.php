@@ -15,7 +15,6 @@ class ilRecSysPageUtils {
         "webr" => 4, //iliastype
         "bib" => 5, //iliastype
         "exc" => 6, //iliastype
-        "excsheet" => 6
     );
 
     const MATERIAL_INDEX_TO_TYPE = array(
@@ -56,7 +55,7 @@ class ilRecSysPageUtils {
         }
         $material = ilRecSysModelExercise::fetchAllSectionsWithObjID($obj_id);
         if($material != null){
-            return "excsheet";
+            return "exc";
         }
         $material = ilRecSysModelWeblink::fetchByObjID($obj_id, null);
         if($material != null){
@@ -91,7 +90,7 @@ class ilRecSysPageUtils {
         }
         $material = ilRecSysModelExercise::fetchAllSectionsWithObjID($obj_id);
         if($material != null){
-            return "excsheet";
+            return "exc";
         }
         else{
             return "script";
@@ -113,7 +112,6 @@ class ilRecSysPageUtils {
                 $section = ilRecSysModelWeblink::fetchByMaterialSectionID($section_id);
                 break;
             case "exc":
-            case "excsheet":
                 $section = ilRecSysModelExercise::fetchByMaterialSectionID($section_id);
                 break;
         }
@@ -124,7 +122,7 @@ class ilRecSysPageUtils {
     }
 
     public static function getMaterialTagEntries($obj_id, $material_type) {
-        //In shape [[section_id, [tag1, tag2, tag3], [from, to]], ...] 
+        //In shape [[section_id, [tag1, tag2, tag3], [from, to], difficulty], ...] 
        
         $material_tag_entries = array();
         switch ($material_type){
@@ -142,7 +140,6 @@ class ilRecSysPageUtils {
                 $sections = $sections != null ? array($sections) : null;
                 break;
             case "exc":
-            case "excsheet":
                 $sections = ilRecSysModelExercise::fetchAllSectionsWithObjID($obj_id);
                 break;
         }
@@ -151,16 +148,17 @@ class ilRecSysPageUtils {
             foreach($sections as $section){
                 $tags = $tag_handler->getAllTagsForSectionMaterial($section->getSectionID(), ilRecSysPageUtils::MATERIAL_TYPE_TO_INDEX[$material_type]);
                 $from_to = $section->getFromTo();
+                $difficulty = (int) round($section->getDifficulty());
                 if(!empty($tags)){
                     $tag_names = array_map(function($tag){return $tag->getTag_name();}, $tags);
-                    $material_tag_entries[] = array($section->getSectionID(), $tag_names, $from_to);
+                    $material_tag_entries[] = array($section->getSectionID(), $tag_names, $from_to, $difficulty);
                 }
 
             }
         }
         //check if empty array
         if(empty($material_tag_entries)){
-            $material_tag_entries = array(array(-1, array(), ""));
+            $material_tag_entries = array(array(-1, array(), "", 0));
         }
         ilRecSysPageUtils::debug_to_console($material_tag_entries, "loaded material_tag_entries");
         return $material_tag_entries;

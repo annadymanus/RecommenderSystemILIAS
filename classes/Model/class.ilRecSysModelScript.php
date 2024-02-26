@@ -17,8 +17,8 @@ class ilRecSysModelScript extends ilRecSysModelMaterialSection{
 
     //-----------------------------------------------------------------------------------
 
-    public function __construct($script_id, $obj_id, $start_page, $end_page, $difficulty, $rating_count, $no_tags) {
-        parent::__construct($script_id, $obj_id, $difficulty, $rating_count, $no_tags);
+    public function __construct($script_id, $obj_id, $start_page, $end_page, $difficulty, $rating_count, $no_tags, $teach_diff) {
+        parent::__construct($script_id, $obj_id, $difficulty, $rating_count, $no_tags, $teach_diff);
 
         $this->start_page = $start_page;
         $this->end_page = $end_page;
@@ -38,7 +38,9 @@ class ilRecSysModelScript extends ilRecSysModelMaterialSection{
             $fetched_script->end_page, 
             $fetched_script->difficulty, 
             $fetched_script->rating_count,
-            $fetched_script->no_tags);
+            $fetched_script->no_tags,
+            $fetched_script->teach_diff
+        );
         return $script;
     }
 
@@ -63,7 +65,9 @@ class ilRecSysModelScript extends ilRecSysModelMaterialSection{
             $fetched_script->end_page, 
             $fetched_script->difficulty, 
             $fetched_script->rating_count,
-            $fetched_script->no_tags);
+            $fetched_script->no_tags,
+            $fetched_script->teach_diff
+        );
         return $script;
     }
 
@@ -84,7 +88,9 @@ class ilRecSysModelScript extends ilRecSysModelMaterialSection{
                 $fetched_script->end_page, 
                 $fetched_script->difficulty, 
                 $fetched_script->rating_count,
-                $fetched_script->no_tags);
+                $fetched_script->no_tags,
+                $fetched_script->teach_diff
+            );
             array_push($scripts, $script);
         }
         return $scripts;
@@ -108,16 +114,17 @@ class ilRecSysModelScript extends ilRecSysModelMaterialSection{
     //add a new script section to the table
     public function createMaterialSection() {   
         $this->ilDB->manipulateF("INSERT INTO ".self::MATERIALTABLENAME
-                . " (script_id, obj_id, start_page, end_page, difficulty, rating_count, no_tags)"
-                . " VALUES (%s,%s,%s,%s,%s,%s,%s) ;",
-                array("integer", "integer", "integer", "integer", "float", "integer", "integer"),
+                . " (script_id, obj_id, start_page, end_page, difficulty, rating_count, no_tags, teach_diff)"
+                . " VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ;",
+                array("integer", "integer", "integer", "integer", "float", "integer", "integer", "double"),
                 array($this->section_id, 
                       $this->obj_id, 
                       $this->start_page, 
                       $this->end_page, 
                       $this->difficulty, 
                       $this->rating_count,
-                      $this->no_tags
+                      $this->no_tags,
+                      $this->teach_diff
                     ));
     }
 
@@ -156,6 +163,18 @@ class ilRecSysModelScript extends ilRecSysModelMaterialSection{
     public function addNewRating($rating){
         $new_difficulty = $this->calculateDifficulty($rating);
         $this->updateSectionDifficulty($new_difficulty, ($this->getRatingCount() + 1));
+    }
+
+    public function setTeacherDifficulty($new_teach_diff)
+    {
+        $this->ilDB->manipulateF("UPDATE " .self::MATERIALTABLENAME
+            ." SET"
+                ." teach_diff = %s"
+            ." WHERE ".self::SECTIONIDNAME." = %s",
+            array("double", "integer"),
+            array($new_teach_diff, $this->section_id)
+        );
+        $this->teach_diff;
     }
 
     /**

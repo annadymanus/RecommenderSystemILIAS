@@ -7,6 +7,7 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudent.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudentSettings.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelConfig.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageRecommenderModel.php');
 
 
 /**
@@ -65,6 +66,12 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                     $page = new ilRecSysPageStudent($this->ref_id);
                     $page->save_student_recommendations();
                     break;
+                case ilRecommenderSystemConst::CMD_STUDENT_CLICK:
+                    $this->addTab();
+                    $this->ilTabs->setSubTabActive("recsys_student_overview");
+                    $page = new ilRecSysPageStudent($this->ref_id);
+                    $page->save_student_click();
+                    break;
                 case ilRecommenderSystemConst::CMD_SHOW:
                 case ilRecommenderSystemConst::CMD_SHOW_STUDENT:
                     $this->addTab();
@@ -103,8 +110,8 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                     $this->addTab();
                     $this->ilTabs->setSubTabActive("recsys_teacher_settings");
                     
-                    #$page = new ilRecSysTeacherSettings($this->ref_id);
-                    #$page->show_teacher_settings();
+                    $page = new ilRecSysPageTeacherSettings($this->ref_id);
+                    $page->show_teacher_settings();
                     break;
 
                 case ilRecommenderSystemConst::CMD_SAVE_TEACHER_SETTINGS:
@@ -116,12 +123,26 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                     #$page->save_teacher_settings();
                     break;
 
+                case ilRecommenderSystemConst::CMD_SHOW_RECOMMENDER_MODEL:
+                    $this->addTab();
+                    $this->ilTabs->setSubTabActive("recsys_recommender_model");
+                    $page = new ilRecSysPageRecommenderModel($this->ref_id);
+                    $page->show_recommender_model();
+                    break;
+
+                case ilRecommenderSystemConst::CMD_SAVE_RECOMMENDER_MODEL:
+                    $this->addTab();
+                    $this->ilTabs->setSubTabActive("recsys_recommender_model");
+                    $page = new ilRecSysPageRecommenderModel($this->ref_id);
+                    $page->save_recommender_model();
+                    break;
+
                 case ilRecommenderSystemConst::CMD_UPDATE_STUDENTS_AND_RESOURCES:
                     #$this->checkPermission("write");
                     $this->addTab();
                     $this->ilTabs->setSubTabActive("recsys_teacher_settings");
                     
-                    $page = new ilRecSysTeacherSettings($this->ref_id);
+                    $page = new ilRecSysPageTeacherSettings($this->ref_id);
                     #$page->update_students_and_resources();
                     break;
                 default:
@@ -194,6 +215,10 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                   'recsys_teacher_settings', 
                   "Settings", 
                   $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SHOW_TEACHER_SETTINGS));
+            $this->ilTabs->addSubTab(
+                    'recsys_recommender_model', 
+                    "Model", 
+                    $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SHOW_RECOMMENDER_MODEL));
         } else {
             $this->ilTabs->addSubTab(
                 'recsys_student_overview',

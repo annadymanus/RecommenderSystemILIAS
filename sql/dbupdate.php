@@ -293,6 +293,7 @@ if(!$ilDB->tableExists('ui_uihk_recsys_s_t_u')){
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
  *  no_tags:            counts the number tags that use/tag the section
+ *  teach_diff:         percieved difficulty of section for the teacher
  */
 if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_s')){
     $fields = array(
@@ -322,6 +323,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_s')){
         'no_tags' => array(
             'type' => 'integer',
             'length' => 4,
+            'notnull' => true),
+        'teach_diff' => array(
+            'type' => 'float',
             'notnull' => true)
     );
     $ilDB->createTable('ui_uihk_recsys_m_s_f_s', $fields);
@@ -341,6 +345,7 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_s')){
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
  *  no_tags:            counts the number tags that use/tag the section
+ *  teach_diff:         percieved difficulty of section for the teacher
  */
 if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_p')){
     $fields = array(
@@ -370,6 +375,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_p')){
         'no_tags' => array(
             'type' => 'integer',
             'length' => 4,
+            'notnull' => true),
+        'teach_diff' => array(
+            'type' => 'float',
             'notnull' => true)
     );
     $ilDB->createTable('ui_uihk_recsys_m_s_f_p', $fields);
@@ -389,6 +397,7 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_p')){
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
  *  no_tags:            counts the number tags that use/tag the section
+ *  teach_diff:         percieved difficulty of section for the teacher
  */
 if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_v')){
     $fields = array(
@@ -422,6 +431,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_v')){
         'no_tags' => array(
             'type' => 'integer',
             'length' => 4,
+            'notnull' => true),
+        'teach_diff' => array(
+            'type' => 'float',
             'notnull' => true)
     );
     $ilDB->createTable('ui_uihk_recsys_m_s_f_v', $fields);
@@ -439,6 +451,7 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_f_v')){
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
  *  no_tags:            counts the number tags that use/tag the section
+ *  teach_diff:         percieved difficulty of section for the teacher
  */
 if(!$ilDB->tableExists('ui_uihk_recsys_m_s_pic')){
     $fields = array(
@@ -460,6 +473,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_pic')){
         'no_tags' => array(
             'type' => 'integer',
             'length' => 4,
+            'notnull' => true),
+        'teach_diff' => array(
+            'type' => 'float',
             'notnull' => true)
     );
     $ilDB->createTable('ui_uihk_recsys_m_s_pic', $fields);
@@ -477,6 +493,7 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_pic')){
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
  *  no_tags:            counts the number tags that use/tag the section
+ *  teach_diff:         percieved difficulty of section for the teacher
  */
 if(!$ilDB->tableExists('ui_uihk_recsys_m_s_w')){
     $fields = array(
@@ -498,6 +515,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_w')){
         'no_tags' => array(
             'type' => 'integer',
             'length' => 4,
+            'notnull' => true),
+        'teach_diff' => array(
+            'type' => 'float',
             'notnull' => true)
     );
     $ilDB->createTable('ui_uihk_recsys_m_s_w', $fields);
@@ -515,6 +535,7 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_w')){
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
  *  no_tags:            counts the number tags that use/tag the section
+ *  teach_diff:         percieved difficulty of section for the teacher
  */
 if(!$ilDB->tableExists('ui_uihk_recsys_m_s_bib')){
     $fields = array(
@@ -536,6 +557,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_bib')){
         'no_tags' => array(
             'type' => 'integer',
             'length' => 4,
+            'notnull' => true),
+        'teach_diff' => array(
+            'type' => 'float',
             'notnull' => true)
     );
     $ilDB->createTable('ui_uihk_recsys_m_s_bib', $fields);
@@ -554,6 +578,7 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_bib')){
  *  difficulty:         percieved difficulty of this material snippet
  *  rating_count:       number of users that rated this material snippet
  *  no_tags:            counts the number tags that use/tag the section
+ *  teach_diff:         percieved difficulty of section for the teacher
  */
 if(!$ilDB->tableExists('ui_uihk_recsys_m_s_e')){
     $fields = array(
@@ -583,6 +608,9 @@ if(!$ilDB->tableExists('ui_uihk_recsys_m_s_e')){
         'no_tags' => array(
             'type' => 'integer',
             'length' => 4,
+            'notnull' => true),
+        'teach_diff' => array(
+            'type' => 'float',
             'notnull' => true)
     );
     $ilDB->createTable('ui_uihk_recsys_m_s_e', $fields);

@@ -15,9 +15,10 @@ abstract class ilRecSysModelMaterialSection {
     protected $difficulty;
     protected $rating_count;
     protected $no_tags;
+    protected $teach_diff;
 
     // ----------------------------------------------------------
-    protected function __construct($section_id, $obj_id, $difficulty, $rating_count, $no_tags){
+    protected function __construct($section_id, $obj_id, $difficulty, $rating_count, $no_tags, $teach_diff){
         // global definitions
         global $ilDB;
         $this->ilDB = $ilDB;
@@ -28,6 +29,7 @@ abstract class ilRecSysModelMaterialSection {
         $this->difficulty = $difficulty;
         $this->rating_count = $rating_count;
         $this->no_tags = $no_tags;
+        $this->teach_diff = $teach_diff;
     }
 
     // -----------------------------------------------------------------
@@ -77,6 +79,10 @@ abstract class ilRecSysModelMaterialSection {
 
     public function getRatingCount() {
         return $this->rating_count;
+    }
+
+    public function getTeacherDifficulty() {
+        return $this->teach_diff;
     }
 
     public function isRatingValid($rating) {

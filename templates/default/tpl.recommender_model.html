@@ -1,0 +1,91 @@
+<link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/recsys.css">
+<link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/recsys_2.css">
+<link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/accordion.css">
+<link rel="stylesheet" href="./templates/default/delos.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
+
+
+<form id="form_recsys" role="form"
+	action="{RECSYS_MODEL_SAVE}"
+	onsubmit="on_submit_function();"
+	method="post" 
+	novalidate="novalidate">
+    <div class="recsys-modules-frame" style="display: flex">
+        <div class="recsys-module-tile recsys-lo-tile" style="width: 50%; margin-left: 0px;">            
+            <div class="recsys-header-bar">Models</div>
+            <table class="table table-striped fullwidth">
+                <!-- BEGIN Models -->
+                <tr id="model_{MODEL_NAME}_row" style="display:flex">
+                    <td style="width: 100%">
+                        <div class="radio" style=" align-items: center; display:flex;" title="TITLE">
+                            <label style=" text-align: center;">
+                                <input name="models" 
+                                        value="{MODEL_NAME}" 
+                                        type="radio"
+                                        {MODEL_SELECTED} 
+                                        style="vertical-align: middle; margin: 0 0 1px -20px;"
+                                        onclick="on_model_selected(this);" 
+                                        />
+                            {MODEL_NAME}
+                            </label>
+                            
+                        </div>        
+                        <p style="margin: 0 0 0 20px; font-size: 12px; ">{MODEL_DESCRIPTION}</p>
+                    </td>
+                </tr>
+                <!-- END Models -->
+            </table>
+        </div>
+        <div class="recsys-module-tile recsys-lo-tile" style="width: 50%; margin-right: 0px;">
+            <div class="recsys-header-bar">Model Components</div>
+            <table id="model_components" class="table table-striped fullwidth ">
+                <!-- BEGIN Components -->
+                <tr class="componentrow"  name="components_{MODEL_NAME}_row">
+                    <td style="width: 100%; ">
+                        <div style="margin-top: 10px; margin-bottom: 10px; align-items: center;">
+                        <input style="vertical-align: middle; margin: 0 0 1px 0" name="model_{MODEL_NAME}_{COMPONENT_NAME}" type="checkbox" {COMPONENT_SELECTED} > {COMPONENT_NAME}</input>
+                        <p style="margin: 0 0 0 18px; font-size: 12px;">{COMPONENT_DESCRIPTION}</p>
+                        </div>
+                    </td>
+                </tr>
+                <!-- END Components -->
+            </table>
+        </div>
+        <div style="display: block; clear: both;"></div>
+    </div>
+    <input class="btn btn-default" style="width: 100%; padding: 18px;" type="submit" name="cmd[save]" value="{SAVING}"></input>
+    <!--input class="btn btn-default" disabled style="width: 100%; padding: 18px; margin-top: 5px" type="submit" name="cmd[save]" value="Retrain"></input-->
+
+</form>
+
+
+<script>
+    //show only the selected model's components
+    function on_model_selected(ele) {
+        var model = ele.value;
+        var componentrows = document.getElementsByClassName("componentrow");
+        for (var i = 0; i < componentrows.length; i++) {
+            if (componentrows[i].getAttribute("name") == "components_" + model + "_row"){
+                componentrows[i].style.display = "flex";
+            }
+            else{
+                componentrows[i].style.display = "none";
+            }
+        }             
+    }
+
+    function get_selected_model_element(){
+        var models = document.getElementsByName("models");
+        for (var i = 0; i < models.length; i++) {
+            if (models[i].checked){
+                return models[i];
+            }
+        }
+        return null;
+    }
+
+    on_model_selected(get_selected_model_element());
+
+</script>

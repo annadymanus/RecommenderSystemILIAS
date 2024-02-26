@@ -313,3 +313,15 @@
 .recsys-settings-bordered {
 	border: 1px solid #999999;
 }
+
+.recsys-header-bar {
+	background-color: #eee;
+	background-image: url("../../../../../../../../../libs/ilias/Style/basic_style/images/header.png");
+	color: white; 
+	font-size: larger;
+	padding: 18px;
+	width: 100%;
+	text-align: left;
+	border: none;
+	outline: none;
+}

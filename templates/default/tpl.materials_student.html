@@ -75,7 +75,7 @@
 		var item_id = descfield.children[1].name.split("_")[0];
 		var section = descfield.children[1].name.split("_")[1];
 		if (type == "file") {
-			if (filetype == "excsheet") {
+			if (filetype == "exc") {
 				descfield.innerHTML = '<div style="margin: auto; width:fit-content"> Task </div>'
 				+ '<div style="margin: auto auto auto 5px; width:40px; text-align: center;" name="' + item_id + '_' + section + '_desc" >' + from + '</div>';
 			}
@@ -96,7 +96,6 @@
 					+ '</div><div style="text-align: center; margin: auto 5px auto 5px; width:40px; width:40px;" name="' + item_id + '_' + section + '_descfrom">' + from + '</div>'
 					+ '<div style="margin: auto; text-align: center;"> - </div>'
 					+ '<div style="text-align: center; margin: auto 5px auto 5px; width:40px;" name="' + item_id + '_' + section + '_descto">' + to + '</div>';
-					console.log(descfield.innerHTML);
 			}
 		}
 		else if (type == "webr") {

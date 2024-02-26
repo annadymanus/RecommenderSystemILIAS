@@ -12,8 +12,8 @@ class ilRecSysModelPicture extends ilRecSysModelMaterialSection{
     // --------------------------------------------------------
 
     //constructor
-    public function __construct($picture_id, $obj_id, $difficulty, $rating_count, $no_tags) {
-        parent::__construct($picture_id, $obj_id, $difficulty, $rating_count, $no_tags);
+    public function __construct($picture_id, $obj_id, $difficulty, $rating_count, $no_tags, $teach_diff) {
+        parent::__construct($picture_id, $obj_id, $difficulty, $rating_count, $no_tags, $teach_diff);
     }
 
     public static function fetchByMaterialSectionID($picture_id){
@@ -28,7 +28,9 @@ class ilRecSysModelPicture extends ilRecSysModelMaterialSection{
             $fetched_picture->obj_id,
             $fetched_picture->difficulty, 
             $fetched_picture->rating_count,
-            $fetched_picture->no_tags);
+            $fetched_picture->no_tags,
+            $fetched_picture->teach_diff
+        );
         return $picture;
     }
 
@@ -48,7 +50,9 @@ class ilRecSysModelPicture extends ilRecSysModelMaterialSection{
             $fetched_picture->obj_id,
             $fetched_picture->difficulty, 
             $fetched_picture->rating_count,
-            $fetched_picture->no_tags);
+            $fetched_picture->no_tags,
+            $fetched_picture->teach_diff
+        );
         return $picture;
     }
 
@@ -76,14 +80,15 @@ class ilRecSysModelPicture extends ilRecSysModelMaterialSection{
      */
     public function createMaterialSection(){
         $this->ilDB->manipulateF("INSERT INTO ".self::MATERIALTABLENAME
-                . "(picture_id, obj_id, difficulty, rating_count, no_tags)"
-                . " VALUES (%s,%s,%s,%s,%s)",
-                array("integer", "integer", "double", "integer", "integer"),
+                . "(picture_id, obj_id, difficulty, rating_count, no_tags, teach_diff)"
+                . " VALUES (%s,%s,%s,%s,%s,%s)",
+                array("integer", "integer", "double", "integer", "integer", "double"),
                 array($this->section_id, 
                       $this->obj_id,  
                       $this->difficulty,    
                       $this->rating_count,
-                      $this->no_tags       
+                      $this->no_tags,
+                      $this->teach_diff      
                     ));
     }
 
@@ -106,6 +111,18 @@ class ilRecSysModelPicture extends ilRecSysModelMaterialSection{
     public function addNewRating($rating){
         $new_difficulty = $this->calculateDifficulty($rating);
         $this->updateSectionDifficulty($new_difficulty, ($this->getRatingCount() + 1));
+    }
+
+    public function setTeacherDifficulty($new_teach_diff)
+    {
+        $this->ilDB->manipulateF("UPDATE " .self::MATERIALTABLENAME
+            ." SET"
+                ." teach_diff = %s"
+            ." WHERE ".self::SECTIONIDNAME." = %s",
+            array("double", "integer"),
+            array($new_teach_diff, $this->section_id)
+        );
+        $this->teach_diff;
     }
 
     /**

@@ -14,11 +14,11 @@ class ilRecSysModelPresentation extends ilRecSysModelMaterialSection{
 
     //-----------------------------------------------------------------------------------
 
-    public function __construct($presentation_id, $obj_id, $start_slide, $end_slide, $difficulty, $rating_count, $no_tags) {
-        parent::__construct($presentation_id, $obj_id, $difficulty, $rating_count, $no_tags);
+    public function __construct($presentation_id, $obj_id, $start_slide, $end_slide, $difficulty, $rating_count, $no_tags, $teach_diff) {
+        parent::__construct($presentation_id, $obj_id, $difficulty, $rating_count, $no_tags, $teach_diff);
 
-        $this->$start_slide = $start_slide;
-        $this->$end_slide = $end_slide;
+        $this->start_slide = $start_slide;
+        $this->end_slide = $end_slide;
     }
 
     public static function fetchByMaterialSectionID($presentation_id) {
@@ -35,14 +35,16 @@ class ilRecSysModelPresentation extends ilRecSysModelMaterialSection{
             $fetched_presentation->end_slide,
             $fetched_presentation->difficulty, 
             $fetched_presentation->rating_count,
-            $fetched_presentation->no_tags);
+            $fetched_presentation->no_tags,
+            $fetched_presentation->teach_diff
+        );
         return $presentation;
     }
 
     public static function fetchByObjID($obj_id, $from_to) {
         global $ilDB;
         if(sizeof($from_to) == 2) {
-            $queryResult = $ilDB->query("SELECT * FROM ".self::MATERIALTABLENAME." WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_slide == ".$ilDB->quote($from_to[0], "integer")." AND end_slide == ".$ilDB->quote($from_to[1], "integer"));
+            $queryResult = $ilDB->query("SELECT * FROM ".self::MATERIALTABLENAME." WHERE obj_id = ".$ilDB->quote($obj_id, "integer")." AND start_slide = ".$ilDB->quote($from_to[0], "integer")." AND end_slide = ".$ilDB->quote($from_to[1], "integer"));
         } else {
             throw new Exception("Both start end end slide have to be defined for this material_type");
         }
@@ -58,7 +60,9 @@ class ilRecSysModelPresentation extends ilRecSysModelMaterialSection{
             $fetched_presentation->end_slide,
             $fetched_presentation->difficulty, 
             $fetched_presentation->rating_count,
-            $fetched_presentation->no_tags);
+            $fetched_presentation->no_tags,
+            $fetched_presentation->teach_diff
+        );
         return $presentation;
     }
 
@@ -79,7 +83,9 @@ class ilRecSysModelPresentation extends ilRecSysModelMaterialSection{
                 $fetched_presentation->end_slide,
                 $fetched_presentation->difficulty, 
                 $fetched_presentation->rating_count,
-                $fetched_presentation->no_tags);
+                $fetched_presentation->no_tags,
+                $fetched_presentation->teach_diff
+            );
             array_push($presentations, $presentation);
         }
         return $presentations;
@@ -108,17 +114,18 @@ class ilRecSysModelPresentation extends ilRecSysModelMaterialSection{
      * put a new Presentation section in the table
      */
      public function createMaterialSection() {
-        $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_m_c_f_p"
-                . "(presentation_id, obj_id, start_slide, end_slide, difficulty, rating_count, no_tags)"
-                . " VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                array("integer", "integer", "integer", "integer", "float", "integer", "integer"),
+        $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_m_s_f_p"
+                . "(presentation_id, obj_id, start_slide, end_slide, difficulty, rating_count, no_tags, teach_diff)"
+                . " VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                array("integer", "integer", "integer", "integer", "float", "integer", "integer", "double"),
                 array($this->section_id, 
                       $this->obj_id,
                       $this->start_slide,
                       $this->end_slide,  
                       $this->difficulty,          // difficulty
                       $this->rating_count,       // rating_count
-                      $this->no_tags
+                      $this->no_tags,
+                      $this->teach_diff
                     ));
     }
 
@@ -143,7 +150,7 @@ class ilRecSysModelPresentation extends ilRecSysModelMaterialSection{
      */
     public function updateStartEndSlide($start_slide, $end_slide) {
         $this->ilDB->manipulateF("UPDATE ".self::MATERIALTABLENAME
-            ."SET"
+            ." SET"
             ." start_slide = %s,"
             ." end_slide = %s"
             ." WHERE presentation_id = %s",
@@ -157,6 +164,18 @@ class ilRecSysModelPresentation extends ilRecSysModelMaterialSection{
     public function addNewRating($rating) {
         $new_difficulty = $this->calculateDifficulty($rating);
         $this->updateSectionDifficulty($new_difficulty, ($this->getRatingCount() + 1));
+    }
+
+    public function setTeacherDifficulty($new_teach_diff)
+    {
+        $this->ilDB->manipulateF("UPDATE " .self::MATERIALTABLENAME
+            ." SET"
+                ." teach_diff = %s"
+            ." WHERE ".self::SECTIONIDNAME." = %s",
+            array("double", "integer"),
+            array($new_teach_diff, $this->section_id)
+        );
+        $this->teach_diff;
     }
 
     /**

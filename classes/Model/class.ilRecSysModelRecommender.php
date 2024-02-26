@@ -10,14 +10,39 @@ class ilRecSysModelRecommender{
     private $crs_id;
     private $student;
     private $usr_id; //user id of the student
-    
+    public $recommenderModels; //list of recommender models with components that can be slelected for recommendation
+    private $selectedRecommenderModel; //selected recommender model with components that are used for recommendation
+
     public function __construct($usr_id, $crs_id)
     {
         global $ilDB;
         $this->ilDB = $ilDB;
         $this->crs_id = $crs_id;
         $this->usr_id = $usr_id;
+        $this->recommenderModels = array("PythonML" => array(
+                                                        array(
+                                                            array("tag", "Tag Encoder Description. These descriptions might take a lot of text since they need to be detailed."), 
+                                                            array("recquery", "Rec Query Description"), 
+                                                            array("pastquery", "Past Query Description"), 
+                                                            array("pastclicked", "Past Clicked Description")), 
+                                                        "ML Model description"), 
+                                         "TagFiltering" => array(array(), "Tag Filtering description"));
+        $this->selectedRecommenderModel = array("PythonML", array("tag", "recquery", "pastquery", "pastclicked"));
         //$this->student = ilRecSysModelStudent::getRecSysStudent($usr_id, $crs_id);
+    }
+
+    public function setRecommenderModel($recommenderModel){
+        $this->selectedRecommenderModel = $recommenderModel;
+        if ($recommenderModel[0] == "PythonML"){
+            //trigger retraining of model
+        }
+        else if ($recommenderModel[0] == "TagFiltering"){
+            //do nothing
+        }
+    }
+
+    public function getRecommenderModel(){
+        return $this->selectedRecommenderModel;
     }
 
     function debug_to_console($data, $context = 'Debug in Console') {
@@ -32,14 +57,28 @@ class ilRecSysModelRecommender{
         echo $output;
     }   
 
-    private function getUniqueTags($section_mattype_tuples){
-        $tag_ids = array();
-        foreach($section_mattype_tuples as $section_mattype){
-            $tag_ids = array_merge($tag_ids, ilRecSysModelTagsPerSection::getAllTagIdsForSection($section_mattype[0], $section_mattype[1]));
+    public function getRecommendation(){
+        if ($this->selectedRecommenderModel[0] == "PythonML"){
+            return $this->getPythonMLRecommend();
         }
-        $tag_ids = array_unique($tag_ids);
-        $tag_ids = array_filter($tag_ids);
-        return $tag_ids;
+        else if ($this->selectedRecommenderModel[0] == "TagOnly"){
+            return $this->getTagOnlyRecommend();
+        }
+    }
+
+    public function getPythonMLRecommend(){
+        //Get called when somebody presses the "Recommend" button
+        //@Joel entry point
+        #Contains the rows in the ui_uihk_recsys_u_q table that belong to the most recent recommendation query for this student in this course
+        $most_recent_query = $this->getMostRecentRecommendationQuery($this->crs_id, $this->usr_id);
+        if($most_recent_query == null){
+            return null;
+        }
+        //do stuff here..
+        //pass this to some file etc.
+
+        //should return a list of such tuples that can be directly used to display results in frontend (will be used in ilRecSysPageStudentRecommender::addModuleRecommendedMaterials):
+        // array(obj_id, section_id, material_type, [tag1, tag2,...], from_to, matching_score);
     }
 
     public function getTagOnlyRecommend(){
@@ -111,6 +150,16 @@ class ilRecSysModelRecommender{
         return $materials_with_score;
     }
 
+    private function getUniqueTags($section_mattype_tuples){
+        $tag_ids = array();
+        foreach($section_mattype_tuples as $section_mattype){
+            $tag_ids = array_merge($tag_ids, ilRecSysModelTagsPerSection::getAllTagIdsForSection($section_mattype[0], $section_mattype[1]));
+        }
+        $tag_ids = array_unique($tag_ids);
+        $tag_ids = array_filter($tag_ids);
+        return $tag_ids;
+    }
+
     public function getMostRecentRecommendationQuery(){
         //get all recommendation queries that have the same timestamp as most recent recommendation query for this student
         $query = "SELECT * FROM ui_uihk_recsys_u_q WHERE crs_id = %s AND usr_id = %s AND timestamp = (SELECT MAX(timestamp) FROM ui_uihk_recsys_u_q WHERE crs_id = %s AND usr_id = %s)";
@@ -137,6 +186,17 @@ class ilRecSysModelRecommender{
                 array("integer","integer","integer","integer","integer"),
                 array($this->usr_id, $this->crs_id, $section_mattype[0], $section_mattype[1], $time));
         }
+    }
+
+    public function setClickedItem($section_mattype_tuple){
+        global $ilDB;
+        $time = time();
+        $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_u_c"
+            ."(usr_id, crs_id, material_id, material_type, timestamp)"
+            ." VALUES (%s,%s,%s,%s,%s)",
+            array("integer","integer","integer","integer","integer"),
+            array($this->usr_id, $this->crs_id, $section_mattype_tuple[0], $section_mattype_tuple[1], $time));
+        return;
     }
 
 }
