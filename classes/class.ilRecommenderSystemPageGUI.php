@@ -211,10 +211,10 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                   'recsys_teacher_overview', 
                   "Overview", 
                   $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SHOW_TEACHER));
-            $this->ilTabs->addSubTab(
-                  'recsys_teacher_settings', 
-                  "Settings", 
-                  $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SHOW_TEACHER_SETTINGS));
+            #$this->ilTabs->addSubTab(
+            #      'recsys_teacher_settings', 
+            #      "Settings", 
+            #      $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SHOW_TEACHER_SETTINGS));
             $this->ilTabs->addSubTab(
                     'recsys_recommender_model', 
                     "Model", 
@@ -224,10 +224,10 @@ class ilRecommenderSystemPageGUI extends ilObjectGUI {
                 'recsys_student_overview',
                 "Overview",
                 $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SHOW_STUDENT));
-            $this->ilTabs->addSubTab(
-                'recsys_student_settings',
-                "Settings",
-                $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SHOW_STUDENT_SETTINGS));
+            #$this->ilTabs->addSubTab(
+            #    'recsys_student_settings',
+            #    "Settings",
+            #    $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SHOW_STUDENT_SETTINGS));
         }
     }
 }

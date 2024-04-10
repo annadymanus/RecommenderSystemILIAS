@@ -180,7 +180,9 @@ class ilRecSysPageTeacher {
                         }
                     }
                     else{
-                        $material_tags[$column_1][$column_2]["fromto"] = array($value, $value);
+                        //this is for exc case, where from to is task, subtask
+                        //subtask is currently not implemented, so set to 0
+                        $material_tags[$column_1][$column_2]["fromto"] = array($value, 0);
                     }
                 }
                 //this value is a tag
@@ -190,6 +192,9 @@ class ilRecSysPageTeacher {
                     }
                 }
                 else if(str_contains($column_3, 'difficulty')){
+                    if($value == ""){
+                        $value = 2; #Default difficulty
+                    }
                     $material_tags[$column_1][$column_2]["difficulty"] = $value;
                 }
             }
@@ -291,7 +296,6 @@ class ilRecSysPageTeacher {
 
                 $material_tags = ilRecSysPageUtils::getMaterialTagEntries($item['obj_id'], $file_type == null ?  $material_type : $file_type);
                 
-                //replace section with actual database section ids instead of just an iterator
                 foreach ($material_tags as $tags) {
                     $counter = 0;
                     $section = $tags[0];
@@ -301,8 +305,7 @@ class ilRecSysPageTeacher {
                             $tpl->setVariable("ALL_TAG", $all_tag);
                             $tpl->setVariable("TAG_SELECTED", $all_tag == $subtag ? "selected" : "");
                             $tpl->parseCurrentBlock();
-                        }
-                        //get index of tag in all tags for selection default
+                        }                
                         $tpl->setCurrentBlock("Subtags");
 
                         $tpl->setVariable("TAG", $subtag);

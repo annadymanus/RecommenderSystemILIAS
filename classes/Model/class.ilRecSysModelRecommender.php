@@ -1,6 +1,10 @@
 <?php
 
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageUtils.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Client/class.ilRecSysClientML.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Client/Payload/class.ilRecSysTrainInput.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Client/Payload/class.ilRecSysMLInput.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Client/Payload/class.ilRecSysMLOutput.php');
 
 
 //@author Eschbach-Dymanus Anna
@@ -12,6 +16,7 @@ class ilRecSysModelRecommender{
     private $usr_id; //user id of the student
     public $recommenderModels; //list of recommender models with components that can be slelected for recommendation
     private $selectedRecommenderModel; //selected recommender model with components that are used for recommendation
+    private $clientML;
 
     public function __construct($usr_id, $crs_id)
     {
@@ -21,20 +26,53 @@ class ilRecSysModelRecommender{
         $this->usr_id = $usr_id;
         $this->recommenderModels = array("PythonML" => array(
                                                         array(
-                                                            array("tag", "Tag Encoder Description. These descriptions might take a lot of text since they need to be detailed."), 
-                                                            array("recquery", "Rec Query Description"), 
-                                                            array("pastquery", "Past Query Description"), 
-                                                            array("pastclicked", "Past Clicked Description")), 
-                                                        "ML Model description"), 
-                                         "TagFiltering" => array(array(), "Tag Filtering description"));
-        $this->selectedRecommenderModel = array("PythonML", array("tag", "recquery", "pastquery", "pastclicked"));
-        //$this->student = ilRecSysModelStudent::getRecSysStudent($usr_id, $crs_id);
+                                                            array("tag", "Encodes the tags occuring among material sections the user queried recommendations for."), 
+                                                            array("recquery", "Encodes the material sections the user queried recommendations for."), 
+                                                            array("pastquery", "Encodes all the users' past queried material sections."), 
+                                                            array("pastclicked", "Encodes all recommended material sections the user clicked on in the past.")), 
+                                                        "A neural network consiting of various optional single layer feed forward encoders and one single layer feed forward decoder. If training data from user interaction is sparse, the model is pretrained to predict material sections with tags that occur among queried items."), 
+                                         "TagFiltering" => array(array(), "A simple filter based approach that recommends material sections with the same tags as the ones the user queried recommendations for."));
+        $this->selectedRecommenderModel = $this->loadSelectedModelFromDB();
+        $this->clientML = new ilRecSysClientML();
+    }
+
+    public function saveSelectedModelToDB(){
+        //save the selected recommender model to the database
+        $query = "SELECT * FROM ui_uihk_recsys_recmod WHERE crs_id = %s;";
+        $result = $this->ilDB->queryF($query, array("integer"), array($this->crs_id));
+        if($result->numRows() == 0){
+            $this->ilDB->manipulateF("INSERT INTO ui_uihk_recsys_recmod"
+                ."(crs_id, model_name, components)"
+                ." VALUES (%s,%s,%s)",
+                array("integer","text","text"),
+                array($this->crs_id, $this->selectedRecommenderModel[0], implode(",", $this->selectedRecommenderModel[1])));
+        }
+        else{
+            $this->ilDB->manipulateF("UPDATE ui_uihk_recsys_recmod SET model_name = %s, components = %s WHERE crs_id = %s",
+                array("text","text","integer"),
+                array($this->selectedRecommenderModel[0], implode(",", $this->selectedRecommenderModel[1]), $this->crs_id));
+        }
+    }
+
+    public function loadSelectedModelFromDB(){
+        //load the selected recommender model from the database
+        //if no model is selected, select the default model
+        $query = "SELECT * FROM ui_uihk_recsys_recmod WHERE crs_id = %s;";
+        $result = $this->ilDB->queryF($query, array("integer"), array($this->crs_id));
+        if($result->numRows() == 0){
+            return array("PythonML", array("tag", "recquery", "pastquery", "pastclicked"));
+        }
+        $entry = $this->ilDB->fetchAssoc($result);
+        return array($entry['model_name'], explode(",", $entry['components']));
     }
 
     public function setRecommenderModel($recommenderModel){
         $this->selectedRecommenderModel = $recommenderModel;
+        $this->saveSelectedModelToDB();
+
         if ($recommenderModel[0] == "PythonML"){
-            //trigger retraining of model
+            $train_input = new TrainInput($this->crs_id, $recommenderModel[1]);
+            $this->clientML->putTrainRequest($train_input);
         }
         else if ($recommenderModel[0] == "TagFiltering"){
             //do nothing
@@ -61,7 +99,7 @@ class ilRecSysModelRecommender{
         if ($this->selectedRecommenderModel[0] == "PythonML"){
             return $this->getPythonMLRecommend();
         }
-        else if ($this->selectedRecommenderModel[0] == "TagOnly"){
+        else if ($this->selectedRecommenderModel[0] == "TagFiltering"){
             return $this->getTagOnlyRecommend();
         }
     }
@@ -74,8 +112,27 @@ class ilRecSysModelRecommender{
         if($most_recent_query == null){
             return null;
         }
-        //do stuff here..
-        //pass this to some file etc.
+        $material_ids = array();
+        $material_types = array();
+        $timestamp = 0;
+        foreach($most_recent_query as $query){
+            $material_ids[] = (int)$query['material_id'];
+            $material_types[] = (int)$query['material_type'];
+            $timestamp = $query['timestamp'];
+        }
+
+        $ml_input = new MLInput($this->usr_id, $this->crs_id, $timestamp, $material_ids, $material_types, $this->selectedRecommenderModel[1]);
+        $ml_output = $this->clientML->postPredictionRequest($ml_input);
+        
+        $recommendations = array();
+        foreach($ml_output->predictions as $prediction){
+            $material_type = ilRecSysPageUtils::MATERIAL_INDEX_TO_TYPE[$prediction->material_type];
+            $section = ilRecSysPageUtils::getSectionBySectionIDAndMaterialType($prediction->section_id, $material_type);
+            $from_to = $section->getFromTo();
+            $obj_id = $section->getObId();
+            $recommendations[] = array($obj_id, $prediction->section_id, $material_type, array(), $from_to, $prediction->score*100);
+        }
+        return $recommendations;
 
         //should return a list of such tuples that can be directly used to display results in frontend (will be used in ilRecSysPageStudentRecommender::addModuleRecommendedMaterials):
         // array(obj_id, section_id, material_type, [tag1, tag2,...], from_to, matching_score);
@@ -86,23 +143,18 @@ class ilRecSysModelRecommender{
         if($most_recent_query == null){
             return null;
         }
-        $this->debug_to_console($most_recent_query, "most_recent_query");
-        $this->debug_to_console($most_recent_query, "most_recent_query");
 
         $section_mattype_tuples = array();
         foreach($most_recent_query as $query){
             $section_mattype_tuples[] = array($query['material_id'], $query['material_type']);
         }
         $tag_ids = $this->getUniqueTags($section_mattype_tuples);
-        $this->debug_to_console($tag_ids, "tag_ids");
         $materials = array();
         foreach($tag_ids as $tag_id){
             $matching_mats = ilRecSysModelTagsPerSection::getAllSectionIDsForTag($tag_id);
             $materials = array_merge($materials, $matching_mats);
         }
-        $this->debug_to_console($materials, "materials");        
         $materials = array_filter($materials);
-        $this->debug_to_console($materials, "materials");
         $unique_materials = array();
         foreach($materials as $material){
             //dont add if in section_material_tuples
@@ -127,9 +179,6 @@ class ilRecSysModelRecommender{
         }
         $materials = $unique_materials;
         
-        $this->debug_to_console($materials, "materials");
-        //$materials = array_diff($materials, $section_mattype_tuples); //dont recommend the things the student wants recommendation for
-        //$this->debug_to_console($materials, "materials");
 
         //add from_to information and matching score (percentage of matching tags)
         $materials_with_score = array();

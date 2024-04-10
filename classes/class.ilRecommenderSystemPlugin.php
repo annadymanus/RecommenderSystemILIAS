@@ -134,6 +134,8 @@ class ilRecommenderSystemPlugin extends ilUserInterfaceHookPlugin
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_u_q_seq");
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_u_c");
         $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_u_c_seq");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_recmod");
+        $queryResult = $ilDB->query("DROP TABLE IF EXISTS ui_uihk_recsys_recmod_seq");
 
 	    $log->info("Uninstalled Recsys");	    
 	    return true; // false would indicate that anything went wrong	    

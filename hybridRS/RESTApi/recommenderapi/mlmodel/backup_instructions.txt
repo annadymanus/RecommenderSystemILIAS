@@ -1,0 +1,5 @@
+sudo mysqldump -u root -p ilias ui_uihk_recsys_u_q  > q_backup.sql
+sudo mysqldump -u root -p ilias ui_uihk_recsys_u_c  > c_backup.sql
+
+mysql -u root -p -D ilias < q_backup.sql
+mysql -u root -p -D ilias < c_backup.sql

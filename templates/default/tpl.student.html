@@ -7,9 +7,32 @@
 <!--script type="text/javascript" src="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/lib/bootstrap-slider/bootstrap-slider.min.js"></script-->
 
 <!-- Start Code -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+<button class="fa fa-question-circle help-button" style="background: transparent; border:none; float: right;font-size: 32px;color:#4c6586; margin-bottom: 5px; margin-right: 10px; margin-top: 5px" onclick="help()"></button>
+<div class="helptext" style="display: none; border-radius: 25px; background:#4c6586; padding:20px; width: 100%; color: white; margin-bottom: 10px">
+	The page allows you to get recommendations for a specific topic, as well as to see the match information for each material related to the course. For example: if you want to get a recommendation for an interesting topic, you need to choose it on the left column among the files related to the course and choose the Recommend button. Note that you can choose a few topics for which you want to get recommendations simultaneously.
+</div>
 <div class="recsys-modules-frame">
 	{MATERIALS}
 	{RECOMMENDATIONS}	
 	<!--	{MOD_REMINDER}	-->
 	<div style="display: block; clear: both;"></div>
 </div>
+<script>
+    function help(){
+		var helptext = document.getElementsByClassName("helptext")[0];
+		var helpbutton = document.getElementsByClassName("help-button")[0];
+		if (helptext.style.display == "none") {
+			helptext.style.display = "block";
+			helpbutton.style.color = "white";
+		}
+		else{
+			helptext.style.display = "none";
+			helpbutton.style.color = "#4c6586";
+		}
+	
+	}
+</script>

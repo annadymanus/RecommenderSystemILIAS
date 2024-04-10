@@ -90,7 +90,7 @@ class ilRecSysPageRecommenderModel {
     private function getRecommenderModelTemplate() {
         $tpl = new ilTemplate("tpl.recommender_model.html", true, true, self::PLUGIN_DIR);
         
-        $tpl->setVariable("SAVING", $this->plugin->txt("recsys_teacher_save"));
+        $tpl->setVariable("SAVING", "Save and Train Model"); //$this->plugin->txt("recsys_teacher_save"));
         $tpl->setVariable("TRAINING", $this->plugin->txt("recsys_model_train"));
         
         $models = $this->recommenderModel->recommenderModels;
@@ -125,7 +125,7 @@ class ilRecSysPageRecommenderModel {
         }
 
         $tpl->setVariable("RECSYS_MODEL_SAVE", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SAVE_RECOMMENDER_MODEL));
-        $tpl->setVariable("RECSYS_MODEL_TRAIN", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SAVE_RECOMMENDER_MODEL));
+        //$tpl->setVariable("RECSYS_MODEL_TRAIN", $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', ilRecommenderSystemConst::CMD_SAVE_RECOMMENDER_MODEL));
 
         return $tpl;
     }

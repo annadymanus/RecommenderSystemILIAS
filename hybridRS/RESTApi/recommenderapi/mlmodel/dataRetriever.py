@@ -15,6 +15,10 @@ class Database:
     def fetchall(self, query):
         self.cursor.execute(query)
         return self.cursor.fetchall()
+    
+    def write(self, query):
+        self.cursor.execute(query)
+        self.connection.commit()
 
 
 DB = Database(user=os.getenv("ILIAS_DB_USER"), password=os.getenv("ILIAS_DB_PASS"), host=os.getenv("ILIAS_DB_HOST"), port=int(os.getenv("ILIAS_DB_PORT")), database=os.getenv("ILIAS_DB_NAME"))
@@ -55,10 +59,9 @@ def get_past_queries(usr_id, crs_id, timestamp):
         SELECT material_id, material_type, timestamp 
         FROM ui_uihk_recsys_u_q
         WHERE usr_id = {}
-        AND crs_id = {}
         AND timestamp < {}
         AND (material_id, material_type) IN (SELECT material_id, material_type FROM ui_uihk_recsys_t_p_s);
-    """.format(usr_id, crs_id, timestamp)
+    """.format(usr_id, timestamp)
     return DB.fetchall(past_queries_query)
 
 def get_all_past_queries():
@@ -74,11 +77,19 @@ def get_past_recommendations(usr_id, crs_id, timestamp):
         SELECT material_id, material_type, timestamp 
         FROM ui_uihk_recsys_u_c
         WHERE usr_id = {}
-        AND crs_id = {}
         AND timestamp < {}
         AND (material_id, material_type) IN (SELECT material_id, material_type FROM ui_uihk_recsys_t_p_s);
-    """.format(usr_id, crs_id, timestamp)
+    """.format(usr_id, timestamp)
     return DB.fetchall(past_recommendations_query)
+
+def get_all_recommendations_for_crs(crs_id):
+    all_recommendations_for_crs_query = """
+        SELECT usr_id, material_id, material_type, timestamp
+        FROM ui_uihk_recsys_u_c
+        WHERE crs_id = {}
+        AND (material_id, material_type) IN (SELECT material_id, material_type FROM ui_uihk_recsys_t_p_s);
+    """.format(crs_id)
+    return DB.fetchall(all_recommendations_for_crs_query)
 
 def get_all_tags():
     all_tags_query = """
@@ -102,6 +113,28 @@ def get_all_sections():
     """
     return DB.fetchall(all_sections_query)
 
+def get_all_sections_for_crs(crs_id):
+    """Make an SQL Join of ui_uihk_recsys_t_p_s table with ui_uihk_recsys_tags table (to get crs_id field) and return all section_ids of the crs_id with their material_type and tag_id"""
+    all_sections_for_crs_query = """
+        SELECT section_id, material_type
+        FROM ui_uihk_recsys_t_p_s
+        JOIN ui_uihk_recsys_tags
+        ON ui_uihk_recsys_t_p_s.tag_id = ui_uihk_recsys_tags.tag_id
+        WHERE crs_id = {}
+    """.format(crs_id)
+    return DB.fetchall(all_sections_for_crs_query)
+
+def get_all_sections_and_tags_for_crs(crs_id):
+    """Make an SQL Join of ui_uihk_recsys_t_p_s table with ui_uihk_recsys_tags table and return all section_ids with their material types plus the tag_id"""
+    all_sections_and_tags_for_crs_query = """
+        SELECT ui_uihk_recsys_t_p_s.section_id, ui_uihk_recsys_t_p_s.material_type, ui_uihk_recsys_tags.tag_id
+        FROM ui_uihk_recsys_t_p_s
+        JOIN ui_uihk_recsys_tags
+        ON ui_uihk_recsys_t_p_s.tag_id = ui_uihk_recsys_tags.tag_id
+        WHERE crs_id = {}
+    """.format(crs_id)
+    return DB.fetchall(all_sections_and_tags_for_crs_query)
+
 def get_sections_for_tag(tag_id):
     """Returns all section_ids that have the tag_id"""
     sections_for_tag_query = """
@@ -116,7 +149,10 @@ def section_to_identifier(section_id, material_type):
     return str(section_id) + "_" + str(material_type)
 
 def identifier_to_section(identifier):
-    """Returns the section_id, material_type tuple of the identifier"""
+    """
+    Returns the section_id, material_type tuple of the identifier. 
+    Not quite the reverse function, as it does not convert back to 2 integers, but changing it now would break the code.
+    """
     return identifier.split("_")
     
 def get_all_item_identifiers():
@@ -134,6 +170,17 @@ def get_first_timestamp_for_crs(crs_id):
     """.format(crs_id)
     return DB.fetchall(first_timestamp_query)[0][0]
 
+def get_first_timestamp():
+    """Returns the timestamp of the first entry in ui_uihk_recsys_u_c"""
+    first_timestamp_query = """
+        SELECT timestamp
+        FROM ui_uihk_recsys_u_q
+        ORDER BY timestamp ASC
+        LIMIT 1
+    """
+    return DB.fetchall(first_timestamp_query)[0][0]
+
+
 def create_tag_pretraining_data(n=100):
     #Create dictionary with all tags as keys and a list of all section_ids that have the tag as values
     all_tags = get_all_tags()
@@ -144,7 +191,8 @@ def create_tag_pretraining_data(n=100):
         input_item = random.choice(tag_pretraining_inputs)
         tag = input_item[0]
         targets = [section_to_identifier(*section) for section in tag_dict[tag]]
-        final_data.append({"TAG_INPUT": [tag], "PAST_QUERIES": [], "PAST_RECOMMENDATIONS": [], "TARGET_RECOMMENDATIONS": [(target, 1) for target in targets], "QUERIED_SECTIONS": [(input_item[1], 0)]})
+        if len(targets) > 0:
+            final_data.append({"TAG_INPUT": [tag], "PAST_QUERIES": [], "PAST_RECOMMENDATIONS": [], "TARGET_RECOMMENDATIONS": [(target, 1) for target in targets], "QUERIED_SECTIONS": [(input_item[1], 0)]})
     return final_data
 
 def collect_data_for_query(usr_id, crs_id, section_ids, material_types, timestamp, retrieve_targets=False):
@@ -201,7 +249,8 @@ def parse_datadict(data_dict):
     #Convert timestamps to relative timestamps
     global FIRST_TIMESTAMP
     if FIRST_TIMESTAMP == None:
-        FIRST_TIMESTAMP = get_first_timestamp_for_crs(data_dict['QUERY'][1])-1
+        #FIRST_TIMESTAMP = get_first_timestamp_for_crs(data_dict['QUERY'][1])-1
+        FIRST_TIMESTAMP = get_first_timestamp()-1
     
     current_timestamp = data_dict['QUERY'][-1]
     data_dict["PAST_QUERIES"] = [(item_identifier , max((timestamp-FIRST_TIMESTAMP)/(current_timestamp-FIRST_TIMESTAMP), MIN_IMPORTANCE)) for item_identifier, timestamp in data_dict["PAST_QUERIES"]]

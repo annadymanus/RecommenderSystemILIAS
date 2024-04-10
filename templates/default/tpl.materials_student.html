@@ -16,7 +16,7 @@
 	<div class="panel">
 		<!-- BEGIN Materials  -->
 		<div class="recsys-lo container-fluid" style="margin: 5px">
-			<div class="row recsys-lo-material">
+			<div class="row recsys-lo-material" style="display:flex">
 				<div>
 					{ITEM_HTML}
 				</div>
@@ -29,6 +29,13 @@
 						<!-- BEGIN Subtags -->
 						<div style="display: flex; margin-right: 5px; margin-bottom: 5px; padding: 4px; box-shadow: 0px 2px 2px 0px gray; color: white ; background-color: #4c6586;">{TAG}</div>
 						<!-- END Subtags -->
+					</td>
+					<td style="width: 170px; display:flex">
+						<div style="display:flex; align-items: center;">
+							<!-- BEGIN Stars -->
+							<div class="glyphicon glyphicon-star{STAR_EMPTY}" id="{ITEM_ID}_{SECTION}_{STAR_COUNT}_star" style="color:#4c6586; margin-right:-3px;" ></div>
+							<!-- END Stars -->
+						</div>						
 					</td>
 					<td class="descfield" id="{ITEM_ID}_{MATERIAL_TYPE}_{FILE_TYPE}" value="{FROM}_{TO}" style="display:flex"><div></div><input name="{ITEM_ID}_{SECTION}_desc"></input></td>
 				</tr>	

@@ -703,29 +703,85 @@ if (!$ilDB->tableExists('ui_uihk_recsys_u_c'))
 }
 
 
+?>
 
-//Not sure whether it's right, but this is my idea of how to store the tags for questions in a test
-if(!$ilDB->tableExists('ui_uihk_recsys_q_a_t')){
+<#2>
+<?php
+if(!$ilDB->tableExists('ui_uihk_recsys_recmod')){
     $fields = array(
-        'test_id' => array(
+        'crs_id' => array(
             'type' => 'integer',
             'length' => 8,
             'notnull' => true),
-        'obj_id' => array( // TODO: link to the ilias test object
-            'type' => 'integer',
-            'length' => 8,
+        'model_name' => array(
+            'type' => 'text',
+            'length' => 128,
             'notnull' => true),
-        'question_id' => array(
-            'type' => 'integer',
-            'length' => 4,
-            'notnull' => true),
-        'tag_id' => array(
-            'type' => 'integer',
-            'length' => 8,
+        'components' => array(
+            'type' => 'text',
+            'length' => 1000,
             'notnull' => true),
     );
-    $ilDB->createTable('ui_uihk_recsys_q_a_t', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_q_a_t', array("test_id"));
-    $ilDB->createSequence('ui_uihk_recsys_q_a_t');
+    $ilDB->createTable('ui_uihk_recsys_recmod', $fields);
+    $ilDB->addPrimaryKey('ui_uihk_recsys_recmod', array("crs_id"));
+    $ilDB->createSequence('ui_uihk_recsys_recmod');
 }
+
+?>
+
+<#3>
+<?php
+//write migration adding teach_diff column to all material section tables if not already present
+
+if(!$ilDB->tableColumnExists('ui_uihk_recsys_m_s_f_s', 'teach_diff')){
+    $ilDB->addTableColumn('ui_uihk_recsys_m_s_f_s', 'teach_diff', array(
+        'type' => 'float',
+        'notnull' => true
+    ));
+}
+
+if(!$ilDB->tableColumnExists('ui_uihk_recsys_m_s_f_p', 'teach_diff')){
+    $ilDB->addTableColumn('ui_uihk_recsys_m_s_f_p', 'teach_diff', array(
+        'type' => 'float',
+        'notnull' => true
+    ));
+}
+
+if(!$ilDB->tableColumnExists('ui_uihk_recsys_m_s_f_v', 'teach_diff')){
+    $ilDB->addTableColumn('ui_uihk_recsys_m_s_f_v', 'teach_diff', array(
+        'type' => 'float',
+        'notnull' => true
+    ));
+}
+
+if(!$ilDB->tableColumnExists('ui_uihk_recsys_m_s_pic', 'teach_diff')){
+    $ilDB->addTableColumn('ui_uihk_recsys_m_s_pic', 'teach_diff', array(
+        'type' => 'float',
+        'notnull' => true
+    ));
+}
+
+if(!$ilDB->tableColumnExists('ui_uihk_recsys_m_s_w', 'teach_diff')){
+    $ilDB->addTableColumn('ui_uihk_recsys_m_s_w', 'teach_diff', array(
+        'type' => 'float',
+        'notnull' => true
+    ));
+}
+
+if(!$ilDB->tableColumnExists('ui_uihk_recsys_m_s_bib', 'teach_diff')){
+    $ilDB->addTableColumn('ui_uihk_recsys_m_s_bib', 'teach_diff', array(
+        'type' => 'float',
+        'notnull' => true
+    ));
+}
+
+if(!$ilDB->tableColumnExists('ui_uihk_recsys_m_s_e', 'teach_diff')){
+    $ilDB->addTableColumn('ui_uihk_recsys_m_s_e', 'teach_diff', array(
+        'type' => 'float',
+        'notnull' => true
+    ));
+}
+
+
+
 ?>

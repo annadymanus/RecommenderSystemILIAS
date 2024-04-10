@@ -13,23 +13,26 @@ class ModelHandlerAdmin:
     _lock = threading.Lock()
     
     @classmethod
-    def get_model_handler(cls):
+    def get_model_handler(cls, crs_id, encoder_types=["tag", "recquery", "pastquery", "pastclicked"], refresh=False):
         with cls._lock:
             # If the model_handler is not initialized, create a new instance
-            if not cls._model_handler:
+            if not cls._model_handler or refresh or set(encoder_types) != set(cls._model_handler.encoder_types_to_index.keys()):
                 #This instantiates the ModelHandler with 4 different encoders
-                cls._model_handler = ModelHandler(encoder_types=["tag", "recquery", "pastquery", "pastclicked"],
+                cls._model_handler = ModelHandler(encoder_types=encoder_types,
                              tags=get_all_tags(),
-                             items=get_all_item_identifiers())
+                             items=get_all_item_identifiers(),
+                             crs_id=crs_id,
+                             load_checkpoint=refresh)
             return cls._model_handler
 
     
 
 
 
-MODEL_HANDLER= ModelHandler(encoder_types=["recquery"],# "tag", "pastquery", "pastclicked"],
-                             tags=get_all_tags(),
-                             items=get_all_item_identifiers())
+#MODEL_HANDLER= ModelHandler(encoder_types=["tag","recquery", "pastquery", "pastclicked"],
+#                             tags=get_all_tags(),
+#                             items=get_all_item_identifiers(),
+#                             crs_id=100)
 # This is how to call the handler to get the recommendations
 # usr_id, crs_id, queried section_ids, corresponding material_types, timestamp of the query
 # The relevant information is then queried from the database and the model predicts the recommendations
@@ -49,7 +52,7 @@ MODEL_HANDLER= ModelHandler(encoder_types=["recquery"],# "tag", "pastquery", "pa
 # The first time the handler is called and "observes" a new itemID or tag, it will add it to the model.
 # Removed itemIDs or Tags are not removed from the model until retraining, but will simply be ignored in the predictions.
 
-MODEL_HANDLER.train() #Retrains the model with the new data available in the DB
+#MODEL_HANDLER.train() #Retrains the model with the new data available in the DB
 
 
 #When someone clicks on a recommendation, the model should be updated with the new data

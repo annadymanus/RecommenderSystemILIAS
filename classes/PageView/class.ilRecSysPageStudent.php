@@ -41,7 +41,8 @@ class ilRecSysPageStudent {
         global $ilCtrl, $ilUser;
         
         $this->ctrl         = $ilCtrl;
-        $this->crs_id       = $crs_id;       
+        $this->crs_id       = $crs_id;
+        $this->debug_to_console($crs_id, "crs_id");      
         $this->il_crs_id    = ilObject::_lookupObjectId($crs_id);
         $this->CourseObject = new ilObjCourse($crs_id);
         $this->ilUser       = $ilUser;
@@ -178,6 +179,28 @@ class ilRecSysPageStudent {
                         $tpl->setVariable("TAG", $subtag);
                         $tpl->parseCurrentBlock();
                     }
+                    
+                    $difficulty = $material_tag[3];
+                    $star_list = []; 
+                    for ($i = 0; $i < 5; $i++){
+                        if ($i <= $difficulty){
+                            array_push($star_list, "");
+                        }
+                        else{
+                            array_push($star_list, "-empty");
+                        }
+                    }
+                    $star_counter = 0;
+                    foreach ($star_list as $star){
+                        $tpl->setCurrentBlock("Stars");
+                        $tpl->setVariable("ITEM_ID", $item['obj_id']);
+                        $tpl->setVariable("SECTION", $material_tag[0]);
+                        $tpl->setVariable("STAR_EMPTY", $star);
+                        $tpl->setVariable("STAR_COUNT", $star_counter);
+                        $tpl->parseCurrentBlock();
+                        $star_counter++;
+                    }
+
                     $tpl->setCurrentBlock("Tags");
                     $tpl->setVariable("TAG_SELECTED", False ? 'checked' : ''); #Query Student Selection (Student Selection Status)
                     $tpl->setVariable("SECTION", $material_tag[0]);
@@ -187,6 +210,8 @@ class ilRecSysPageStudent {
                     $tpl->setVariable("FILE_TYPE", $file_type);
                     $tpl->setVariable("ITEM_ID", $item['obj_id']);
                     $tpl->parseCurrentBlock();
+
+
                 }
                 $tpl->setCurrentBlock("Materials");
                 $itemHtml = $CourseContent->getHtmlItem($item);

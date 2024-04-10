@@ -2,7 +2,13 @@
 <link rel="stylesheet" href="./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/templates/css/accordion.css">
 <link rel="stylesheet" href="./templates/default/delos.css">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
+<button class="fa fa-question-circle help-button" style="background: transparent; border:none; float: right;font-size: 32px;color:#4c6586; margin-bottom: 5px; margin-right: 10px; margin-top: 5px" onclick="help()"></button>
+<div class="helptext" style="display: none; border-radius: 25px; background:#4c6586; padding:20px; width: 100%; color: white; margin-bottom: 10px">
+	The page contains all uploaded files for the course and provides functionality to assign tags to each file. The tags are subtopics and can be repeated within the course. For example: you have a topic "Properties of Triangles" for the first lecture. The material type of the lecture - presentation. The topic contains subtopics: "Types of Triangles", "Sum of Interior Angles", "Exterior Angle Theorem", "Pythagorean Theorem", "Congruent Triangles", and "Similar Triangles". Each subtopic represents a tag for which you need to specify a page range in the presentation (in other words, the part of the presentation where it's written about the subtopic). You can choose the Add Tag button if a tag has already been created before or you can create a new tag by choosing the New Tag button.
+</div>
 <form id="form_recsys" role="form"
 	action="{RECSYS_TEACHER_SAVE}"
 	onsubmit="on_submit_function();"
@@ -89,8 +95,21 @@
 
 
 <script>
+	function help(){
+		var helptext = document.getElementsByClassName("helptext")[0];
+		var helpbutton = document.getElementsByClassName("help-button")[0];
+		if (helptext.style.display == "none") {
+			helptext.style.display = "block";
+			helpbutton.style.color = "white";
+		}
+		else{
+			helptext.style.display = "none";
+			helpbutton.style.color = "#4c6586";
+		}
+	
+	}
 	function setDifficulty(clicked_id){
-		console.log(clicked_id);
+		console.log("set difficulty", clicked_id)
 		var star_count = parseInt(clicked_id.split("_")[2]);
 		var item_id = clicked_id.split("_")[0];
 		var section = clicked_id.split("_")[1];
@@ -150,10 +169,16 @@
 				star_counts[item_id][section] = star_count;
 			}
 		}
-		console.log(star_counts);
 		//for each item_id section combination, create input field with value of highest count
 		for (var item_id in star_counts) {
 			for (var section in star_counts[item_id]) {
+				//remove old entry
+				var old_input = document.getElementsByName(item_id + "_" + section + "_difficulty")[0];
+				if (old_input) {
+					old_input.remove();
+				}
+
+
 				var star_count = star_counts[item_id][section];
 				var input = document.createElement("input");
 				input.setAttribute("type", "number");
@@ -167,7 +192,7 @@
 
 	function on_submit_function(){
 		enable_filetypeselectors();
-		//convert_glyphicons_to_numeric_input();
+		convert_glyphicons_to_numeric_input();
 	}
 
 	function enable_filetypeselectors(){
@@ -338,18 +363,8 @@
 	function removeTag(clicked_id)
 	{
 		var id = clicked_id.replace("_delete", "") + "_box";
-		//check if only one tag left
 		var tag = document.getElementById(id);
-		var tagholder = tag.parentElement;
-		// 2 means only one left, since newtagfield is always there but hidden
 		tag.remove();
-
-		if (tagholder.childElementCount <= 2) {
-			//if only one tag left, empty it
-			//tag.children[0].value = "";
-			//release filetype selector
-			//releaseFileTypeSelector(tagholder.id.split("_")[0]);
-		}
 	}
 
 	function updateNextI(id){
@@ -397,6 +412,7 @@
 	}
 
 	function addTag(clicked_id){
+		//extract item-section-tag id
 		var id = clicked_id.replace("_add", "");
 		var box = document.getElementsByClassName("tagbox")[0];
 		var box_clone = box.cloneNode(true);
@@ -481,7 +497,8 @@
 		section.children[0].children[2].id = new_id + "_create";
 		
 		section.children[1].setAttribute("name", new_id + "_desc");
-		section.children[2].children[0].id = new_id + "_deletesection";
+		section.children[3].children[0].id = new_id + "_deletesection";
+
 	}
 
 	function updateAddSectionId(item_id){
@@ -513,9 +530,14 @@
 		var item_id = id.split("_")[0];
 		document.getElementById(item_id + "_table").children[0].appendChild(section_clone);
 
-		console.log(get_addsection_by_item_id(item_id));
+		//set difficulty ids
+		for (var i = 0; i < section_clone.children[2].childElementCount; i++) {
+			section_clone.children[2].children[i].id = section_clone.id + "_" + i + "_star";
+		}
+		//set difficulty to 2
+		setDifficulty(section_clone.id + "_2_star");
+
 		updateAddSectionId(item_id);
-		console.log(get_addsection_by_item_id(item_id));
 
 		update_descfieldtype(section_clone.children[1], "", "")
 

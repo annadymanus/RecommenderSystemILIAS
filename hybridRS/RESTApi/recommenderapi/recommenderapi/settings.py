@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-*xr6+8y40tg-bppss$m-o_j6boe^ydvb2)0gur7vp5%ujj+z5-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -51,7 +51,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #'recommenderapp.views.ExceptionLoggingMiddleware'
 ]
+
 
 ROOT_URLCONF = 'recommenderapi.urls'
 

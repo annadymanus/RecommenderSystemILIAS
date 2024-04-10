@@ -122,8 +122,7 @@ class ilRecSysPageUtils {
     }
 
     public static function getMaterialTagEntries($obj_id, $material_type) {
-        //In shape [[section_id, [tag1, tag2, tag3], [from, to], difficulty], ...] 
-       
+        //Returns tuples in shape [[section_id, [tag1, tag2, tag3], [from, to], difficulty], ...] 
         $material_tag_entries = array();
         switch ($material_type){
             case "script":
@@ -146,7 +145,10 @@ class ilRecSysPageUtils {
         $tag_handler = ilRecSysModelTagHandler::getInstance();
         if($sections != null){
             foreach($sections as $section){
-                $tags = $tag_handler->getAllTagsForSectionMaterial($section->getSectionID(), ilRecSysPageUtils::MATERIAL_TYPE_TO_INDEX[$material_type]);
+                $tags = $tag_handler->getAllTagsForSectionMaterial(
+                    $section->getSectionID(), 
+                    ilRecSysPageUtils::MATERIAL_TYPE_TO_INDEX[$material_type]
+                );
                 $from_to = $section->getFromTo();
                 $difficulty = (int) round($section->getDifficulty());
                 if(!empty($tags)){
@@ -156,11 +158,11 @@ class ilRecSysPageUtils {
 
             }
         }
-        //check if empty array
+        //if array is empty, add a dummy entry. 
+        //With no variables passed, template would just break for some reason...
         if(empty($material_tag_entries)){
             $material_tag_entries = array(array(-1, array(), "", 0));
         }
-        ilRecSysPageUtils::debug_to_console($material_tag_entries, "loaded material_tag_entries");
         return $material_tag_entries;
     }
 
@@ -184,11 +186,8 @@ class ilRecSysPageUtils {
         
         $items = array();
         
-        foreach ($container as $item) {    
-          
-            if ($item['type'] == $type || $type == null) {
-                array_push($items, $item);
-            } else if ($item['type'] == 'fold') {
+        foreach ($container as $item) {              
+            if ($item['type'] == 'fold') {
                 $ilObjFolder = new ilObjFolder($item['ref_id']);
                 $objects = $ilObjFolder->getSubItems();
                 $objects = $objects['_all'];
@@ -198,7 +197,9 @@ class ilRecSysPageUtils {
                 $objects = $ilObjGroup->getSubItems();
                 $objects = $objects['_all'];            
                 $items = array_merge($items, ilRecSysPageUtils::getAllSubItems($objects, $type));
-            }
+            } else if ($item['type'] == $type || $type == null) {
+                array_push($items, $item);
+            } 
         }
         return $items;
     }

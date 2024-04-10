@@ -20,6 +20,7 @@ from recommenderapp import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('mlmodelrec/', views.ml_model_rec)
+    path('mlmodelrec/', views.ml_model_rec),
+    path('mlmodeltrain/', views.ml_model_train)
 ]
 
