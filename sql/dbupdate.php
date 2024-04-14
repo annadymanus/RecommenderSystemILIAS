@@ -22,8 +22,6 @@ global $ilDB;
   * ui_uihk_recsys_courses:                            no change
   * ui_uihk_recsys_tags:                               no change
   * ui_uihk_recsys_tags_per_section:                   ui_uihk_recsys_t_p_s
-  * ui_uihk_recsys_tags_user:                          ui_uihk_recsys_t_u
-  * ui_uihk_recsys_section_tag_user:                   ui_uihk_recsys_s_t_u
   * ui_uihk_recsys_material_section_file_script:       ui_uihk_recsys_m_s_f_s
   * ui_uihk_recsys_material_section_file_presentation: ui_uihk_recsys_m_s_f_p
   * ui_uihk_recsys_material_section_file_video:        ui_uihk_recsys_m_s_f_v
@@ -217,68 +215,6 @@ if(!$ilDB->tableExists('ui_uihk_recsys_t_p_s')){
     $ilDB->createTable('ui_uihk_recsys_t_p_s', $fields);
     $ilDB->addPrimaryKey('ui_uihk_recsys_t_p_s', array("tag_id", "material_type", "section_id"));
     $ilDB->createSequence('ui_uihk_recsys_t_p_s');
-}
-
-/**
- *  This table is for holding records on which tags the user has to work on. For that purpose it stores the following attributes:
- *  Formerly known as ui_uihk_recsys_tags_user 
- * 
- *  tag_id:         identifier of the tag
- *  usr_id:         identifier of the user that the tag was assigned to
- *  priority:       priority of the tag (using some kind of heuristic)
- *  tag_count:      counts how often the tag was assigned to the user (can be used for the priority-heuristic)
- */
-if(!$ilDB->tableExists('ui_uihk_recsys_t_u')){ 
-    $fields = array(
-        'tag_id' => array(
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true),
-        'usr_id' => array(
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true),
-        'priority' => array(
-            'type' => 'float',
-            'notnull' => true),
-        'tag_counter' => array( //how often the same tag was assigned to one user (can be used as factor for importance of tag to usr)
-            'type' => 'integer',
-            'length' => 4,
-            'notnull' => true)
-    );
-    $ilDB->createTable('ui_uihk_recsys_t_u', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_t_u', array("tag_id", "usr_id"));
-    $ilDB->createSequence('ui_uihk_recsys_t_u');
-}
-
-/**
- *  This table holds the specific section a user has to fullfill in order to get rid of a tag (/accomplish to learn all recomended materials).
- *  It is also used to for the recommendation of specific materials sections (not just a topic).
- * 
- *  Earlier ui_uihk_recsys_section_tags_user
- * 
- *  usr_id:             identifier of the user that the tag was assigned to
- *  material_type:      type of material
- *  section_id:         identifier of the material        
- */
-if(!$ilDB->tableExists('ui_uihk_recsys_s_t_u')){
-    $fields = array(
-        'usr_id' => array(
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true),
-        'material_type' => array(
-            'type' => 'integer',
-            'length' => 4,
-            'notnull' => true),
-        'section_id' => array(
-            'type' => 'integer',
-            'length' => 8,
-            'notnull' => true),
-    );
-    $ilDB->createTable('ui_uihk_recsys_s_t_u', $fields);
-    $ilDB->addPrimaryKey('ui_uihk_recsys_s_t_u', array("usr_id", "material_type", "section_id"));
-    $ilDB->createSequence('ui_uihk_recsys_s_t_u');
 }
 
 /**

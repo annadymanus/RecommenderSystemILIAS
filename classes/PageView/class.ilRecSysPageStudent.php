@@ -7,7 +7,6 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 #require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelFeedback.php');
 #require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelRating.php');
 #require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysEventTracker.php');
-require_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDB.php");
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/util/class.ilRecSysListMaterials.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudentRecommender.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/class.ilRecommenderSystemPageGUI.php');
@@ -32,7 +31,6 @@ class ilRecSysPageStudent {
     private $ilUser;
     private $RecSysCourse;
     private $RecSysStudent;
-    private $CoreDB;
     private $plugin;
     private $recommender;
     
@@ -50,7 +48,6 @@ class ilRecSysPageStudent {
 
         $this->RecSysCourse   = ilRecSysModelCourse::getOrCreateRecSysCourse($crs_id);
         $this->RecSysStudent  = ilRecSysModelStudent::getOrCreateRecSysStudent($this->ilUser->getId(), $this->crs_id, $this->RecSysCourse->getOpt_default());
-        $this->CoreDB          = null;//new ilRecSysCoreDB("admin");
         
         $this->recommender = new ilRecSysModelRecommender($this->ilUser->getId(), $this->crs_id);
 

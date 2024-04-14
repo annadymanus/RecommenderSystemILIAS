@@ -4,7 +4,6 @@ include_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelCourse.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelStudent.php');
 #require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelFeedback.php');
-require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDB.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/util/class.ilRecSysListMaterials.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/PageView/class.ilRecSysPageStudentRecommender.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/class.ilRecommenderSystemPageGUI.php');
@@ -49,9 +48,6 @@ class ilRecSysPageTeacher {
         $this->tag_handler  = ilRecSysModelTagHandler::getInstance();
 
         $this->RecSysCourse   = ilRecSysModelCourse::getOrCreateRecSysCourse($crs_id);
-        #$this->CoreDB          = null;//new ilRecSysCoreDB("admin");
-        //to @Joel: sth bugs out in RecSysCoreDbdriverLibrary, it is sth with the init function of the db driver
-        
         $this->plugin = ilPlugin::getPluginObject(IL_COMP_SERVICE, 'UIComponent', 'uihk', 'RecommenderSystem');
     }
     

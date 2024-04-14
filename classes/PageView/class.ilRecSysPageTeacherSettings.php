@@ -4,7 +4,6 @@
 require_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecommenderSystemConst.php");
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelCourse.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelStudent.php');
-#require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDB.php');
 
 
 /**
@@ -61,10 +60,6 @@ class ilRecSysPageTeacherSettings {
     {            
         $this->updateCourseSettings(); 
 
-        #$this->CoreDB = new ilRecSysCoreDB("admin");
-        #$this->CoreDB->createCourse( $this->RecSysCourse );
-        #$this->CoreDB->checkLastConnection();
-
         ilUtil::sendSuccess($this->plugin->txt("recsys_saved_successfully"), true);
         
         $this->show_teacher_settings();
@@ -73,14 +68,6 @@ class ilRecSysPageTeacherSettings {
     
     public function update_student_and_resources() 
     {
-        #$this->CoreDB = new ilRecSysCoreDB("admin");
-
-        // at first create the course if not exists
-        #$this->CoreDB->createCourse( $this->RecSysCourse );
-        #if (!$this->CoreDB->checkLastConnection()) {
-        #    $this->show_teacher_settings();
-        #    return False;
-        #}
 
         $result = $this->updateStudentsOfCourse();
 

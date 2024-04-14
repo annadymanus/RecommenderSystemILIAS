@@ -85,7 +85,8 @@ class Decoder(Module):
         return x
     
 class MultiEncoderDecoder(Module):
-    """A class that combines multiple encoders of various input size, concatenates their latent representations, and then decodes them."""
+    """A class that combines multiple encoders of various input size, concatenates their latent representations, 
+    and then decodes them."""
     def __init__(self, input_dims, latent_dim, output_dim):
         super(MultiEncoderDecoder, self).__init__()
         self.input_dims = input_dims
@@ -186,9 +187,8 @@ class ModelHandler():
             if item not in self.items:
                 self.add_item(item)
         
-        all_input = []
-        
-        #create one-hot encodings for tags
+        all_input = [] 
+        #create boolean encodings for tags
         if "tag" in self.encoder_types_to_index:
             tag_input_encodings = torch.zeros(len(self.tags))
             tag_indices = torch.tensor([self.tags_to_index[tag] for tag in tag_input])
@@ -203,7 +203,7 @@ class ModelHandler():
                 past_queries_encodings[self.items_to_index[item]] = importance
             past_queries_encodings = (past_queries_encodings, self.encoder_types_to_index['pastquery'])
             all_input.append(past_queries_encodings)
-            
+        
         #create weighted encodings for past recommendations
         if "pastclicked" in self.encoder_types_to_index:
             past_recommendations_encodings = torch.zeros(len(self.items))
@@ -212,14 +212,13 @@ class ModelHandler():
             past_recommendations_encodings = (past_recommendations_encodings, self.encoder_types_to_index['pastclicked'])
             all_input.append(past_recommendations_encodings)
         
-        #create one-hot encodings for queried sections
+        #create boolean encodings for queried sections
         if "recquery" in self.encoder_types_to_index:
             queried_sections_encodings = torch.zeros(len(self.items))
             item_indices = torch.tensor([self.items_to_index[item[0]] for item in queried_sections])
             queried_sections_encodings[item_indices] = 1
             queried_sections_encodings = (queried_sections_encodings, self.encoder_types_to_index['recquery'])
             all_input.append(queried_sections_encodings)
-            
         
         #Arrange in correct encoder order
         all_input.sort(key=lambda x: x[1])
@@ -317,12 +316,12 @@ class ModelHandler():
             self.model.eval()
         with torch.no_grad():
             preds = self.model(inputs)
-        preds = torch.exp(preds) / (1 + torch.exp(preds))
-        preds = preds * crs_mask
+            preds = torch.exp(preds) / (1 + torch.exp(preds))
+            preds = preds * crs_mask
         scored_items = {}
         for i, pred in enumerate(preds):
             item = self.items[i]
-            scored_items[item] = pred.item()  #Scale to positive classification area
+            scored_items[item] = pred.item()
         return scored_items
     
     def _step(self, inputs, labels):

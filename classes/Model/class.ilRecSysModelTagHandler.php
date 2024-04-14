@@ -234,6 +234,7 @@ class ilRecSysModelTagHandler{
      *  args[3]     to (optional)
      */
     public function assignTagToSection($tag_id, $material_type, $obj_id, $from, $to, $difficulty) {
+        
         // 1. check whether tag_id exists
         $tag = $this->getTagByID($tag_id);
         if ($tag == null){

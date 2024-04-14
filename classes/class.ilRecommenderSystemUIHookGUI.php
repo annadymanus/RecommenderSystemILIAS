@@ -54,7 +54,6 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
 
         if ($correct_position) 
         {
-            //Dont know what that does in Leap
             $this->rememberRefId();
             $this->addRecSysTab();
         }
@@ -68,24 +67,10 @@ class ilRecommenderSystemUIHookGUI extends ilUIHookPluginGUI {
 
     private function addRecSysTab() 
     {
-        // i dont know what this tabId is about...but i guess to later access the tab among all tabs
         $tabId = "recsys_cockpit";
         $tabLabel = $this->plugin->txt("tab_label");
-        
-        //$tabLink = $this->ctrl->null; //getLinkTargetByClass('ilRecommenderSystemPageGUI', "show");
-        //Link the actual page rather than null, so the tab is clickable
         $tabLink = $this->ctrl->getLinkTargetByClass('ilRecommenderSystemPageGUI', "show");
         $this->ilTabs->addTab($tabId, $tabLabel, $tabLink);
-
-        
-        // activate Tab if it is current Tab
-        $cmdClass = $this->ctrl->getCmdClass();        
-
-        //Here the page is activated if the tab is clicked, but page logic is still not implemented
-        //No idea yet how exactly this ctrl thing
-        //if ($cmdClass == 'ilrecommendersystempagegui') {            
-        //    $this->ilTabs->activateTab('recsys_cockpit');            
-        //}
     }
     
     

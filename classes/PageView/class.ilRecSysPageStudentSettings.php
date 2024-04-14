@@ -3,10 +3,9 @@
 include_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecommenderSystemConst.php");
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelCourse.php');
 require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Model/class.ilRecSysModelStudent.php');
-#require_once("./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/RecommenderSystem/classes/Libraries/class.ilRecSysCoreDB.php");
 
 /**
- * The ProfilePage-class handles every command on the Setting Page for Students, 
+ * The ProfilePage-class handles every command on the Setting Page for Students, CURRENTLY NOT USED!
  * 
  * @author Anna Eschbach-Dymanus <anna.maria.eschbach-dymanus@students.uni-mannheim.de>
  * 
@@ -43,11 +42,9 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
 
         $this->CourseObject = new ilObjCourse($crs_id);
 
-        #$this->RecSysCourse = ilRecSysModelCourse::getOrCreateRecSysCourse($crs_id);
-        #$this->RecSysStudent = ilRecSysModelStudent::getOrCreateRecSysStudent($this->ilUser->getId(), $this->crs_id, $this->RecSysCourse->getOpt_default());
+        //$this->RecSysCourse = ilRecSysModelCourse::getOrCreateRecSysCourse($crs_id);
+        //$this->RecSysStudent = ilRecSysModelStudent::getOrCreateRecSysStudent($this->ilUser->getId(), $this->crs_id, $this->RecSysCourse->getOpt_default());
         
-        #CREATE COREDB CLASS!
-        #$this->CoreDB = new ilRecSysCoreDB("admin");
 
         $this->plugin = ilPlugin::getPluginObject(IL_COMP_SERVICE, 'UIComponent', 'uihk', 'RecommenderSystem');
     }
